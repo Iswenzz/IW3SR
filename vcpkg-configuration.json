@@ -1,0 +1,15 @@
+{
+	"default-registry": {
+		"kind": "git",
+		"repository": "https://github.com/microsoft/vcpkg",
+		"baseline": "4a600e9fea71bd7872080cbb716797e04d30e6d3"
+	},
+	"registries": [
+		{
+			"kind": "git",
+			"repository": "https://github.com/Iswenzz/vcpkg-registry",
+			"packages": ["imgui", "implot"],
+			"baseline": "c12eb749ee43da80e9951717c334059a50bbdf5b"
+		}
+	]
+}

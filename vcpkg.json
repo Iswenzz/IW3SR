@@ -1,0 +1,41 @@
+{
+	"name": "iw3sr",
+	"version": "1.0.0",
+	"description": "A Call of Duty 4 client modification.",
+  	"homepage": "https://github.com/Iswenzz/IW3SR",
+	"features": {
+		"windows": {
+			"description": "Build Windows",
+			"dependencies": [
+				{ "name": "imgui", "features": ["win32-binding"] }
+			]
+		},
+		"dx9": {
+			"description": "Build DX9",
+			"dependencies": [
+				{ "name": "imgui", "features": ["dx9-binding"] },
+				"directxsdk"
+			]
+		},
+		"tests": {
+			"description": "Build tests",
+			"dependencies": ["gtest"]
+		}
+	},
+	"dependencies": [
+		{ "name": "imgui", "features": ["club", "markdown"] },
+		"implot",
+		"polyhook2",
+		"nlohmann-json",
+		"glm"
+	],
+	"overrides": [
+        { "name": "imgui", "version": "1.89.9" },
+        { "name": "implot", "version": "0.16" },
+        { "name": "directxsdk", "version-string": "jun10#7" },
+        { "name": "polyhook2", "version": "2023-08-11" },
+        { "name": "nlohmann-json", "version": "3.11.2" },
+        { "name": "glm", "version": "2023-06-08" },
+        { "name": "gtest", "version": "1.13.0" }
+    ]
+}
