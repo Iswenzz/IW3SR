@@ -1,11 +1,11 @@
 #include "Renderer.hpp"
-#include "GUI.hpp"
 
 #include "Drawing/Draw2D.hpp"
 #include "Drawing/Draw3D.hpp"
 #include "Modules/Modules.hpp"
 #include "Settings/Settings.hpp"
 
+#include "Game/GUI/GUI.hpp"
 #include "Game/System/Console.hpp"
 
 namespace IW3SR

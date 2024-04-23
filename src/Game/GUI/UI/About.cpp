@@ -12,7 +12,7 @@ namespace IW3SR::UC
 
 		constexpr auto IW3SR = "IW3SR";
 		constexpr auto markdown = R"(
-A Call of Duty 4 Modification.
+A Call of Duty 4 client modification.
 
 [https://github.com/Iswenzz/IW3SR](https://github.com/Iswenzz/IW3SR)
 IW3SR (ent) 2023-2024)";
