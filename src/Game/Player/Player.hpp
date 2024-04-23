@@ -50,32 +50,11 @@ namespace IW3SR
 		bool InAir();
 
 		/// <summary>
-		/// Initialize all players.
+		/// Check if the player is active.
 		/// </summary>
-		static void Initialize();
+		inline operator bool() const;
 
-		/// <summary>
-		/// Player connect.
-		/// </summary>
-		static void Connect();
-
-		/// <summary>
-		/// Player disconnect.
-		/// </summary>
-		/// <param name="localClientNum">Local client num.</param>
-		static void Disconnect(int localClientNum);
-
-		/// <summary>
-		/// Player respawn.
-		/// </summary>
-		static void Respawn();
-
-		/// <summary>
-		/// Predict player state.
-		/// </summary>
-		/// <param name="localClientNum">Local client num.</param>
-		static void Predict(int localClientNum);
-
+	public:
 		/// <summary>
 		/// Get all players.
 		/// </summary>
@@ -95,17 +74,7 @@ namespace IW3SR
 		/// <returns></returns>
 		static inline Ref<Player>& Self();
 
-		/// <summary>
-		/// Check if the player is active.
-		/// </summary>
-		inline operator bool() const;
-
 	private:
 		static inline std::array<Ref<Player>, 64> Players;
-
-		/// <summary>
-		/// Interpolate view angles for mover.
-		/// </summary>
-		static void InterpolateViewForMover();
 	};
 }

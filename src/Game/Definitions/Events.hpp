@@ -21,46 +21,46 @@ namespace IW3SR
 		EventRendererRender() = default;
 	};
 
-	class EventPlayerConnect : public Event
+	class EventClientConnect : public Event
 	{
-		EVENT_CLASS("player.connect")
-		EventPlayerConnect() = default;
+		EVENT_CLASS("client.connect")
+		EventClientConnect() = default;
 	};
 
-	class EventPlayerDisconnect : public Event
+	class EventClientDisconnect : public Event
 	{
-		EVENT_CLASS("player.disconnect")
-		EventPlayerDisconnect() = default;
+		EVENT_CLASS("client.disconnect")
+		EventClientDisconnect() = default;
 	};
 
-	class EventPlayerSpawn : public Event
+	class EventClientSpawn : public Event
 	{
-		EVENT_CLASS("player.spawn")
-		EventPlayerSpawn() = default;
+		EVENT_CLASS("client.spawn")
+		EventClientSpawn() = default;
 	};
 
-	class EventPlayerDeath : public Event
+	class EventClientDeath : public Event
 	{
-		EVENT_CLASS("player.death")
-		EventPlayerDeath() = default;
+		EVENT_CLASS("client.death")
+		EventClientDeath() = default;
 	};
 
-	class EventPlayerDamage : public Event
+	class EventClientDamage : public Event
 	{
-		EVENT_CLASS("player.damage")
-		EventPlayerDamage() = default;
+		EVENT_CLASS("client.damage")
+		EventClientDamage() = default;
 	};
 
-	class EventPlayerCommand : public Event
+	class EventClientCommand : public Event
 	{
-		EVENT_CLASS("player.command")
-		EventPlayerCommand() = default;
+		EVENT_CLASS("client.command")
+		EventClientCommand() = default;
 	};
 
-	class EventPlayerLoadPosition : public Event
+	class EventClientLoadPosition : public Event
 	{
-		EVENT_CLASS("player.load.position")
-		EventPlayerLoadPosition() = default;
+		EVENT_CLASS("client.load.position")
+		EventClientLoadPosition() = default;
 	};
 
 	class EventPMoveWalk : public Event

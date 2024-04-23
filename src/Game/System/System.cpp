@@ -45,7 +45,7 @@ namespace IW3SR
 
 		if (command == "openscriptmenu cj load")
 		{
-			EventPlayerLoadPosition event;
+			EventClientLoadPosition event;
 			Application::Get().Dispatch(event);
 		}
 		EventExecuteCommand event(command);

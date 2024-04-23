@@ -1,9 +1,11 @@
 #include "Core/System/Environment.hpp"
 #include "Core/System/Plugins.hpp"
 
+#include "Client/Client.hpp"
+#include "Player/Player.hpp"
+
 #include "Renderer/Modules/Modules.hpp"
 #include "Renderer/Settings/Settings.hpp"
-#include "Player/Player.hpp"
 
 #include "System/Console.hpp"
 #include "System/Patch.hpp"
@@ -17,7 +19,7 @@ void Application::Start()
 		
 	Patch::Initialize();
 	GConsole::Initialize();
-	Player::Initialize();
+	Client::Initialize();
 	Plugins::Initialize();
 }
 

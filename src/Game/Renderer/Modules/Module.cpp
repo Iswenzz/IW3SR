@@ -25,11 +25,11 @@ namespace IW3SR
 
 		EventDispatcher dispatcher(event);
 
-		dispatcher.Dispatch<EventPlayerConnect>(EVENT_BIND(OnConnect));
-		dispatcher.Dispatch<EventPlayerDisconnect>(EVENT_BIND(OnDisconnect));
-		dispatcher.Dispatch<EventPlayerSpawn>(EVENT_BIND(OnSpawn));
+		dispatcher.Dispatch<EventClientConnect>(EVENT_BIND(OnConnect));
+		dispatcher.Dispatch<EventClientDisconnect>(EVENT_BIND(OnDisconnect));
+		dispatcher.Dispatch<EventClientSpawn>(EVENT_BIND(OnSpawn));
+		dispatcher.Dispatch<EventClientLoadPosition>(EVENT_BIND_VOID(OnLoadPosition));
 
-		dispatcher.Dispatch<EventPlayerLoadPosition>(EVENT_BIND_VOID(OnLoadPosition));
 		dispatcher.Dispatch<EventPMoveWalk>(EVENT_BIND(OnWalkMove));
 		dispatcher.Dispatch<EventPMoveAir>(EVENT_BIND(OnAirMove));
 		dispatcher.Dispatch<EventPMoveFinish>(EVENT_BIND(OnFinishMove));
@@ -44,9 +44,9 @@ namespace IW3SR
 
 	void Module::OnMenu() { }
 
-	void Module::OnConnect(EventPlayerConnect& event) { }
-	void Module::OnDisconnect(EventPlayerDisconnect& event) { }
-	void Module::OnSpawn(EventPlayerSpawn& event) { }
+	void Module::OnConnect(EventClientConnect& event) { }
+	void Module::OnDisconnect(EventClientDisconnect& event) { }
+	void Module::OnSpawn(EventClientSpawn& event) { }
 
 	void Module::OnWalkMove(EventPMoveWalk& event) { }
 	void Module::OnAirMove(EventPMoveAir& event) { }

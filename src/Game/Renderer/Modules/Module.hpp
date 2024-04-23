@@ -55,22 +55,22 @@ namespace IW3SR
 		virtual void OnMenu();
 
 		/// <summary>
-		/// Player connect.
+		/// Client connect.
 		/// </summary>
 		/// <param name="event">The event.</param>
-		virtual void OnConnect(EventPlayerConnect& event);
+		virtual void OnConnect(EventClientConnect& event);
 
 		/// <summary>
-		/// Player disconnect.
+		/// Client disconnect.
 		/// </summary>
 		/// <param name="event">The event.</param>
-		virtual void OnDisconnect(EventPlayerDisconnect& event);
+		virtual void OnDisconnect(EventClientDisconnect& event);
 
 		/// <summary>
-		/// Player spawn.
+		/// Client spawn.
 		/// </summary>
 		/// <param name="event">The event.</param>
-		virtual void OnSpawn(EventPlayerSpawn& event);
+		virtual void OnSpawn(EventClientSpawn& event);
 
 		/// <summary>
 		/// Walk moving.

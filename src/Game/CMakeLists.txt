@@ -1,6 +1,7 @@
 add_library(IW3SR SHARED)
 add_library(IW3SR.API INTERFACE)
 
+add_subdirectory(Client)
 add_subdirectory(Definitions)
 add_subdirectory(Math)
 add_subdirectory(Player)

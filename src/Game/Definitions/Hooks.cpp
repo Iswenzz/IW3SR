@@ -5,7 +5,7 @@
 #include "Game/Renderer/Renderer.hpp"
 #include "Game/Renderer/Settings/Settings.hpp"
 
-#include "Game/Player/Player.hpp"
+#include "Game/Client/Client.hpp"
 #include "Game/System/Console.hpp"
 #include "Game/System/System.hpp"
 
@@ -33,16 +33,16 @@ namespace IW3SR
 		CG_DrawCrosshair_h(0x4311A0, GRenderer::Draw2D);
 
 	Hook<void(int localClientNum)>
-		CG_PredictPlayerState_Internal_h(0x447260, Player::Predict);
+		CG_PredictPlayerState_Internal_h(0x447260, Client::Predict);
 
 	Hook<void()>
-		CG_Respawn_h(0x445FA0, Player::Respawn);
+		CG_Respawn_h(0x445FA0, Client::Respawn);
 
 	Hook<void()>
-		CL_Connect_h(0x471050, Player::Connect);
+		CL_Connect_h(0x471050, Client::Connect);
 
 	Hook<void(int localClientNum)>
-		CL_Disconnect_h(0x4696B0, Player::Disconnect);
+		CL_Disconnect_h(0x4696B0, Client::Disconnect);
 
 	Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h(0x463A60, PMove::FinishMove);
