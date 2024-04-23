@@ -96,7 +96,7 @@ namespace IW3SR::UC
 			system(std::format(command, CMAKE_BINARY_DIR).c_str());
 		}
 		Plugins::Initialize();
-		EventPluginGame event;
+		EventPluginInitialize event;
 		Plugins::Dispatch(event);
 
 		IW3SR::Modules::Initialize();

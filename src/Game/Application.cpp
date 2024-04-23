@@ -11,10 +11,10 @@
 
 void Application::Start()
 {
-	Environment::Initialize();
+	Environment::Binary();
 	Environment::Load();
 	Dvar::Initialize();
-		
+
 	Patch::Initialize();
 	GConsole::Initialize();
 	Client::Initialize();

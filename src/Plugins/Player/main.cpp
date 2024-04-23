@@ -4,16 +4,16 @@
 #include "Modules/Lagometer.hpp"
 #include "Modules/Velocity.hpp"
 
-PLUGIN void Initialize(Plugin* plugin)
-{
-	plugin->SetInfos("sr.player", "Player");
-}
-
-PLUGIN void Game()
+PLUGIN void Initialize()
 {
 	UI::InitializeContext();
 
 	Modules::Load<FPS>();
 	Modules::Load<Lagometer>();
 	Modules::Load<Velocity>();
+}
+
+PLUGIN void Info(Plugin* plugin)
+{
+	plugin->SetInfos("sr.player", "Player");
 }
