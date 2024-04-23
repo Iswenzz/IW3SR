@@ -2,8 +2,6 @@
 #include "Core/System/Plugins.hpp"
 
 #include "Client/Client.hpp"
-#include "Player/Player.hpp"
-
 #include "Renderer/Modules/Modules.hpp"
 #include "Renderer/Settings/Settings.hpp"
 
