@@ -39,6 +39,12 @@ namespace IW3SR
 		EventClientSpawn() = default;
 	};
 
+	class EventClientPredict : public Event
+	{
+		EVENT_CLASS("client.predict")
+		EventClientPredict() = default;
+	};
+
 	class EventClientDeath : public Event
 	{
 		EVENT_CLASS("client.death")
