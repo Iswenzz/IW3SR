@@ -3,6 +3,7 @@ add_subdirectory(Settings)
 
 # Build
 target_link_libraries(Graphics PRIVATE IW3SR.API)
+target_include_directories(Graphics PRIVATE .)
 
 # Tree
 set_target_properties(Graphics PROPERTIES FOLDER Plugins)

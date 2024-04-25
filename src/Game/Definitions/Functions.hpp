@@ -68,6 +68,19 @@ namespace IW3SR
 	API extern Function<void(pmove_t* pm, pml_t* pml)>
 		PM_GroundTrace;
 
+	API extern Function<void(pmove_t* pm, int entity_num)>
+		PM_AddTouchEnt;
+
+	API extern Function<void(pmove_t* pm, trace_t* results, const float* start, const float* mins, const float* maxs, 
+		const float* end, int pass_entity_num, int content_mask)>
+		PM_PlayerTrace;
+
+	API extern Function<void(float* normal, float* velIn, float* velOut)>
+		PM_ProjectVelocity;
+
+	API extern Function<void(pmove_t* pm, pml_t* pml, bool gravity)> 
+		PM_StepSlideMove;
+
 	extern Function<void(const char* text, int maxChars, Font_s* font, float x, float y,
 		float xScale, float yScale, float rotation, int style, float* color)>
 		R_AddCmdDrawText;
@@ -97,6 +110,9 @@ namespace IW3SR
 	ASM_FUNCTION(BG_EvaluateTrajectory);
 	ASM_FUNCTION(Dvar_FindVar);
 	ASM_FUNCTION(Dvar_RegisterVariant);
+	ASM_FUNCTION(PM_AddTouchEnt);
+	ASM_FUNCTION(PM_PlayerTrace);
+	ASM_FUNCTION(PM_ProjectVelocity);
 	ASM_FUNCTION(R_AddCmdDrawText);
 	ASM_FUNCTION(R_AddCmdDrawStretchPic);
 	ASM_FUNCTION(R_SetGameTime);

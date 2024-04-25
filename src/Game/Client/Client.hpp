@@ -35,10 +35,5 @@ namespace IW3SR
 		/// </summary>
 		/// <param name="localClientNum">Local client num.</param>
 		static void Predict(int localClientNum);
-
-		/// <summary>
-		/// Interpolate view angles for mover.
-		/// </summary>
-		static void InterpolateViewForMover();
 	};
 }

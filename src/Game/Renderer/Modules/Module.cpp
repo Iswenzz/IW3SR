@@ -28,6 +28,7 @@ namespace IW3SR
 		dispatcher.Dispatch<EventClientConnect>(EVENT_BIND(OnConnect));
 		dispatcher.Dispatch<EventClientDisconnect>(EVENT_BIND(OnDisconnect));
 		dispatcher.Dispatch<EventClientSpawn>(EVENT_BIND(OnSpawn));
+		dispatcher.Dispatch<EventClientPredict>(EVENT_BIND(OnPredict));
 		dispatcher.Dispatch<EventClientLoadPosition>(EVENT_BIND_VOID(OnLoadPosition));
 
 		dispatcher.Dispatch<EventPMoveWalk>(EVENT_BIND(OnWalkMove));
@@ -47,6 +48,7 @@ namespace IW3SR
 	void Module::OnConnect(EventClientConnect& event) { }
 	void Module::OnDisconnect(EventClientDisconnect& event) { }
 	void Module::OnSpawn(EventClientSpawn& event) { }
+	void Module::OnPredict(EventClientPredict& event) { }
 
 	void Module::OnWalkMove(EventPMoveWalk& event) { }
 	void Module::OnAirMove(EventPMoveAir& event) { }

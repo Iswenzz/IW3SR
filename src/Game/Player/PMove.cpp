@@ -15,7 +15,8 @@ namespace IW3SR
 		EventPMoveWalk event(pm, pml);
 		Application::Get().Dispatch(event);
 
-		PM_WalkMove_h(pm, pml);
+		if (!event.PreventDefault)
+			PM_WalkMove_h(pm, pml);
 	}
 
 	void PMove::AirMove(pmove_t* pm, pml_t* pml)
@@ -23,7 +24,8 @@ namespace IW3SR
 		EventPMoveAir event(pm, pml);
 		Application::Get().Dispatch(event);
 
-		PM_AirMove_h(pm, pml);
+		if (!event.PreventDefault)
+			PM_AirMove_h(pm, pml);
 	}
 
 	void PMove::SetYaw(usercmd_s* cmd, const vec3& target)
@@ -70,6 +72,11 @@ namespace IW3SR
 		SetYaw(cmd, target);
 		SetPitch(cmd, target);
 		SetRoll(cmd, target);
+	}
+
+	void PMove::DisableSprint(playerState_s* ps) 
+	{
+		ps->sprintState.sprintButtonUpRequired = 1;
 	}
 
 	bool PMove::OnGround()

@@ -35,7 +35,7 @@ namespace IW3SR::Addons
 	void Velocity::Compute()
 	{
 		static bool prevOnGround = true;
-		int prevVelocity = vec2(pmove->ps->oldVelocity).Length();
+		int prevVelocity = VectorLength2(pmove->ps->oldVelocity);
 
 		bool onGround = PMove::OnGround();
 		bool landed = onGround && !prevOnGround;
@@ -51,7 +51,7 @@ namespace IW3SR::Addons
 		if (onGround)
 			GroundTime += UI::Get().DeltaTimeMS();
 
-		Value = vec2(pmove->ps->velocity).Length();
+		Value = VectorLength2(pmove->ps->velocity);
 		BufferValues.Add(Value);
 		BufferAverages.Add(Average);
 

@@ -73,6 +73,12 @@ namespace IW3SR
 		virtual void OnSpawn(EventClientSpawn& event);
 
 		/// <summary>
+		/// Client predict.
+		/// </summary>
+		/// <param name="event">The event.</param>
+		virtual void OnPredict(EventClientPredict& event);
+
+		/// <summary>
 		/// Walk moving.
 		/// </summary>
 		/// <param name="event">The event.</param>

@@ -64,6 +64,19 @@ namespace IW3SR
 	Function<void(pmove_t* pm, pml_t* pml)>
 		PM_GroundTrace = 0x410660;
 
+	Function<void(pmove_t* pm, int entity_num)>
+		PM_AddTouchEnt = ASM_LOAD(PM_AddTouchEnt);
+
+	Function<void(pmove_t* pm, trace_t* results, const float* start, const float* mins, const float* maxs, 
+		const float* end, int pass_entity_num, int content_mask)>
+		PM_PlayerTrace = ASM_LOAD(PM_PlayerTrace);
+
+	Function<void(float* normal, float* velIn, float* velOut)>
+		PM_ProjectVelocity = ASM_LOAD(PM_ProjectVelocity);
+
+	Function<void(pmove_t* pm, pml_t* pml, bool gravity)> 
+		PM_StepSlideMove = 0x4155C0;
+
 	Function<void(const char* text, int maxChars, Font_s* font, float x, float y,
 		float xScale, float yScale, float rotation, int style, float* color)>
 		R_AddCmdDrawText = ASM_LOAD(R_AddCmdDrawText);
@@ -143,6 +156,60 @@ namespace IW3SR
 		a.call(0x56C350);
 		a.mov(x86::dword_ptr(x86::esp, 0x40), x86::eax);
 		a.add(x86::esp, 0x24);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(PM_AddTouchEnt)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.movzx(x86::edi, x86::dword_ptr(x86::ebp, 0x0C)); // entity_num
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08));   // pm
+		a.call(0x40E270);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(PM_PlayerTrace)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x24));			 // content_mask
+		a.push(x86::dword_ptr(x86::ebp, 0x20));			 // pass_entity_num
+		a.push(x86::dword_ptr(x86::ebp, 0x1C));			 // end
+		a.push(x86::dword_ptr(x86::ebp, 0x18));			 // maxs
+		a.push(x86::dword_ptr(x86::ebp, 0x14));			 // mins
+		a.push(x86::dword_ptr(x86::ebp, 0x10));			 // start
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // results
+		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x08)); // pm
+		a.call(0x40E160);
+		a.add(x86::esp, 0x1C);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(PM_ProjectVelocity)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::edi, x86::dword_ptr(x86::ebp, 0x10)); // normal
+		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x0C)); // velIn
+		a.push(x86::dword_ptr(x86::ebp, 0x08));			 // velOut
+		a.call(0x40E330);
+		a.add(x86::esp, 4);
 
 		a.popad();
 		a.pop(x86::ebp);

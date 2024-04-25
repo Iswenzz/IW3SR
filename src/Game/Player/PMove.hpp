@@ -59,6 +59,12 @@ namespace IW3SR
 		static void SetAngles(usercmd_s* cmd, const vec3& target);
 
 		/// <summary>
+		/// Disable sprint.
+		/// </summary>
+		/// <param name="ps">Player state.</param>
+		static void DisableSprint(playerState_s* ps);
+
+		/// <summary>
 		/// Is player on ground.
 		/// </summary>
 		/// <returns></returns>

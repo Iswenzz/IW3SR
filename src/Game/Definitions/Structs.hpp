@@ -891,6 +891,24 @@ namespace IW3SR
 		char handler;
 	};
 
+	enum PMoveFlags
+	{
+		PMF_NONE = 0,
+		PMF_DUCKED = BIT(1),
+		PMF_MANTLE = BIT(2),
+		PMF_LADDER = BIT(3),
+		PMF_BACKWARDS_JUMP = BIT(5),
+		PMF_LADDER_DOWN = BIT(5) | BIT(3),
+		PMF_TIME_KNOCKBACK = BIT(8),
+		PMF_JUMP_HELD = BIT(10),
+		PMF_JUMPING = BIT(14),
+		PMF_PRONE = BIT(14) | BIT(0),
+		PMF_SPRINTING = BIT(15),
+		PMF_TOOK_DAMAGE = BIT(16),
+		PMF_MELEEING = BIT(17),
+		PMF_RESPAWNED = BIT(19)
+	};
+
 	enum MapType
 	{
 		MAPTYPE_NONE = 0x0,
@@ -2461,6 +2479,12 @@ namespace IW3SR
 		char material[64];
 		int surfaceFlags;
 		int contentFlags;
+	};
+
+	enum SurfaceFlags
+	{
+		SURF_NODAMAGE = BIT(0),
+		SURF_SLICK = BIT(1),
 	};
 
 	struct cNode_t
