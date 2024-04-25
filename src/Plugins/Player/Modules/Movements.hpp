@@ -79,6 +79,6 @@ namespace IW3SR::Addons
 		/// </summary>
 		void InterpolateViewForMover();
 
-		SERIALIZE_POLY(Movements, Module, UseInterpolateMovers)
+		SERIALIZE_POLY(Movements, Module, BhopKey, BhopText, UseBhop, UseInterpolateMovers)
 	};
 }

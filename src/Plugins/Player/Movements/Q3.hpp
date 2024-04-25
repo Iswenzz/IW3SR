@@ -52,7 +52,11 @@ namespace IW3SR::Addons
 		/// <param name="accel">The accel.</param>
 		static void AccelerateWalk(float* wishdir, pml_t* pml, playerState_s* ps, float wishspeed, float accel);
 
-
+		/// <summary>
+		/// Jump check.
+		/// </summary>
+		/// <param name="pm">Player move.</param>
+		/// <param name="pml">Player move library.</param>
 		static bool JumpCheck(pmove_t* pm, pml_t* pml);
 
 		/// <summary>

@@ -20,6 +20,9 @@ namespace IW3SR::Addons
 
 	void Movements::OnMenu()
 	{
+		ImGui::Button(ICON_FA_CIRCLE_INFO);
+		ImGui::Tooltip("Movements modifications also works if you are hosting a server with IW3SR.");
+		ImGui::SameLine();
 		if (ImGui::RadioButton("CoD4", reinterpret_cast<int*>(&Mode), 0))
 		{
 			Dvar::Set<int>("g_speed", 190);
@@ -52,11 +55,9 @@ namespace IW3SR::Addons
 			Dvar::Set<float>("bg_bobMax", 8.0f);
 			Dvar::Set<float>("friction", 5.5f);
 		}
-		ImGui::SameLine();
-		ImGui::TextWrapped("Movements modifications also works if you are hosting a server with IW3SR.");
 		ImGui::Checkbox("Interpolate Movers", &UseInterpolateMovers);
-
 		ImGui::Checkbox("Bhop", &UseBhop);
+		ImGui::SameLine();
 		ImGui::Keybind("Bhop Landing", &BhopKey.Key);
 		BhopText.Menu("Bhop Indicator");
 	}
