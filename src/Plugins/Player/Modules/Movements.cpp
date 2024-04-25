@@ -6,6 +6,8 @@ namespace IW3SR::Addons
 {
 	Movements::Movements() : Module("sr.player.movements", "Player", "Movements")
 	{
+		Dvar::Set<MovementMode>("pm_mode", MovementMode::COD4);
+
 		BhopText = Text("BHOP", FONT_SPACERANGER, -35, 8, 0.8, { 1, 1, 1, 1 });
 		BhopText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
 		BhopText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
@@ -21,7 +23,8 @@ namespace IW3SR::Addons
 	void Movements::OnMenu()
 	{
 		ImGui::Button(ICON_FA_CIRCLE_INFO);
-		ImGui::Tooltip("Movements modifications also works if you are hosting a server with IW3SR.");
+		ImGui::Tooltip("Host a server with IW3SR to enable movement modifications.");
+		ImGui::BeginDisabled(!Dvar::Get<bool>("sv_running"));
 		ImGui::SameLine();
 		if (ImGui::RadioButton("CoD4", reinterpret_cast<int*>(&Mode), 0))
 		{
@@ -64,8 +67,10 @@ namespace IW3SR::Addons
 			Dvar::Set<float>("bg_bobMax", 8.0f);
 			Dvar::Set<float>("friction", 5.5f);
 		}
+		ImGui::EndDisabled();
 		ImGui::Checkbox("Interpolate Movers", &UseInterpolateMovers);
 		ImGui::Checkbox("Bhop", &UseBhop);
+
 		ImGui::SameLine();
 		ImGui::Keybind("Bhop Landing", &BhopKey.Key);
 		BhopText.Menu("Bhop Indicator");
@@ -78,7 +83,7 @@ namespace IW3SR::Addons
 
 	void Movements::OnWalkMove(EventPMoveWalk& event)
 	{
-		switch (Mode)
+		switch (Dvar::Get<MovementMode>("pm_mode"))
 		{
 		case MovementMode::Q3:
 			event.PreventDefault = true;
@@ -89,7 +94,7 @@ namespace IW3SR::Addons
 
 	void Movements::OnAirMove(EventPMoveAir& event)
 	{
-		switch (Mode)
+		switch (Dvar::Get<MovementMode>("pm_mode"))
 		{
 		case MovementMode::Q3:
 			event.PreventDefault = true;

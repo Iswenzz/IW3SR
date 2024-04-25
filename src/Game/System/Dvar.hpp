@@ -9,9 +9,6 @@ namespace IW3SR
 	class API Dvar
 	{
 	public:
-		static inline dvar_s* sr_version;
-		static inline dvar_s* pm_mode;
-
 		/// <summary>
 		/// Initialize dvars.
 		/// </summary>
@@ -150,7 +147,7 @@ namespace IW3SR
 		{
 			const auto dvar = Find(name);
 			if (!dvar)
-				throw std::runtime_error("Dvar not found");
+				return T{};
 			return *reinterpret_cast<T*>(&dvar->current);
 		}
 
@@ -165,7 +162,7 @@ namespace IW3SR
 		{
 			const auto dvar = Find(name);
 			if (!dvar)
-				throw std::runtime_error("Dvar not found");
+				return;
 
 			*reinterpret_cast<T*>(&dvar->current) = value;
 			*reinterpret_cast<T*>(&dvar->latched) = value;
