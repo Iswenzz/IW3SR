@@ -30,3 +30,5 @@
 #define TS_UNUSED_5 0x9
 #define TS_UNUSED_6 0xA
 #define TS_WATER_MAP 0xB
+
+#define ENTITYNUM_NONE 1023

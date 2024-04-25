@@ -75,6 +75,12 @@ namespace IW3SR::Addons
 		void Bhop(usercmd_s* cmd);
 
 		/// <summary>
+		/// Set crash land penalty state.
+		/// </summary>
+		/// <param name="penalty">Slow down landing.</param>
+		void SetCrashLand(bool penalty);
+
+		/// <summary>
 		/// Interpolate view angles for mover.
 		/// </summary>
 		void InterpolateViewForMover();

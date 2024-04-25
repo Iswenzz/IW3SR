@@ -222,13 +222,13 @@ namespace IW3SR::Addons
 
 	bool Q3::JumpCheck(pmove_t* pm, pml_t* pml)
 	{
-		if (pm->ps->pm_flags & 0x80000)
+		if (pm->ps->pm_flags & PMF_RESPAWNED)
 			return false;
 		if (pm->ps->pm_flags & PMF_JUMP_HELD)
 			return false;
-		if (pm->ps->pm_flags & 4)
+		if (pm->ps->pm_flags & PMF_MANTLE)
 			return false;
-		if (pm->ps->pm_type >= 7)
+		if (pm->ps->pm_type >= PM_DEAD)
 			return false;
 		if (pm->ps->viewHeightTarget == 11 || pm->ps->viewHeightTarget == 40)
 			return false;
@@ -242,8 +242,8 @@ namespace IW3SR::Addons
 		pml->groundPlane = false;
 		pml->almostGroundPlane = false;
 		pml->walking = false;
-		pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFFE7F | 0x4000;
-		pm->ps->groundEntityNum = 1023;
+		pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFFE7F | PMF_JUMPING;
+		pm->ps->groundEntityNum = ENTITYNUM_NONE;
 		pm->ps->velocity[2] = jump_velocity;	 // Q3 = 270, COD4 = 250
 		pm->ps->jumpOriginZ = pm->ps->origin[2]; // What if we enable this for q3 too?
 		pm->ps->pm_time = CPM_PM_CLIPTIME;		 // Wallclip
@@ -498,7 +498,7 @@ namespace IW3SR::Addons
 		else
 		{
 			trace.allsolid = false;
-			if (pm->ps->pm_flags & 0x4000 && pm->ps->pm_time)
+			if (pm->ps->pm_flags & PMF_JUMPING && pm->ps->pm_time)
 			{
 				pm->ps->jumpOriginZ = 0.0f;
 				pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFBFFF;

@@ -25,6 +25,9 @@ namespace IW3SR::Addons
 		ImGui::SameLine();
 		if (ImGui::RadioButton("CoD4", reinterpret_cast<int*>(&Mode), 0))
 		{
+			SetCrashLand(true);
+
+			Dvar::Set<MovementMode>("pm_mode", MovementMode::COD4);
 			Dvar::Set<int>("g_speed", 190);
 			Dvar::Set<float>("g_gravity", 800.0f);
 			Dvar::Set<float>("jump_height", 39.0f);
@@ -36,6 +39,9 @@ namespace IW3SR::Addons
 		ImGui::SameLine();
 		if (ImGui::RadioButton("Q3", reinterpret_cast<int*>(&Mode), 1))
 		{
+			SetCrashLand(false);
+
+			Dvar::Set<MovementMode>("pm_mode", MovementMode::Q3);
 			Dvar::Set<int>("g_speed", 320);
 			Dvar::Set<float>("g_gravity", 800.0f);
 			Dvar::Set<float>("jump_height", 46.0f);
@@ -47,6 +53,9 @@ namespace IW3SR::Addons
 		ImGui::SameLine();
 		if (ImGui::RadioButton("CS", reinterpret_cast<int*>(&Mode), 2))
 		{
+			SetCrashLand(false);
+
+			Dvar::Set<MovementMode>("pm_mode", MovementMode::CS);
 			Dvar::Set<int>("g_speed", 190);
 			Dvar::Set<float>("g_gravity", 800.0f);
 			Dvar::Set<float>("jump_height", 39.0f);
@@ -105,7 +114,7 @@ namespace IW3SR::Addons
 
 		if (UseBhop && (cmd->buttons & BUTTON_JUMP))
 		{
-			usercmd_s* oldcmd = &clients->cmds[clients->cmdNumber & 0x7F];
+			usercmd_s* oldcmd = &clients->cmds[clients->cmdNumber - 1 & 0x7F];
 			if (cmd->buttons & BUTTON_JUMP && oldcmd->buttons & BUTTON_JUMP)
 				cmd->buttons -= BUTTON_JUMP;
 		}
@@ -114,6 +123,14 @@ namespace IW3SR::Addons
 			cmd->buttons |= BUTTON_JUMP;
 			UseBhopToggle = false;
 		}
+	}
+
+	void Movements::SetCrashLand(bool penalty)
+	{
+		if (penalty)
+			Memory::Write(0x410315, "D9 46 28 DD 05");
+		else
+			Memory::JMP(0x410315, 0x410333);
 	}
 
 	void Movements::InterpolateViewForMover()

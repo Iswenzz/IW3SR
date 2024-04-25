@@ -74,18 +74,18 @@ namespace IW3SR
 		SetRoll(cmd, target);
 	}
 
-	void PMove::DisableSprint(playerState_s* ps) 
+	void PMove::DisableSprint(playerState_s* ps)
 	{
 		ps->sprintState.sprintButtonUpRequired = 1;
 	}
 
 	bool PMove::OnGround()
 	{
-		return cgs->predictedPlayerState.groundEntityNum != 1023;
+		return cgs->predictedPlayerState.groundEntityNum != ENTITYNUM_NONE;
 	}
 
 	bool PMove::InAir()
 	{
-		return cgs->predictedPlayerState.groundEntityNum == 1023;
+		return cgs->predictedPlayerState.groundEntityNum == ENTITYNUM_NONE;
 	}
 }

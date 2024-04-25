@@ -9,6 +9,9 @@ namespace IW3SR
 	class API Dvar
 	{
 	public:
+		static inline dvar_s* sr_version;
+		static inline dvar_s* pm_mode;
+
 		/// <summary>
 		/// Initialize dvars.
 		/// </summary>

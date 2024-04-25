@@ -85,7 +85,7 @@ namespace IW3SR
 
 		a.popad();
 		a.pop(x86::ebp);
-		a.call(x86::dword_ptr(uintptr_t(&R_RenderAllLeftovers_h.Trampoline)));
+		a.call(ASM_TRAMPOLINE(R_RenderAllLeftovers_h));
 		a.ret();
 	}
 }
