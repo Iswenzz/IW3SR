@@ -91,6 +91,12 @@ namespace IW3SR
 		virtual void OnAirMove(EventPMoveAir& event);
 
 		/// <summary>
+		/// Ground trace.
+		/// </summary>
+		/// <param name="event">The event.</param>
+		virtual void OnGroundTrace(EventPMoveGroundTrace& event);
+
+		/// <summary>
 		/// Finish moving.
 		/// </summary>
 		/// <param name="event">The event.</param>

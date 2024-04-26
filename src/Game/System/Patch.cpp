@@ -91,6 +91,7 @@ namespace IW3SR
 		CL_FinishMove_h.Install();
 		PM_WalkMove_h.Install();
 		PM_AirMove_h.Install();
+		PM_GroundTrace_h.Install();
 		R_Init_h.Install();
 		R_RenderAllLeftovers_h.Install();
 		R_Shutdown_h.Install();
@@ -114,6 +115,7 @@ namespace IW3SR
 		CL_FinishMove_h.Remove();
 		PM_WalkMove_h.Remove();
 		PM_AirMove_h.Remove();
+		PM_GroundTrace_h.Remove();
 		R_Init_h.Remove();
 		R_RenderAllLeftovers_h.Remove();
 		R_Shutdown_h.Remove();

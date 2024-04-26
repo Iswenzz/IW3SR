@@ -24,6 +24,13 @@ namespace IW3SR::Addons
 		static void AirMove(pmove_t* pm, pml_t* pml);
 
 		/// <summary>
+		/// Ground trace.
+		/// </summary>
+		/// <param name="pm">Player move.</param>
+		/// <param name="pml">Player move library.</param>
+		static void GroundTrace(pmove_t* pm, pml_t* pml);
+
+		/// <summary>
 		/// Air control.
 		/// </summary>
 		/// <param name="pm">Player move.</param>

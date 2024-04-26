@@ -48,6 +48,9 @@ namespace IW3SR
 	extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_AirMove_h;
 
+	extern Hook<void(pmove_t* pm, pml_t* pml)>
+		PM_GroundTrace_h;
+
 	extern Hook<void()>
 		R_Init_h;
 

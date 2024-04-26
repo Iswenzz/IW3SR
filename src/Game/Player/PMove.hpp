@@ -31,6 +31,13 @@ namespace IW3SR
 		static void AirMove(pmove_t* pm, pml_t* pml);
 
 		/// <summary>
+		/// Ground trace.
+		/// </summary>
+		/// <param name="pm">The player movement.</param>
+		/// <param name="pml">The player movement library.</param>
+		static void GroundTrace(pmove_t* pm, pml_t* pml);
+
+		/// <summary>
 		/// Set yaw.
 		/// </summary>
 		/// <param name="cmd">The user command.</param>

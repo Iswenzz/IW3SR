@@ -53,6 +53,9 @@ namespace IW3SR
 	Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_AirMove_h(0x40F680, PMove::AirMove);
 
+	Hook<void(pmove_t* pm, pml_t* pml)>
+		PM_GroundTrace_h(0x410660, PMove::GroundTrace);
+
 	Hook<void()>
 		R_Init_h(0x5F4EE0, GRenderer::Initialize);
 

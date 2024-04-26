@@ -61,11 +61,17 @@ namespace IW3SR
 	Function<Material*(const char* material, int size)>
 		Material_RegisterHandle = 0x5F2A80;
 
-	Function<void(pmove_t* pm, pml_t* pml)>
-		PM_GroundTrace = 0x410660;
-
 	Function<void(pmove_t* pm, int entity_num)>
 		PM_AddTouchEnt = ASM_LOAD(PM_AddTouchEnt);
+
+	Function<bool(pmove_t *pm, pml_t *pml, trace_t *trace)>
+		PM_CorrectAllSolid = ASM_LOAD(PM_CorrectAllSolid);
+
+	Function<void(playerState_s* ps, pml_t* pml)>
+		PM_CrashLand = ASM_LOAD(PM_CrashLand);
+
+	Function<void(pmove_t* pm, pml_t* pml)>
+		PM_GroundTraceMissed = ASM_LOAD(PM_GroundTraceMissed);
 
 	Function<void(pmove_t* pm, trace_t* results, const float* start, const float* mins, const float* maxs, 
 		const float* end, int pass_entity_num, int content_mask)>
@@ -171,6 +177,56 @@ namespace IW3SR
 		a.movzx(x86::edi, x86::dword_ptr(x86::ebp, 0x0C)); // entity_num
 		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08));   // pm
 		a.call(0x40E270);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(PM_CorrectAllSolid)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x10));			 // trace
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // pml
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // pm
+		a.call(0x410370);
+		a.mov(x86::dword_ptr(x86::esp, 0x24), x86::eax);
+		a.add(x86::esp, 8);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(PM_CrashLand)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // pml
+		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x08)); // ps
+		a.call(0x40FFB0);
+		a.add(x86::esp, 4);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(PM_GroundTraceMissed)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // pml
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // pm
+		a.call(0x4104E0);
+		a.add(x86::esp, 4);
 
 		a.popad();
 		a.pop(x86::ebp);

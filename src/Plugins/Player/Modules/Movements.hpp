@@ -57,6 +57,12 @@ namespace IW3SR::Addons
 		void OnAirMove(EventPMoveAir& event) override;
 
 		/// <summary>
+		/// Ground trace.
+		/// </summary>
+		/// <param name="event">The event.</param>
+		void OnGroundTrace(EventPMoveGroundTrace& event) override;
+
+		/// <summary>
 		/// Finish moving.
 		/// </summary>
 		/// <param name="event">The event.</param>

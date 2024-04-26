@@ -65,11 +65,17 @@ namespace IW3SR
 	extern Function<Material*(const char* material, int size)>
 		Material_RegisterHandle;
 
-	API extern Function<void(pmove_t* pm, pml_t* pml)>
-		PM_GroundTrace;
-
 	API extern Function<void(pmove_t* pm, int entity_num)>
 		PM_AddTouchEnt;
+
+	API extern Function<bool(pmove_t *pm, pml_t *pml, trace_t *trace)>
+		PM_CorrectAllSolid;
+
+	API extern Function<void(playerState_s* ps, pml_t* pml)>
+		PM_CrashLand;
+
+	API extern Function<void(pmove_t* pm, pml_t* pml)>
+		PM_GroundTraceMissed;
 
 	API extern Function<void(pmove_t* pm, trace_t* results, const float* start, const float* mins, const float* maxs, 
 		const float* end, int pass_entity_num, int content_mask)>
@@ -111,6 +117,9 @@ namespace IW3SR
 	ASM_FUNCTION(Dvar_FindVar);
 	ASM_FUNCTION(Dvar_RegisterVariant);
 	ASM_FUNCTION(PM_AddTouchEnt);
+	ASM_FUNCTION(PM_CorrectAllSolid);
+	ASM_FUNCTION(PM_CrashLand);
+	ASM_FUNCTION(PM_GroundTraceMissed);
 	ASM_FUNCTION(PM_PlayerTrace);
 	ASM_FUNCTION(PM_ProjectVelocity);
 	ASM_FUNCTION(R_AddCmdDrawText);

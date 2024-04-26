@@ -28,6 +28,15 @@ namespace IW3SR
 			PM_AirMove_h(pm, pml);
 	}
 
+	void PMove::GroundTrace(pmove_t* pm, pml_t* pml)
+	{
+		EventPMoveGroundTrace event(pm, pml);
+		Application::Get().Dispatch(event);
+
+		if (!event.PreventDefault)
+			PM_GroundTrace_h(pm, pml);
+	}
+
 	void PMove::SetYaw(usercmd_s* cmd, const vec3& target)
 	{
 		auto deltas = cgs->predictedPlayerState.delta_angles;

@@ -149,6 +149,72 @@ namespace IW3SR::Addons
 		StepSlideMove(pm, pml, true);
 	}
 
+	void Q3::GroundTrace(pmove_t* pm, pml_t* pml)
+	{
+		vec3 point;
+		trace_t trace = {};
+
+		point[0] = pm->ps->origin[0];
+		point[1] = pm->ps->origin[1];
+		point[2] = pm->ps->origin[2] - 0.25f;
+
+		PM_PlayerTrace(pm, &trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+		pml->groundTrace = trace;
+
+		// Do something corrective if the trace starts in a solid...
+		if (trace.allsolid && !PM_CorrectAllSolid(pm, pml, &trace))
+			return;
+
+		// If the trace didn't hit anything, we are in free fall
+		if (trace.fraction == 1.0f)
+		{
+			PM_GroundTraceMissed(pm, pml);
+			pml->groundPlane = false;
+			pml->walking = false;
+			return;
+		}
+		// Check if getting thrown off the ground
+		if (pm->ps->velocity[2] > 0.0f && DotProduct3(pm->ps->velocity, trace.normal) > 10.0f)
+		{
+			// Go into jump animation
+			if (pm->cmd.forwardmove >= 0)
+				pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+			else
+				pm->ps->pm_flags |= PMF_BACKWARDS_JUMP;
+
+			pm->ps->groundEntityNum = ENTITYNUM_NONE;
+			pml->groundPlane = false;
+			pml->walking = false;
+			return;
+		}
+		// Slopes that are too steep will not be considered onground
+		if (trace.normal[2] < 0.7f)
+		{
+			pm->ps->groundEntityNum = ENTITYNUM_NONE;
+			pml->groundPlane = true;
+			pml->walking = false;
+			return;
+		}
+		pml->groundPlane = true;
+		pml->walking = true;
+
+		if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
+			PM_CrashLand(pm->ps, pml);
+
+		switch (trace.hitType)
+		{
+		case TRACE_HITTYPE_ENTITY:
+			pm->ps->groundEntityNum = trace.hitId;
+			break;
+		case TRACE_HITTYPE_DYNENT_MODEL:
+		case TRACE_HITTYPE_DYNENT_BRUSH:
+			pm->ps->groundEntityNum = 1022;
+			break;
+		default:
+			pm->ps->groundEntityNum = 1023;
+		}
+	}
+
 	// https://github.com/xzero450/revolution/blob/8d0b37ba438e65e19d5a5e77f5b9c2076b7900bc/game/bg_promode.c#L303
 	void Q3::AirControl(pmove_t* pm, pml_t* pml, vec3_t wishdir_b, float wishspeed_b)
 	{

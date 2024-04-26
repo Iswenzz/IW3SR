@@ -85,6 +85,14 @@ namespace IW3SR
 		pml_t* pml;
 	};
 
+	class EventPMoveGroundTrace : public Event
+	{
+		EVENT_CLASS("pmove.ground.trace")
+		EventPMoveGroundTrace(pmove_t* pm, pml_t* pml) : pm(pm), pml(pml) { }
+		pmove_t* pm;
+		pml_t* pml;
+	};
+
 	class EventPMoveFinish : public Event
 	{
 		EVENT_CLASS("pmove.finish")

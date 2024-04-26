@@ -107,6 +107,17 @@ namespace IW3SR::Addons
 		}
 	}
 
+	void Movements::OnGroundTrace(EventPMoveGroundTrace& event)
+	{
+		switch (Dvar::Get<MovementMode>("pm_mode"))
+		{
+		case MovementMode::Q3:
+			event.PreventDefault = true;
+			Q3::GroundTrace(event.pm, event.pml);
+			break;
+		}
+	}
+
 	void Movements::OnFinishMove(EventPMoveFinish& event)
 	{
 		Bhop(event.cmd);
