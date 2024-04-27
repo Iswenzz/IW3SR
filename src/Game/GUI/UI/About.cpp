@@ -12,10 +12,13 @@ namespace IW3SR::UC
 
 		constexpr auto IW3SR = "IW3SR";
 		constexpr auto markdown = R"(
-A Call of Duty 4 client modification.
+IW3SR is a client modification for Call of Duty 4 powered by IzEngine.
+Enhance gameplay experience and performance through a range of improvements, features such as an in game GUI with themes,
+a plugin system to reload modules at runtime, interpolation of rotating platforms, Q3 (CPM) and CS movements, shaders playing offline,
+single player maps, a velocity meter and more.
 
-[https://github.com/Iswenzz/IW3SR](https://github.com/Iswenzz/IW3SR)
-IW3SR (ent) 2023-2024)";
+IW3SR (c) 2023-2024
+Iswenzz Dualite Xoxor)";
 
 		Begin();
 		ImGui::PushFont(UI::Get().Themes.H1);
