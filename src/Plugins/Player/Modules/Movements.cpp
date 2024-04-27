@@ -6,7 +6,7 @@ namespace IW3SR::Addons
 {
 	Movements::Movements() : Module("sr.player.movements", "Player", "Movements")
 	{
-		Dvar::Set<MovementMode>("pm_mode", MovementMode::COD4);
+		Dvar::RegisterInt("pm_mode", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Movement mode.", 0, 0, 2);
 
 		BhopText = Text("BHOP", FONT_SPACERANGER, -35, 8, 0.8, { 1, 1, 1, 1 });
 		BhopText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
@@ -23,7 +23,7 @@ namespace IW3SR::Addons
 	void Movements::OnMenu()
 	{
 		ImGui::Button(ICON_FA_CIRCLE_INFO);
-		ImGui::Tooltip("Host a server with IW3SR to enable movement modifications.");
+		ImGui::Tooltip("Use devmap to enable movement modifications.");
 		ImGui::BeginDisabled(!Dvar::Get<bool>("sv_running"));
 		ImGui::SameLine();
 		if (ImGui::RadioButton("CoD4", reinterpret_cast<int*>(&Mode), 0))
