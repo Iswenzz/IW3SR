@@ -80,6 +80,7 @@ namespace IW3SR
 		CreateWindowExA_h.Install();
 		Direct3DCreate9_h.Install();
 		MainWndProc_h.Install();
+		Vsnprintf_h.Install();
 
 		Cmd_ExecuteSingleCommand_h.Install();
 		Com_PrintMessage_h.Install();
@@ -104,6 +105,7 @@ namespace IW3SR
 		CreateWindowExA_h.Remove();
 		Direct3DCreate9_h.Remove();
 		MainWndProc_h.Remove();
+		Vsnprintf_h.Remove();
 
 		Cmd_ExecuteSingleCommand_h.Remove();
 		Com_PrintMessage_h.Remove();

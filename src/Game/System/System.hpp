@@ -39,6 +39,16 @@ namespace IW3SR
 		static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 		/// <summary>
+		/// Vsnprintf call.
+		/// </summary>
+		/// <param name="dest">The buffer dest.</param>
+		/// <param name="size">The buffer size.</param>
+		/// <param name="fmt">The format value.</param>
+		/// <param name="va">Arguments list.</param>
+		/// <returns></returns>
+		static int Vsnprintf(char *dest, size_t size, const char *fmt, va_list va);
+
+		/// <summary>
 		/// Execute single command.
 		/// </summary>
 		/// <param name="localClientNum">The local client number.</param>
