@@ -31,9 +31,11 @@ namespace IW3SR
 			if (Keyboard::IsPressed(Key_Escape))
 				UI.Open = false;
 			ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+			s_wmv->mouseInitialized = false;
 			io.MouseDrawCursor = true;
 			return true;
 		}
+		s_wmv->mouseInitialized = true;
 		io.MouseDrawCursor = false;
 		return MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
