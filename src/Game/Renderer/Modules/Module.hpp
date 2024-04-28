@@ -111,7 +111,7 @@ namespace IW3SR
 		/// Execute command.
 		/// </summary>
 		/// <param name="event">The event.</param>
-		virtual void OnExecuteCommand(EventExecuteCommand& event);
+		virtual void OnExecuteCommand(EventClientCommand& event);
 
 		/// <summary>
 		/// Menu response.

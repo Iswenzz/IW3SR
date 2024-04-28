@@ -36,7 +36,7 @@ namespace IW3SR
 		dispatcher.Dispatch<EventPMoveGroundTrace>(EVENT_BIND(OnGroundTrace));
 		dispatcher.Dispatch<EventPMoveFinish>(EVENT_BIND(OnFinishMove));
 
-		dispatcher.Dispatch<EventExecuteCommand>(EVENT_BIND(OnExecuteCommand));
+		dispatcher.Dispatch<EventClientCommand>(EVENT_BIND(OnExecuteCommand));
 		dispatcher.Dispatch<EventScriptMenuResponse>(EVENT_BIND(OnMenuResponse));
 
 		dispatcher.Dispatch<EventRenderer3D>(EVENT_BIND(OnDraw3D));
@@ -57,7 +57,7 @@ namespace IW3SR
 	void Module::OnFinishMove(EventPMoveFinish& event) { }
 	void Module::OnLoadPosition() { }
 
-	void Module::OnExecuteCommand(EventExecuteCommand& event) { }
+	void Module::OnExecuteCommand(EventClientCommand& event) { }
 	void Module::OnMenuResponse(EventScriptMenuResponse& event) { }
 
 	void Module::OnDraw3D(EventRenderer3D& event) { }

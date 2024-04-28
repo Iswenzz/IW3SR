@@ -69,7 +69,7 @@ namespace IW3SR
 			EventClientLoadPosition event;
 			Application::Get().Dispatch(event);
 		}
-		EventExecuteCommand event(command);
+		EventClientCommand event(command);
 		Application::Get().Dispatch(event);
 	}
 

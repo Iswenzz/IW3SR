@@ -60,7 +60,8 @@ namespace IW3SR
 	class EventClientCommand : public Event
 	{
 		EVENT_CLASS("client.command")
-		EventClientCommand() = default;
+		EventClientCommand(std::string command) : command(command) { }
+		std::string command;
 	};
 
 	class EventClientLoadPosition : public Event
@@ -106,12 +107,5 @@ namespace IW3SR
 		EventScriptMenuResponse(std::string menu, std::string response) : menu(menu), response(response) { }
 		std::string menu;
 		std::string response;
-	};
-
-	class EventExecuteCommand : public Event
-	{
-		EVENT_CLASS("execute.command")
-		EventExecuteCommand(std::string command) : command(command) { }
-		std::string command;
 	};
 }
