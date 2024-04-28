@@ -83,8 +83,8 @@ namespace IW3SR::Addons
 		/// <summary>
 		/// Set crash land penalty state.
 		/// </summary>
-		/// <param name="penalty">Slow down landing.</param>
-		void SetCrashLand(bool penalty);
+		/// <param name="state">Skip crash land slow down.</param>
+		void SetCrashLand(bool state);
 
 		/// <summary>
 		/// Interpolate view angles for mover.

@@ -141,11 +141,10 @@ namespace IW3SR::Addons
 		}
 	}
 
-	void Movements::SetCrashLand(bool penalty)
+	void Movements::SetCrashLand(bool state)
 	{
-		if (penalty)
-			Memory::Write(0x410315, "D9 46 28 DD 05");
-		else
+		Memory::Write(0x410315, "D9 46 28 DD 05");
+		if (!state)
 			Memory::JMP(0x410315, 0x410333);
 	}
 
