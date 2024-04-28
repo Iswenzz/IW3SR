@@ -10,14 +10,14 @@ if(MSVC)
 	set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD true)
 endif()
 
-# Application
-set(APPLICATION_ID "iw3sr")
-
 # Path
 if(NOT DEFINED ENV{COD4})
-	message(FATAL_ERROR "ERROR: COD4 environment variable is not defined. Please set it to the root directory of your CoD4 installation.")
+	message(FATAL_ERROR "ERROR: COD4 environment variable is required to locate the game directory.")
 endif()
 file(TO_CMAKE_PATH $ENV{COD4} COD4)
+
+# Application
+set(APPLICATION_ID "iw3sr")
 
 # Build
 add_subdirectory(engine)
