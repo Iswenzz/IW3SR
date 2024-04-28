@@ -155,7 +155,7 @@ namespace IW3SR::Addons
 			return 0.0f;
 
 		float total = sqrt(static_cast<float>(cmd->rightmove * cmd->rightmove + cmd->forwardmove * cmd->forwardmove));
-		float scale = static_cast<float>(ps->speed) * static_cast<float>(max) / total * 127.0f;
+		float scale = static_cast<float>(ps->speed * max) / (total * 127.0f);
 
 		if (ps->pm_flags & PMF_LEAN || 0.0f != ps->leanf)
 			scale *= 0.4f;
