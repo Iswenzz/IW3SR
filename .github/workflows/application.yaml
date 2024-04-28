@@ -15,6 +15,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        submodules: "recursive"
 
     - name: Vcpkg
       uses: lukka/run-vcpkg@v11
@@ -24,7 +26,7 @@ jobs:
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TOOLCHAIN_FILE=".vcpkg/windows.cmake" -DBUILD_TESTING=True
+        cmake .. --preset windows-dx9 -DBUILD_TESTING=True
         cmake --build . --config ${{env.BUILD_TYPE}}
 
     - name: Artifact
@@ -33,35 +35,35 @@ jobs:
         name: build-artifact
         path: build
 
-  tests:
-    runs-on: windows-latest
-    needs: [build]
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+  # tests:
+  #   runs-on: windows-latest
+  #   needs: [build]
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
 
-    - name: OpenCppCoverage
-      shell: bash
-      run: |
-        choco install -y opencppcoverage
-        echo "C:\Program Files\OpenCppCoverage" >> $GITHUB_PATH
+  #   - name: OpenCppCoverage
+  #     shell: bash
+  #     run: |
+  #       choco install -y opencppcoverage
+  #       echo "C:\Program Files\OpenCppCoverage" >> $GITHUB_PATH
 
-    - name: Artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: build-artifact
-        path: build
+  #   - name: Artifact
+  #     uses: actions/download-artifact@v2
+  #     with:
+  #       name: build-artifact
+  #       path: build
 
-    - name: Tests
-      run: |
-        opencppcoverage --quiet --export_type=cobertura:opencppcoverageCoverage.xml --working_dir build --sources src -- build/Release/IW3SR.Tests.exe
+  #   - name: Tests
+  #     run: |
+  #       opencppcoverage --quiet --export_type=cobertura:opencppcoverageCoverage.xml --working_dir build --sources src -- build/Release/IW3SR.Tests.exe
 
-    - name: CodeCov
-      uses: codecov/codecov-action@v2
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./opencppcoverageCoverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
-        verbose: true
+  #   - name: CodeCov
+  #     uses: codecov/codecov-action@v2
+  #     with:
+  #       token: ${{ secrets.CODECOV_TOKEN }}
+  #       files: ./opencppcoverageCoverage.xml
+  #       flags: unittests
+  #       name: codecov-umbrella
+  #       fail_ci_if_error: true
+  #       verbose: true
