@@ -45,11 +45,6 @@ namespace IW3SR::Addons
 		virtual ~Velocity() = default;
 
 		/// <summary>
-		/// Compute values.
-		/// </summary>
-		void Compute();
-
-		/// <summary>
 		/// Menu drawing.
 		/// </summary>
 		void OnMenu() override;
@@ -58,6 +53,12 @@ namespace IW3SR::Addons
 		/// Render frame.
 		/// </summary>
 		void OnRender() override;
+
+	private:
+		/// <summary>
+		/// Compute values.
+		/// </summary>
+		void Compute();
 
 		SERIALIZE_POLY(Velocity, Module, VelocityText, AverageText, MaxText, GroundText, Graph, KeyReset, ShowVelocity,
 			ShowAverage, ShowMax, ShowGround, ShowGraph)

@@ -1,20 +1,25 @@
 #include "Q3.hpp"
 
+#define pm_duck_scale 0.5f
+#define pm_prone_scale 0.25f
+#define pm_accelerate 15.0f
+#define pm_slick_accelerate 15.0f
+#define pm_crouch_accelerate 15.0f
+#define pm_prone_accelerate 10.0f
+
+#define cpm_air_control 150.0f
+#define cpm_air_accelerate 1.0f
+#define cpm_airstop_accelerate 3.0f // 2.5
+#define cpm_strafe_accelerate 70.0f
+
 #define OVERCLIP 1.001f
-#define MAX_CLIP_PLANES 5
 #define CPM_PM_CLIPTIME 200
+#define MAX_CLIP_PLANES 5
 
 namespace IW3SR::Addons
 {
 	void Q3::WalkMove(pmove_t* pm, pml_t* pml)
 	{
-		const auto pm_duck_scale = 0.5f;
-		const auto pm_prone_scale = 0.25f;
-		const auto pm_accelerate = 15.0f;
-		const auto pm_slick_accelerate = 15.0f;
-		const auto pm_crouch_accelerate = 15.0f;
-		const auto pm_prone_accelerate = 10.0f;
-
 		if (JumpCheck(pm, pml))
 		{
 			AirMove(pm, pml);
@@ -60,15 +65,13 @@ namespace IW3SR::Addons
 			wishspeed = speed * pm_prone_scale;
 
 		// When a player gets hit, he temporarily loses full control, which allows him to be moved a bit
-		float accelerate;
+		float accelerate = pm_accelerate;
 		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || pm->ps->pm_flags & PMF_TIME_KNOCKBACK)
 			accelerate = pm_slick_accelerate;
 		else if (pm->ps->pm_flags & PMF_DUCKED)
 			accelerate = pm_crouch_accelerate;
 		else if (pm->ps->pm_flags & PMF_PRONE)
 			accelerate = pm_prone_accelerate;
-		else
-			accelerate = pm_accelerate;
 
 		AccelerateWalk(wishdir, pml, pm->ps, wishspeed, accelerate);
 
@@ -93,9 +96,6 @@ namespace IW3SR::Addons
 
 	void Q3::AirMove(pmove_t* pm, pml_t* pml)
 	{
-		const auto cpm_airstopAccelerate = 3.0f; // 2.5
-		const auto cpm_strafeAccelerate = 70.0f;
-
 		const auto ps = pm->ps;
 		float fmove, smove, wishspeed, scale = 1.0f;
 		vec3 wishvel, wishdir;
@@ -116,7 +116,7 @@ namespace IW3SR::Addons
 		Math::VectorNormalize3(pml->right);
 
 		// Determine x and y parts of velocity
-		for (auto i = 0; i < 2; i++)
+		for (int i = 0; i < 2; i++)
 			wishvel[i] = pml->forward[i] * fmove + pml->right[i] * smove;
 
 		wishvel[2] = 0; // Zero out z part of velocity
@@ -128,7 +128,7 @@ namespace IW3SR::Addons
 		const float wishspeed2 = wishspeed;
 
 		if (DotProduct3(ps->velocity, wishdir) < 0)
-			accel = cpm_airstopAccelerate;
+			accel = cpm_airstop_accelerate;
 		else
 			accel = 1.0f;
 
@@ -137,7 +137,7 @@ namespace IW3SR::Addons
 		{
 			if (wishspeed > 30.0f)
 				wishspeed = 30.0f;
-			accel = cpm_strafeAccelerate;
+			accel = cpm_strafe_accelerate;
 		}
 		Accelerate(ps, pml, wishdir, wishspeed, accel);
 		AirControl(pm, pml, wishdir, wishspeed2);
@@ -224,23 +224,20 @@ namespace IW3SR::Addons
 		if ((ps->movementDir && ps->movementDir != 4) || wishspeed_b == 0.0f)
 			return;
 
-		const auto cpm_airControl = 150.0f;
-		const auto cpm_airAccelerate = 1.0f;
-
 		const float zspeed = ps->velocity[2];
 		ps->velocity[2] = 0.0f;
 
 		const float speed = Math::VectorNormalize3(ps->velocity);
 		const float dot = DotProduct3(ps->velocity, wishdir_b);
-		float k = 32.0f * cpm_airControl * dot * dot * pml->frametime * cpm_airAccelerate;
+		float k = 32.0f * cpm_air_control * dot * dot * pml->frametime * cpm_air_accelerate;
 
 		if (dot > 0)
 		{
-			for (auto i = 0; i < 2; i++)
+			for (int i = 0; i < 2; i++)
 				ps->velocity[i] = ps->velocity[i] * speed + wishdir_b[i] * k;
 			Math::VectorNormalize3(ps->velocity);
 		}
-		for (auto i = 0; i < 2; i++)
+		for (int i = 0; i < 2; i++)
 			ps->velocity[i] *= speed;
 		ps->velocity[2] = zspeed;
 	}
@@ -258,7 +255,7 @@ namespace IW3SR::Addons
 		if (accelspeed > addspeed)
 			accelspeed = addspeed;
 
-		for (auto i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++)
 			ps->velocity[i] += accelspeed * wishdir_b[i];
 	}
 
@@ -282,7 +279,7 @@ namespace IW3SR::Addons
 		if (accelspeed > addspeed)
 			accelspeed = addspeed;
 
-		for (auto i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++)
 			ps->velocity[i] += accelspeed * wishdir[i];
 	}
 

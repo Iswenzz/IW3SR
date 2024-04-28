@@ -1,11 +1,15 @@
 #include "CS.hpp"
 
+#define sv_maxspeed 320.0f
+#define pm_accel 100.0f
+#define pm_airspeedcap 30.0f
+
+#define SURF_SLOPE_NORMAL 0.7f
+
 namespace IW3SR::Addons
 {
 	void CS::AirMove(pmove_t* pm, pml_t* pml)
 	{
-		const auto sv_maxspeed = 320.0f;
-
 		const auto ps = pm->ps;
 		float fmove, smove, wishspeed, scale = 1.0f;
 		vec3 wishvel, wishdir;
@@ -22,7 +26,7 @@ namespace IW3SR::Addons
 		Math::VectorNormalize3(pml->right);
 
 		// Determine x and y parts of velocity
-		for (auto i = 0; i < 2; i++)
+		for (int i = 0; i < 2; i++)
 			wishvel[i] = pml->forward[i] * fmove + pml->right[i] * smove;
 
 		wishvel[2] = 0; // Zero out z part of velocity
@@ -44,30 +48,25 @@ namespace IW3SR::Addons
 	{
 		float wishspeed2 = wishspeed;
 
-		const auto accel = 100.0f;
-		const auto airspeedcap = 30.0f;
-
-		if (wishspeed2 > airspeedcap)
-			wishspeed2 = airspeedcap;
+		if (wishspeed2 > pm_airspeedcap)
+			wishspeed2 = pm_airspeedcap;
 
 		const float currentspeed = DotProduct3(ps->velocity, wishdir);
 		const float addspeed = wishspeed2 - currentspeed;
 
 		if (addspeed > 0)
 		{
-			float accelspeed = pml->frametime * accel * wishspeed * 1.0f; // * surfacefriction
+			float accelspeed = pml->frametime * pm_accel * wishspeed * 1.0f; // * surfacefriction
 			if (accelspeed > addspeed)
 				accelspeed = addspeed;
 
-			for (auto i = 0; i < 3; i++)
+			for (int i = 0; i < 3; i++)
 				ps->velocity[i] += wishdir[i] * accelspeed;
 		}
 	}
 
 	void CS::TryPlayerMove(pmove_t* pm, pml_t* pml)
 	{
-		const float SURF_SLOPE_NORMAL = 0.7f;
-
 		vec3 end;
 		trace_t trace = {};
 		const auto ps = pm->ps;
@@ -95,7 +94,7 @@ namespace IW3SR::Addons
 		// Determine how far along plane to slide based on incoming direction.
 		const float backoff = DotProduct3(in, normal) * overbounce;
 
-		for (auto i = 0; i < 3; i++)
+		for (int i = 0; i < 3; i++)
 			out[i] = in[i] - (normal[i] * backoff);
 
 		// Iterate once to make sure we aren't still moving through the plane

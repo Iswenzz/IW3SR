@@ -32,6 +32,33 @@ namespace IW3SR::Addons
 		KeyReset = Keyboard(Key_R);
 	}
 
+	void Velocity::OnMenu()
+	{
+		ImGui::Checkbox("Velocity", &ShowVelocity);
+		ImGui::Checkbox("Average", &ShowAverage);
+		ImGui::Checkbox("Max", &ShowMax);
+
+		if (ShowMax)
+		{
+			ImGui::SameLine();
+			ImGui::Keybind("Reset", &KeyReset.Key);
+		}
+		ImGui::Checkbox("Ground", &ShowGround);
+
+		if (ShowGround)
+		{
+			ImGui::SameLine();
+			ImGui::Checkbox("Time", &ShowGroundTime);
+		}
+		ImGui::Checkbox("Display Graph", &ShowGraph);
+
+		VelocityText.Menu("Velocity");
+		AverageText.Menu("Average");
+		MaxText.Menu("Max");
+		GroundText.Menu("Ground");
+		Graph.Menu("Graph");
+	}
+
 	void Velocity::Compute()
 	{
 		static bool prevOnGround = true;
@@ -63,33 +90,6 @@ namespace IW3SR::Addons
 		BufferGrounds.Add(Ground < Max ? Ground : Max);
 
 		prevOnGround = onGround;
-	}
-
-	void Velocity::OnMenu()
-	{
-		ImGui::Checkbox("Velocity", &ShowVelocity);
-		ImGui::Checkbox("Average", &ShowAverage);
-		ImGui::Checkbox("Max", &ShowMax);
-
-		if (ShowMax)
-		{
-			ImGui::SameLine();
-			ImGui::Keybind("Reset", &KeyReset.Key);
-		}
-		ImGui::Checkbox("Ground", &ShowGround);
-
-		if (ShowGround)
-		{
-			ImGui::SameLine();
-			ImGui::Checkbox("Time", &ShowGroundTime);
-		}
-		ImGui::Checkbox("Display Graph", &ShowGraph);
-
-		VelocityText.Menu("Velocity");
-		AverageText.Menu("Average");
-		MaxText.Menu("Max");
-		GroundText.Menu("Ground");
-		Graph.Menu("Graph");
 	}
 
 	void Velocity::OnRender()

@@ -62,7 +62,10 @@ namespace IW3SR
 		float r, float g, int b, int a, int null4, int null5)>
 		Dvar_RegisterVariantColor;
 
-	extern Function<Material*(const char* material, int size)>
+	API extern Function<bool(pmove_t* pm, pml_t* pml)>
+		Jump_Check;
+
+	API extern Function<Material*(const char* material, int size)>
 		Material_RegisterHandle;
 
 	API extern Function<void(pmove_t* pm, int entity_num)>
@@ -74,17 +77,23 @@ namespace IW3SR
 	API extern Function<void(playerState_s* ps, pml_t* pml)>
 		PM_CrashLand;
 
+	API extern Function<void(playerState_s* ps, pml_t* pml)>
+		PM_Friction;
+
+	API extern Function<void(pmove_t* pm, pml_t* pml)>
+		PM_GroundTrace;
+
 	API extern Function<void(pmove_t* pm, pml_t* pml)>
 		PM_GroundTraceMissed;
 
-	API extern Function<void(pmove_t* pm, trace_t* results, const float* start, const float* mins, const float* maxs, 
+	API extern Function<void(pmove_t* pm, trace_t* results, const float* start, const float* mins, const float* maxs,
 		const float* end, int pass_entity_num, int content_mask)>
 		PM_PlayerTrace;
 
 	API extern Function<void(float* normal, float* velIn, float* velOut)>
 		PM_ProjectVelocity;
 
-	API extern Function<void(pmove_t* pm, pml_t* pml, bool gravity)> 
+	API extern Function<void(pmove_t* pm, pml_t* pml, bool gravity)>
 		PM_StepSlideMove;
 
 	extern Function<void(const char* text, int maxChars, Font_s* font, float x, float y,
@@ -116,9 +125,11 @@ namespace IW3SR
 	ASM_FUNCTION(BG_EvaluateTrajectory);
 	ASM_FUNCTION(Dvar_FindVar);
 	ASM_FUNCTION(Dvar_RegisterVariant);
+	ASM_FUNCTION(Jump_Check);
 	ASM_FUNCTION(PM_AddTouchEnt);
 	ASM_FUNCTION(PM_CorrectAllSolid);
 	ASM_FUNCTION(PM_CrashLand);
+	ASM_FUNCTION(PM_Friction);
 	ASM_FUNCTION(PM_GroundTraceMissed);
 	ASM_FUNCTION(PM_PlayerTrace);
 	ASM_FUNCTION(PM_ProjectVelocity);

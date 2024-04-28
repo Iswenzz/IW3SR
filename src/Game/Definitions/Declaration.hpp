@@ -30,7 +30,7 @@ namespace IW3SR
 	extern const char* g_entityEndParsePoint;
 	API extern int* clientActiveCmdNumber;
 	extern infoParm_t* info_params;
-	extern WeaponDef** bg_weaponNames;
+	API extern WeaponDef** bg_weaponNames;
 	extern dvar_s** dvars;
 	extern int& dvarCount;
 

@@ -58,6 +58,9 @@ namespace IW3SR
 		float r, float g, int b, int a, int null4, int null5)>
 		Dvar_RegisterVariantColor = ASM_LOAD(Dvar_RegisterVariant);
 
+	Function<bool(pmove_t* pm, pml_t* pml)>
+		Jump_Check = ASM_LOAD(Jump_Check);
+
 	Function<Material*(const char* material, int size)>
 		Material_RegisterHandle = 0x5F2A80;
 
@@ -69,6 +72,12 @@ namespace IW3SR
 
 	Function<void(playerState_s* ps, pml_t* pml)>
 		PM_CrashLand = ASM_LOAD(PM_CrashLand);
+
+	Function<void(playerState_s* ps, pml_t* pml)>
+		PM_Friction = ASM_LOAD(PM_Friction);
+
+	Function<void(pmove_t* pm, pml_t* pml)>
+		PM_GroundTrace = 0x410660;
 
 	Function<void(pmove_t* pm, pml_t* pml)>
 		PM_GroundTraceMissed = ASM_LOAD(PM_GroundTraceMissed);
@@ -168,6 +177,23 @@ namespace IW3SR
 		a.ret();
 	}
 
+	ASM_FUNCTION(Jump_Check)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // pml
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // pm
+		a.call(0x407D90);
+		a.mov(x86::dword_ptr(x86::esp, 0x20), x86::eax);
+		a.add(x86::esp, 4);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
 	ASM_FUNCTION(PM_AddTouchEnt)
 	{
 		a.push(x86::ebp);
@@ -210,6 +236,22 @@ namespace IW3SR
 		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // pml
 		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x08)); // ps
 		a.call(0x40FFB0);
+		a.add(x86::esp, 4);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(PM_Friction)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // pml
+		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x08)); // ps
+		a.call(0x40E860);
 		a.add(x86::esp, 4);
 
 		a.popad();

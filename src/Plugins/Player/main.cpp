@@ -1,5 +1,6 @@
 #include "Game/Plugin.hpp"
 
+#include "Modules/CGAZ.hpp"
 #include "Modules/FPS.hpp"
 #include "Modules/Movements.hpp"
 #include "Modules/Lagometer.hpp"
@@ -9,6 +10,7 @@ PLUGIN void Initialize()
 {
 	UI::InitializeContext();
 
+	Modules::Load<CGAZ>();
 	Modules::Load<FPS>();
 	Modules::Load<Lagometer>();
 	Modules::Load<Movements>();
