@@ -26,7 +26,7 @@ jobs:
     - name: Build
       run: |
         mkdir build && cd build
-        cmake .. --preset windows-dx9 -DBUILD_TESTING=True
+        cmake .. --preset windows-dx9
         cmake --build . --config ${{env.BUILD_TYPE}}
 
     - name: Artifact
