@@ -13,7 +13,7 @@ _Pre-Requisites:_
 
 _Build Command:_
 
-    ./install.bat
+    ./build.bat
 
 ### [Download](https://github.com/Iswenzz/IW3SR/releases)
 
