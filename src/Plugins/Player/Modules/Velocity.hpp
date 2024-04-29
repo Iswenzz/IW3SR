@@ -50,6 +50,12 @@ namespace IW3SR::Addons
 		void OnMenu() override;
 
 		/// <summary>
+		/// Client spawn.
+		/// </summary>
+		/// <param name="event">The event.</param>
+		void OnSpawn(EventClientSpawn& event) override;
+
+		/// <summary>
 		/// Render frame.
 		/// </summary>
 		void OnRender() override;
@@ -59,6 +65,11 @@ namespace IW3SR::Addons
 		/// Compute values.
 		/// </summary>
 		void Compute();
+
+		/// <summary>
+		/// Reset values.
+		/// </summary>
+		void Reset();
 
 		SERIALIZE_POLY(Velocity, Module, VelocityText, AverageText, MaxText, GroundText, Graph, KeyReset, ShowVelocity,
 			ShowAverage, ShowMax, ShowGround, ShowGraph)

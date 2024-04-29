@@ -92,9 +92,29 @@ namespace IW3SR::Addons
 		prevOnGround = onGround;
 	}
 
+	void Velocity::Reset() 
+	{ 
+		Average = 0;
+		Max = 0;
+		GroundAverage = 0;
+		GroundTime = 0;
+
+		BufferAverages.Clear();
+		BufferMaxs.Clear();
+		BufferGrounds.Clear();
+	}
+
+	void Velocity::OnSpawn(EventClientSpawn& event) 
+	{ 
+		Reset();
+	}
+
 	void Velocity::OnRender()
 	{
 		Compute();
+
+		if (KeyReset.IsPressed())
+			Reset();
 
 		VelocityText.Value = std::to_string(Value);
 		AverageText.Value = std::to_string(Average);
@@ -110,17 +130,6 @@ namespace IW3SR::Addons
 		if (ShowGround)
 			GroundText.Render();
 
-		if (KeyReset.IsPressed())
-		{
-			Average = 0;
-			Max = 0;
-			GroundAverage = 0;
-			GroundTime = 0;
-
-			BufferAverages.Clear();
-			BufferMaxs.Clear();
-			BufferGrounds.Clear();
-		}
 		if (ShowGraph)
 		{
 			Graph.Begin();
