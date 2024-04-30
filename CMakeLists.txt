@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Compilers
 if(MSVC)
 	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-	set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD true)
 endif()
 
 # Path

@@ -11,7 +11,7 @@
 			"generator": "Visual Studio 17 2022",
 			"architecture": "Win32",
 			"cacheVariables": {
-				"CMAKE_TOOLCHAIN_FILE": "engine/.vcpkg/windows.cmake",
+				"CMAKE_TOOLCHAIN_FILE": "engine/.vcpkg/x86-windows.cmake",
 				"PLATFORM_WINDOWS": true,
 				"GRAPHICS_API_DX9": true
 			}
