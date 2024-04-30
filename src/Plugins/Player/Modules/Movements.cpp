@@ -13,7 +13,7 @@ namespace IW3SR::Addons
 		BhopText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
 
 		Mode = MovementMode::COD4;
-		BhopKey = Keyboard(Key_G);
+		BhopKey = Keyboard(Key_None);
 
 		UseBhop = false;
 		UseBhopToggle = false;
