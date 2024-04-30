@@ -10,7 +10,7 @@ PLUGIN void Initialize()
 {
 	UI::InitializeContext();
 
-	Modules::Load<CGAZ>();
+	Modules::Load<CGAZ>(false);
 	Modules::Load<FPS>();
 	Modules::Load<Lagometer>();
 	Modules::Load<Movements>();
