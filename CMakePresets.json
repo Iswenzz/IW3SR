@@ -7,7 +7,7 @@
 	},
 	"configurePresets": [
 		{
-			"name": "windows-dx9",
+			"name": "x86-windows-dx9",
 			"generator": "Visual Studio 17 2022",
 			"architecture": "Win32",
 			"cacheVariables": {
