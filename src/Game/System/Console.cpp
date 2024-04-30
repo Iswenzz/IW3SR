@@ -7,7 +7,7 @@ namespace IW3SR
 	void GConsole::Initialize()
 	{
 		Console::Initialize();
-		Console::SetTile("IW3SR");
+		Console::SetTitle("IW3SR");
 
 		for (int i = 0; i <= dvarCount - 1; i++)
 			Console::AddCommand(dvars[i]->name);
