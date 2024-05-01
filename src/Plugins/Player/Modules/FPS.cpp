@@ -35,13 +35,13 @@ namespace IW3SR::Addons
 			if (ImPlot::BeginPlot("##FPS", Graph.RenderSize))
 			{
 				ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_Canvas, ImPlotAxisFlags_Canvas);
-				ImPlot::SetupAxisLimits(ImAxis_X1, 0, Values.Size(), ImGuiCond_Always);
+				ImPlot::SetupAxisLimits(ImAxis_X1, 0, Buffer.Max(), ImGuiCond_Always);
 				ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1000, ImGuiCond_Always);
 
 				ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
 				ImPlot::PushStyleColor(ImPlotCol_Line, FrameText.Color.RGBA());
-				ImPlot::PlotShaded("FPS", Values.Get(), Values.Size(), -INFINITY, 1, 0, 0, Values.Offset);
-				ImPlot::PlotLine("FPS", Values.Get(), Values.Size(), 1, 0, 0, Values.Offset);
+				ImPlot::PlotShaded("FPS", Buffer.Get(), Buffer.Max(), -INFINITY, 1, 0, 0, Buffer.Offset);
+				ImPlot::PlotLine("FPS", Buffer.Get(), Buffer.Max(), 1, 0, 0, Buffer.Offset);
 				ImPlot::PopStyleColor();
 
 				ImPlot::EndPlot();

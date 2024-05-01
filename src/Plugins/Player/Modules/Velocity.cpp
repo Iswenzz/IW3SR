@@ -99,6 +99,9 @@ namespace IW3SR::Addons
 		GroundAverage = 0;
 		GroundTime = 0;
 
+		Averages.Clear();
+		GroundAverages.Clear();
+
 		BufferAverages.Clear();
 		BufferMaxs.Clear();
 		BufferGrounds.Clear();
@@ -136,35 +139,35 @@ namespace IW3SR::Addons
 			if (ImPlot::BeginPlot("##Velocity", Graph.RenderSize))
 			{
 				ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_Canvas, ImPlotAxisFlags_Canvas);
-				ImPlot::SetupAxisLimits(ImAxis_X1, 0, BufferValues.Size(), ImGuiCond_Always);
+				ImPlot::SetupAxisLimits(ImAxis_X1, 0, BufferValues.Max(), ImGuiCond_Always);
 				ImPlot::SetupAxisLimits(ImAxis_Y1, 0, Max * 1.5, ImGuiCond_Always);
 
 				if (ShowVelocity)
 				{
 					ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
 					ImPlot::PushStyleColor(ImPlotCol_Line, VelocityText.Color.RGBA());
-					ImPlot::PlotShaded("Velocity", BufferValues.Get(), BufferValues.Size(), -INFINITY, 1, 0, 0,
+					ImPlot::PlotShaded("Velocity", BufferValues.Get(), BufferValues.Max(), -INFINITY, 1, 0, 0,
 						BufferValues.Offset);
-					ImPlot::PlotLine("Velocity", BufferValues.Get(), BufferValues.Size(), 1, 0, 0, BufferValues.Offset);
+					ImPlot::PlotLine("Velocity", BufferValues.Get(), BufferValues.Max(), 1, 0, 0, BufferValues.Offset);
 					ImPlot::PopStyleColor();
 				}
 				if (ShowAverage)
 				{
 					ImPlot::PushStyleColor(ImPlotCol_Line, AverageText.Color.RGBA());
-					ImPlot::PlotLine("Average", BufferAverages.Get(), BufferAverages.Size(), 1, 0, 0,
+					ImPlot::PlotLine("Average", BufferAverages.Get(), BufferAverages.Max(), 1, 0, 0,
 						BufferAverages.Offset);
 					ImPlot::PopStyleColor();
 				}
 				if (ShowMax)
 				{
 					ImPlot::PushStyleColor(ImPlotCol_Line, MaxText.Color.RGBA());
-					ImPlot::PlotLine("Max", BufferMaxs.Get(), BufferMaxs.Size(), 1, 0, 0, BufferMaxs.Offset);
+					ImPlot::PlotLine("Max", BufferMaxs.Get(), BufferMaxs.Max(), 1, 0, 0, BufferMaxs.Offset);
 					ImPlot::PopStyleColor();
 				}
 				if (ShowGround)
 				{
 					ImPlot::PushStyleColor(ImPlotCol_Line, GroundText.Color.RGBA());
-					ImPlot::PlotLine("Ground", BufferGrounds.Get(), BufferGrounds.Size(), 1, 0, 0,
+					ImPlot::PlotLine("Ground", BufferGrounds.Get(), BufferGrounds.Max(), 1, 0, 0,
 						BufferGrounds.Offset);
 					ImPlot::PopStyleColor();
 				}

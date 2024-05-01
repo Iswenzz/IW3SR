@@ -21,9 +21,7 @@ namespace IW3SR
 	void GConsole::Write(ConChannel channel, const char* msg, int type)
 	{
 		Log::Write(Q3(msg));
-
-		if (Com_PrintMessage_h)
-			Com_PrintMessage_h(channel, msg, type);
+		Com_PrintMessage_h(channel, msg, type);
 	}
 
 	void GConsole::Command(EventConsoleCommand& event)

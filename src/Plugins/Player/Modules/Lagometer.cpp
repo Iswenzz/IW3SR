@@ -52,7 +52,7 @@ namespace IW3SR::Addons
 		SnapsFlags.Clear();
 		SnapsFlagsDrop.Clear();
 
-		int pingSize = Pings.Size();
+		int pingSize = Pings.Max();
 		for (int i = 0; i < pingSize; i++)
 		{
 			int index = pingIndex - pingSize + i - 1;
@@ -71,31 +71,31 @@ namespace IW3SR::Addons
 		if (ImPlot::BeginPlot("##Ping", Graph.RenderSize, ImPlotFlags_NoLegend))
 		{
 			ImPlot::SetupAxes(nullptr, nullptr, ImPlotAxisFlags_Canvas, ImPlotAxisFlags_Canvas);
-			ImPlot::SetupAxisLimits(ImAxis_X1, 0, Snaps.Size(), ImGuiCond_Always);
+			ImPlot::SetupAxisLimits(ImAxis_X1, 0, Snaps.Max(), ImGuiCond_Always);
 			ImPlot::SetupAxisLimits(ImAxis_Y1, 0, range, ImGuiCond_Always);
 
 			if (ShowSnap)
 			{
 				ImPlot::SetNextFillStyle(ColorSnap);
-				ImPlot::PlotShaded("Snap", Snaps.Get(), Snaps.Size(), snapRange, 1, 0, 0, Snaps.Offset);
+				ImPlot::PlotShaded("Snap", Snaps.Get(), Snaps.Max(), snapRange, 1, 0, 0, Snaps.Offset);
 
 				ImPlot::SetNextFillStyle(ColorSnapDelay);
-				ImPlot::PlotShaded("SnapDelay", SnapsDelay.Get(), SnapsDelay.Size(), snapRange, 1, 0, 0,
+				ImPlot::PlotShaded("SnapDelay", SnapsDelay.Get(), SnapsDelay.Max(), snapRange, 1, 0, 0,
 					SnapsDelay.Offset);
 			}
 			if (ShowPing)
 			{
 				ImPlot::SetNextFillStyle(ColorPing);
-				ImPlot::PlotShaded("Ping", Pings.Get(), Pings.Size(), -pingRange, 1, 0, 0, Pings.Offset);
+				ImPlot::PlotShaded("Ping", Pings.Get(), Pings.Max(), -pingRange, 1, 0, 0, Pings.Offset);
 			}
 			if (ShowSnapFlag)
 			{
 				ImPlot::SetNextFillStyle(ColorSnapFlag);
-				ImPlot::PlotShaded("SnapFlag", SnapsFlags.Get(), SnapsFlags.Size(), -pingRange, 1, 0, 0,
+				ImPlot::PlotShaded("SnapFlag", SnapsFlags.Get(), SnapsFlags.Max(), -pingRange, 1, 0, 0,
 					SnapsFlags.Offset);
 
 				ImPlot::SetNextFillStyle(ColorSnapFlagDrop);
-				ImPlot::PlotShaded("SnapFlagDrop", SnapsFlagsDrop.Get(), SnapsFlagsDrop.Size(), -pingRange, 1, 0, 0,
+				ImPlot::PlotShaded("SnapFlagDrop", SnapsFlagsDrop.Get(), SnapsFlagsDrop.Max(), -pingRange, 1, 0, 0,
 					SnapsFlagsDrop.Offset);
 			}
 			ImPlot::EndPlot();
