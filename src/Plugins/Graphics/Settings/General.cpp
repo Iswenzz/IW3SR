@@ -65,7 +65,7 @@ namespace IW3SR::Addons
 			ImGui::ColorEdit4("Sun Color", SunColor, ImGuiColorEditFlags_Float);
 			ImGui::SliderFloat3("Sun Direction", SunDirection, -360, 360);
 		}
-		if (ImGui::Button("Apply Changes"))
+		if (ImGui::Button("Apply"))
 		{
 			Dvar::Set<bool>("r_specular", DrawSpecular);
 			Dvar::Set<bool>("r_fog", DrawFog);
@@ -81,7 +81,7 @@ namespace IW3SR::Addons
 			Dvar::Set<float>("r_filmTweakDesaturation", TweakDesaturation);
 			Dvar::Set<float>("r_glowTweakRadius0", GlowRadius);
 			Dvar::Set<float>("r_glowTweakBloomDesaturation", GlowBloomDesaturation);
-			// Dvar::Set<float>("r_glowTweakBloomIntensity", GlowBloomIntensity);
+			Dvar::Set<float>("r_glowTweakBloomIntensity", GlowBloomIntensity);
 			Dvar::Set<float>("r_glowTweakBloomCutoff", GlowBloomCutoff);
 
 			Dvar::Set<vec4>("r_lightTweakSunColor", SunColor);
