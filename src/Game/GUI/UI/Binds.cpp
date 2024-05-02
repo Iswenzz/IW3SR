@@ -12,7 +12,7 @@ namespace IW3SR::UC
 
 		Begin();
 		if (ImGui::CollapsingHeader("General", ImGuiTreeNodeFlags_DefaultOpen))
-			ImGui::Keybind("Menu", &UI::Get().KeyOpen.Key);
+			ImGui::Keybind("Menu", &UI::Get().KeyOpen.Key, false);
 		End();
 	}
 }
