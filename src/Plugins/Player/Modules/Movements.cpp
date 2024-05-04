@@ -11,8 +11,6 @@ namespace IW3SR::Addons
 		BhopText = Text("BHOP", FONT_SPACERANGER, -35, 8, 0.8, { 1, 1, 1, 1 });
 		BhopText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
 		BhopText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
-
-		Mode = MovementMode::COD4;
 		BhopKey = Keyboard(Key_None);
 
 		UseBhop = false;
@@ -22,11 +20,14 @@ namespace IW3SR::Addons
 
 	void Movements::OnMenu()
 	{
+		int mode = Dvar::Get<int>("pm_mode");
+
 		ImGui::Button(ICON_FA_CIRCLE_INFO);
 		ImGui::Tooltip("Use devmap to enable movement modifications.");
 		ImGui::BeginDisabled(!Dvar::Get<bool>("sv_running"));
 		ImGui::SameLine();
-		if (ImGui::RadioButton("CoD4", reinterpret_cast<int*>(&Mode), 0))
+
+		if (ImGui::RadioButton("CoD4", &mode, 0))
 		{
 			SetCrashLand(true);
 
@@ -40,7 +41,7 @@ namespace IW3SR::Addons
 			Dvar::Set<float>("friction", 5.5f);
 		}
 		ImGui::SameLine();
-		if (ImGui::RadioButton("Q3", reinterpret_cast<int*>(&Mode), 1))
+		if (ImGui::RadioButton("Q3", &mode, 1))
 		{
 			SetCrashLand(false);
 
@@ -54,7 +55,7 @@ namespace IW3SR::Addons
 			Dvar::Set<float>("friction", 8.0f);
 		}
 		ImGui::SameLine();
-		if (ImGui::RadioButton("CS", reinterpret_cast<int*>(&Mode), 2))
+		if (ImGui::RadioButton("CS", &mode, 2))
 		{
 			SetCrashLand(false);
 

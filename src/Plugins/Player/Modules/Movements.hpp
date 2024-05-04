@@ -19,7 +19,6 @@ namespace IW3SR::Addons
 	class Movements : public Module
 	{
 	public:
-		MovementMode Mode;
 		Keyboard BhopKey;
 		Text BhopText;
 
