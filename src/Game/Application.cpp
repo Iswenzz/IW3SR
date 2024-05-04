@@ -1,3 +1,4 @@
+#include "Core/System/Crash.hpp"
 #include "Core/System/Environment.hpp"
 #include "Core/System/Plugins.hpp"
 
@@ -6,11 +7,12 @@
 #include "Renderer/Settings/Settings.hpp"
 
 #include "System/Console.hpp"
-#include "System/Patch.hpp"
 #include "System/Dvar.hpp"
+#include "System/Patch.hpp"
 
 void Application::Start()
 {
+	Crash::Setup();
 	Environment::Binary();
 	Environment::Load();
 	Dvar::Initialize();
