@@ -24,8 +24,9 @@ namespace IW3SR
 
 	void Settings::Deserialize()
 	{
-		std::ifstream file(Environment::AppDirectory / "settings.json");
+		IZ_ASSERT(Environment::Initialized, "Environment not initialized.");
 
+		std::ifstream file(Environment::AppDirectory / "settings.json");
 		if (file.peek() != std::ifstream::traits_type::eof())
 			Serialized = nlohmann::json::parse(file);
 
@@ -38,6 +39,8 @@ namespace IW3SR
 
 	void Settings::Serialize()
 	{
+		IZ_ASSERT(Environment::Initialized, "Environment not initialized.");
+
 		for (const auto& [_, entry] : Entries)
 		{
 			entry->Serialize(Serialized[entry->ID]);

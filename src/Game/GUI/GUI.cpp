@@ -4,7 +4,7 @@
 
 namespace IW3SR
 {
-	GUI::GUI() : UI(UI::Get())
+	GUI::GUI()
 	{
 		About = UC::About();
 		Binds = UC::Binds();
@@ -18,14 +18,14 @@ namespace IW3SR
 		Environment::Deserialize("GUI", *this);
 	}
 
-	void GUI::Release()
+	void GUI::Shutdown()
 	{
 		Environment::Serialize("GUI", *this);
 	}
 
 	void GUI::Render()
 	{
-		if (!UI.Open)
+		if (!UI::Get().Open)
 			return;
 
 		Toolbar.Render();

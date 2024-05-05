@@ -24,6 +24,8 @@ namespace IW3SR::UC
 			| ImGuiWindowFlags_NoMove);
 
 		auto& GUI = GUI::Get();
+		auto& UI = UI::Get();
+
 		const vec2& position = RenderPosition;
 		const vec2& size = RenderSize;
 		const vec2 buttonSize = vec2{ 14, 14 } * UI::Get().Size;
@@ -40,10 +42,10 @@ namespace IW3SR::UC
 			ImGui::Tooltip("Reload plugins");
 			ImGui::SameLine();
 		}
-		ImGui::ButtonToggle(ICON_FA_GRIP, "Design", &GUI.UI.DesignMode, buttonSize);
+		ImGui::ButtonToggle(ICON_FA_GRIP, "Design", &UI.DesignMode, buttonSize);
 		ImGui::Tooltip("Design mode");
 		ImGui::SameLine();
-		ImGui::Button(ICON_FA_PAINTBRUSH, "Themes", &GUI.UI.Themes.Open, buttonSize);
+		ImGui::Button(ICON_FA_PAINTBRUSH, "Themes", &UI.Themes.Open, buttonSize);
 		ImGui::Tooltip("Themes");
 		ImGui::SameLine();
 		ImGui::Button(ICON_FA_KEYBOARD, "Binds", &GUI.Binds.Open, buttonSize);
@@ -61,7 +63,7 @@ namespace IW3SR::UC
 				ImGui::ShowDebugLogWindow(&IsDebug);
 				ImGui::ShowStackToolWindow(&IsDebug);
 			}
-			ImGui::Button(ICON_FA_MEMORY, "Memory", &GUI.UI.Memory.Open, buttonSize);
+			ImGui::Button(ICON_FA_MEMORY, "Memory", &UI.Memory.Open, buttonSize);
 			ImGui::Tooltip("Memory");
 			ImGui::SameLine();
 		}

@@ -1,6 +1,6 @@
 #include "System.hpp"
 
-#include "Core/System/System.hpp"
+#include "Core/System/Window.hpp"
 
 namespace IW3SR
 {
@@ -10,11 +10,10 @@ namespace IW3SR
 		HWND hwnd = CreateWindowExA_h(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent,
 			hMenu, hInstance, lpParam);
 
-		std::string windowName = std::string{ lpWindowName };
-		if (windowName != "Call of Duty 4" && windowName != "Call of Duty 4 X")
-			return hwnd;
-
-		return reinterpret_cast<HWND>(System::MainWindow = hwnd);
+		const std::string_view windowName = lpWindowName;
+		if (windowName == "Call of Duty 4" || windowName == "Call of Duty 4 X")
+			OSWindow::Handle = hwnd;
+		return hwnd;
 	}
 
 	LRESULT GSystem::MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -30,6 +29,7 @@ namespace IW3SR
 		{
 			if (Keyboard::IsPressed(Key_Escape))
 				UI.Open = false;
+
 			ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
 			s_wmv->mouseInitialized = false;
 			io.MouseDrawCursor = true;

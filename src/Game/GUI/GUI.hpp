@@ -16,8 +16,6 @@ namespace IW3SR
 	{
 		CLASS_SINGLETON(GUI)
 	public:
-		UI& UI;
-
 		UC::About About;
 		UC::Binds Binds;
 		UC::Modules Modules;
@@ -32,7 +30,7 @@ namespace IW3SR
 		/// <summary>
 		/// Release GUI.
 		/// </summary>
-		void Release();
+		void Shutdown();
 
 		/// <summary>
 		/// Render frame.

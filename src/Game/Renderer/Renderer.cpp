@@ -14,11 +14,10 @@ namespace IW3SR
 	{
 		R_Init_h();
 
-		Device::Initialize(dx->d3d9, dx->device);
-		Device::CreateScreen();
+		Device::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize();
-
 		GUI::Get().Initialize();
+
 		Modules::Initialize();
 		Settings::Initialize();
 	}
@@ -27,9 +26,10 @@ namespace IW3SR
 	{
 		Settings::Release();
 		Modules::Release();
-		GUI::Get().Release();
 
+		GUI::Get().Shutdown();
 		Renderer::Shutdown();
+
 		R_Shutdown_h(window);
 	}
 
@@ -69,6 +69,5 @@ namespace IW3SR
 			Application::Get().Dispatch(event);
 		}
 		Renderer::End();
-		Keyboard::Reset();
 	}
 }

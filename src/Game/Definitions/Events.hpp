@@ -15,12 +15,6 @@ namespace IW3SR
 		EventRenderer2D() = default;
 	};
 
-	class EventRendererRender : public Event
-	{
-		EVENT_CLASS("renderer.render")
-		EventRendererRender() = default;
-	};
-
 	class EventClientConnect : public Event
 	{
 		EVENT_CLASS("client.connect")

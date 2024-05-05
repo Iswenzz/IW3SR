@@ -40,8 +40,9 @@ namespace IW3SR
 
 	void Modules::Deserialize()
 	{
-		std::ifstream file(Environment::AppDirectory / "modules.json");
+		IZ_ASSERT(Environment::Initialized, "Environment not initialized.");
 
+		std::ifstream file(Environment::AppDirectory / "modules.json");
 		if (file.peek() != std::ifstream::traits_type::eof())
 			Serialized = nlohmann::json::parse(file);
 
@@ -54,6 +55,8 @@ namespace IW3SR
 
 	void Modules::Serialize()
 	{
+		IZ_ASSERT(Environment::Initialized, "Environment not initialized.");
+
 		for (const auto& [_, entry] : Entries)
 		{
 			entry->Serialize(Serialized[entry->ID]);
