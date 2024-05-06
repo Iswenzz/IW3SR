@@ -144,7 +144,7 @@ namespace IW3SR::Addons
 
 	void Movements::SetCrashLand(bool state)
 	{
-		Memory::Write(0x410315, "D9 46 28 DD 05");
+		Memory::Write(0x410315, "\xD9\x46\x28\xDD\x05");
 		if (!state)
 			Memory::JMP(0x410315, 0x410333);
 	}
