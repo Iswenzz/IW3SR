@@ -19,24 +19,28 @@ namespace IW3SR
 	LRESULT GSystem::MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		auto& UI = UI::Get();
-		Keyboard::Process(msg, wParam);
 
+		switch (msg)
+		{
+		case WM_KEYDOWN:
+		case WM_KEYUP:
+		case WM_SYSKEYDOWN:
+		case WM_SYSKEYUP:
+			Keyboard::Process(msg, wParam);
+			break;
+		}
 		if (!UI.Active)
 			return MainWndProc_h(hWnd, msg, wParam, lParam);
 
 		ImGuiIO& io = ImGui::GetIO();
+		io.MouseDrawCursor = UI.Open;
+		s_wmv->mouseInitialized = !UI.Open;
+
 		if (UI.Open)
 		{
-			if (Keyboard::IsPressed(Key_Escape))
-				UI.Open = false;
-
 			ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
-			s_wmv->mouseInitialized = false;
-			io.MouseDrawCursor = true;
 			return true;
 		}
-		s_wmv->mouseInitialized = true;
-		io.MouseDrawCursor = false;
 		return MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
@@ -49,7 +53,7 @@ namespace IW3SR
 		{
 			va_list args;
 			va_copy(args, va);
-			
+
 			if (format == "maps/mp/%s.d3dbsp")
 			{
 				std::string_view map = va_arg(args, char*);

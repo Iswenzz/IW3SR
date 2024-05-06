@@ -7,6 +7,8 @@
 #include "UI/Settings.hpp"
 #include "UI/Toolbar.hpp"
 
+#include "Core/Input/Keyboard.hpp"
+
 namespace IW3SR
 {
 	/// <summary>
@@ -16,6 +18,8 @@ namespace IW3SR
 	{
 		CLASS_SINGLETON(GUI)
 	public:
+		Keyboard KeyOpen;
+
 		UC::About About;
 		UC::Binds Binds;
 		UC::Modules Modules;
@@ -44,6 +48,6 @@ namespace IW3SR
 		GUI();
 		virtual ~GUI() = default;
 
-		SERIALIZE(GUI, About, Binds, Modules, Settings, Toolbar)
+		SERIALIZE(GUI, KeyOpen, About, Binds, Modules, Settings, Toolbar)
 	};
 }

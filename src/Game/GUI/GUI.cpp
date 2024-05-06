@@ -6,6 +6,8 @@ namespace IW3SR
 {
 	GUI::GUI()
 	{
+		KeyOpen = Keyboard(Key_F10);
+
 		About = UC::About();
 		Binds = UC::Binds();
 		Modules = UC::Modules();
@@ -25,13 +27,21 @@ namespace IW3SR
 
 	void GUI::Render()
 	{
-		if (!UI::Get().Open)
-			return;
+		auto& UI = UI::Get();
 
-		Toolbar.Render();
-		Binds.Render();
-		Modules.Render();
-		Settings.Render();
-		About.Render();
+		if (KeyOpen.IsPressed())
+			UI.Open = !UI.Open;
+
+		if (Keyboard::IsPressed(Key_Escape))
+			UI.Open = false;
+
+		if (UI.Open)
+		{
+			Toolbar.Render();
+			Binds.Render();
+			Modules.Render();
+			Settings.Render();
+			About.Render();
+		}
 	}
 }
