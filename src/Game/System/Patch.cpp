@@ -2,7 +2,7 @@
 
 #include "Core/Memory/Memory.hpp"
 #include "Core/Memory/Signature.hpp"
-#include "Core/System/Environment.hpp"
+#include "Core/System/System.hpp"
 
 #define COD4X if (COD4X_BASE)
 
@@ -10,6 +10,9 @@ namespace IW3SR
 {
 	void Patch::Initialize()
 	{
+		System::MapProcesses();
+		System::MapModules(System::Modules[IW3MP_BIN]);
+
 		CoD4X();
 		Definitions();
 		Renderer();
@@ -65,14 +68,14 @@ namespace IW3SR
 
 	void Patch::CoD4X()
 	{
-		const auto cod4x = std::ranges::find_if(Environment::Modules,
-			[](const auto& m) { return m.find("cod4x_") != std::string::npos; });
+		auto cod4x = std::ranges::find_if(System::Modules,
+			[](const auto& pair) { return pair.first.find("cod4x_") != std::string::npos; });
 
-		if (cod4x == Environment::Modules.end())
+		if (cod4x == System::Modules.end())
 			return;
 
-		COD4X_BIN = *cod4x;
-		COD4X_BASE = uintptr_t(GetModuleHandle(COD4X_BIN.c_str()));
+		COD4X_BIN = cod4x->first;
+		COD4X_BASE = cod4x->second;
 	}
 
 	void Patch::Hook()
