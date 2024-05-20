@@ -92,8 +92,8 @@ namespace IW3SR::Addons
 		prevOnGround = onGround;
 	}
 
-	void Velocity::Reset() 
-	{ 
+	void Velocity::Reset()
+	{
 		Average = 0;
 		Max = 0;
 		GroundAverage = 0;
@@ -107,8 +107,8 @@ namespace IW3SR::Addons
 		BufferGrounds.Clear();
 	}
 
-	void Velocity::OnSpawn(EventClientSpawn& event) 
-	{ 
+	void Velocity::OnSpawn(EventClientSpawn& event)
+	{
 		Reset();
 	}
 
@@ -167,8 +167,7 @@ namespace IW3SR::Addons
 				if (ShowGround)
 				{
 					ImPlot::PushStyleColor(ImPlotCol_Line, GroundText.Color.RGBA());
-					ImPlot::PlotLine("Ground", BufferGrounds.Get(), BufferGrounds.Max(), 1, 0, 0,
-						BufferGrounds.Offset);
+					ImPlot::PlotLine("Ground", BufferGrounds.Get(), BufferGrounds.Max(), 1, 0, 0, BufferGrounds.Offset);
 					ImPlot::PopStyleColor();
 				}
 				ImPlot::EndPlot();

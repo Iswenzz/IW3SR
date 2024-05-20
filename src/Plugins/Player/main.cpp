@@ -2,8 +2,8 @@
 
 #include "Modules/CGAZ.hpp"
 #include "Modules/FPS.hpp"
-#include "Modules/Movements.hpp"
 #include "Modules/Lagometer.hpp"
+#include "Modules/Movements.hpp"
 #include "Modules/Velocity.hpp"
 
 PLUGIN void Initialize()
