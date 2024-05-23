@@ -46,6 +46,9 @@ namespace IW3SR
 
 	int GSystem::Vsnprintf(char* dest, size_t size, const char* fmt, va_list va)
 	{
+		if (!fmt)
+			return _vsnprintf(dest, size, fmt, va);
+
 		const std::string_view format = fmt;
 
 		// Singleplayer maps
