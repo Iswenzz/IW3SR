@@ -1,6 +1,7 @@
 #include "Core/System/Crash.hpp"
 #include "Core/System/Environment.hpp"
 #include "Core/System/Plugins.hpp"
+#include "Core/System/System.hpp"
 
 #include "Client/Client.hpp"
 #include "Renderer/Modules/Modules.hpp"
@@ -15,10 +16,13 @@ void Application::Start()
 	Crash::Setup();
 	Environment::Binary();
 	Environment::Load();
-	Dvar::Initialize();
 
+	Dvar::Initialize();
 	Patch::Initialize();
-	GConsole::Initialize();
+
+	if (System::IsDebug())
+		GConsole::Initialize();
+
 	Client::Initialize();
 	Plugins::Initialize();
 }
@@ -27,7 +31,9 @@ void Application::Shutdown()
 {
 	Environment::Save();
 
-	GConsole::Shutdown();
+	if (System::IsDebug())
+		GConsole::Shutdown();
+
 	Plugins::Shutdown();
 	Patch::Shutdown();
 }
