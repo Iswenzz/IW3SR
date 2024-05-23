@@ -18,7 +18,7 @@ namespace IW3SR
 
 	LRESULT GSystem::MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
-		auto& UI = UI::Get();
+		const auto& UI = UI::Get();
 
 		switch (msg)
 		{
@@ -29,19 +29,14 @@ namespace IW3SR
 			Keyboard::Process(msg, wParam);
 			break;
 		}
-		if (!UI.Active)
-			return MainWndProc_h(hWnd, msg, wParam, lParam);
+		if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+			return true;
 
 		ImGuiIO& io = ImGui::GetIO();
 		io.MouseDrawCursor = UI.Open;
 		s_wmv->mouseInitialized = !UI.Open;
 
-		if (UI.Open)
-		{
-			ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
-			return true;
-		}
-		return MainWndProc_h(hWnd, msg, wParam, lParam);
+		return UI.Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
 	int GSystem::Vsnprintf(char* dest, size_t size, const char* fmt, va_list va)
