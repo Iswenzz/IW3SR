@@ -29,7 +29,7 @@ namespace IW3SR
 			Keyboard::Process(msg, wParam);
 			break;
 		}
-		if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+		if (UI.Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 			return true;
 
 		ImGuiIO& io = ImGui::GetIO();
