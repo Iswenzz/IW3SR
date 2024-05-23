@@ -1,11 +1,12 @@
 #include "Game/Plugin.hpp"
-#include "Settings/General.hpp"
+
+#include "Settings/Tweaks.hpp"
 
 PLUGIN void Initialize()
 {
 	UI::InitializeContext();
 
-	Settings::Load<General>();
+	Settings::Load<Tweaks>();
 }
 
 PLUGIN void Info(Plugin* plugin)
