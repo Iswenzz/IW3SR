@@ -112,30 +112,30 @@ namespace IW3SR
 
 	UINT D3D9EX::GetAdapterModeCountEx(UINT Adapter, const D3DDISPLAYMODEFILTER* pFilter)
 	{
-		return (pIDirect3D9Ex->GetAdapterModeCountEx(Adapter, pFilter));
+		return pIDirect3D9Ex->GetAdapterModeCountEx(Adapter, pFilter);
 	}
 
 	HRESULT D3D9EX::EnumAdapterModesEx(UINT Adapter, const D3DDISPLAYMODEFILTER* pFilter, UINT Mode,
 		D3DDISPLAYMODEEX* pMode)
 	{
-		return (pIDirect3D9Ex->EnumAdapterModesEx(Adapter, pFilter, Mode, pMode));
+		return pIDirect3D9Ex->EnumAdapterModesEx(Adapter, pFilter, Mode, pMode);
 	}
 
 	HRESULT D3D9EX::GetAdapterDisplayModeEx(UINT Adapter, D3DDISPLAYMODEEX* pMode, D3DDISPLAYROTATION* pRotation)
 	{
-		return (pIDirect3D9Ex->GetAdapterDisplayModeEx(Adapter, pMode, pRotation));
+		return pIDirect3D9Ex->GetAdapterDisplayModeEx(Adapter, pMode, pRotation);
 	}
 
 	HRESULT D3D9EX::CreateDeviceEx(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags,
 		D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode,
 		IDirect3DDevice9Ex** ppReturnedDeviceInterface)
 	{
-		return (pIDirect3D9Ex->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters,
-			pFullscreenDisplayMode, ppReturnedDeviceInterface));
+		return pIDirect3D9Ex->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters,
+			pFullscreenDisplayMode, ppReturnedDeviceInterface);
 	}
 
 	HRESULT D3D9EX::GetAdapterLUID(UINT Adapter, LUID* pLUID)
 	{
-		return (pIDirect3D9Ex->GetAdapterLUID(Adapter, pLUID));
+		return pIDirect3D9Ex->GetAdapterLUID(Adapter, pLUID);
 	}
 }

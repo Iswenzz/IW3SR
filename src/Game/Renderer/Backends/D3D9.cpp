@@ -263,7 +263,6 @@ namespace IW3SR
 			Pool = D3DPOOL_DEFAULT;
 			Usage |= D3DUSAGE_DYNAMIC;
 		}
-
 		return pIDirect3DDevice9->CreateTexture(Width, Height, Levels, Usage, Format, Pool, ppTexture, pSharedHandle);
 	}
 
@@ -275,7 +274,6 @@ namespace IW3SR
 			Pool = D3DPOOL_DEFAULT;
 			Usage |= D3DUSAGE_DYNAMIC;
 		}
-
 		return pIDirect3DDevice9->CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, Pool,
 			ppVolumeTexture, pSharedHandle);
 	}
@@ -288,7 +286,6 @@ namespace IW3SR
 			Pool = D3DPOOL_DEFAULT;
 			Usage |= D3DUSAGE_DYNAMIC;
 		}
-
 		return pIDirect3DDevice9->CreateCubeTexture(EdgeLength, Levels, Usage, Format, Pool, ppCubeTexture,
 			pSharedHandle);
 	}
@@ -301,7 +298,6 @@ namespace IW3SR
 			Pool = D3DPOOL_DEFAULT;
 			Usage |= D3DUSAGE_DYNAMIC;
 		}
-
 		return pIDirect3DDevice9->CreateVertexBuffer(Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
 	}
 
@@ -313,7 +309,6 @@ namespace IW3SR
 			Pool = D3DPOOL_DEFAULT;
 			Usage |= D3DUSAGE_DYNAMIC;
 		}
-
 		return pIDirect3DDevice9->CreateIndexBuffer(Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
 	}
 
@@ -368,9 +363,7 @@ namespace IW3SR
 		IDirect3DSurface9** ppSurface, HANDLE* pSharedHandle)
 	{
 		if (Pool == D3DPOOL_MANAGED)
-		{
 			Pool = D3DPOOL_DEFAULT;
-		}
 
 		return pIDirect3DDevice9->CreateOffscreenPlainSurface(Width, Height, Format, Pool, ppSurface, pSharedHandle);
 	}
