@@ -20,9 +20,6 @@ namespace IW3SR
 	Hook<IDirect3D9* STDCALL(UINT sdk)>
 		Direct3DCreate9_h(Direct3DCreate9, D3D9::Direct3DCreate9);
 
-	Hook<int(char *dest, size_t size, const char *fmt, va_list va)>
-		Vsnprintf_h(0x6706F5, GSystem::Vsnprintf);
-
 	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
 

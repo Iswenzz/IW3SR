@@ -15,9 +15,6 @@ namespace IW3SR
 	extern Hook<IDirect3D9* STDCALL(UINT sdk)>
 		Direct3DCreate9_h;
 
-	extern Hook<int(char *dest, size_t size, const char *fmt, va_list va)>
-		Vsnprintf_h;
-
 	extern Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h;
 

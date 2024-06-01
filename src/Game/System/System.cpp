@@ -39,30 +39,6 @@ namespace IW3SR
 		return UI.Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
-	int GSystem::Vsnprintf(char* dest, size_t size, const char* fmt, va_list va)
-	{
-		if (!fmt || !dest)
-			return -1;
-
-		const std::string_view format = fmt;
-
-		// Singleplayer maps
-		if (format.contains("maps/mp/"))
-		{
-			va_list args;
-			va_copy(args, va);
-
-			if (format == "maps/mp/%s.d3dbsp")
-			{
-				std::string_view map = va_arg(args, char*);
-				if (!map.starts_with("mp_"))
-					fmt = "maps/%s.d3dbsp";
-			}
-			va_end(args);
-		}
-		return _vsnprintf(dest, size, fmt, va);
-	}
-
 	void GSystem::ExecuteSingleCommand(int localClientNum, int controllerIndex, char* cmd)
 	{
 		std::string command = cmd;
