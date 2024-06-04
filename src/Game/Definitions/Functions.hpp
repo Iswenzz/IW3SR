@@ -11,7 +11,7 @@ namespace IW3SR
 		BG_EvaluateTrajectory;
 
 	API extern Function<int(const char* name)>
-		BG_FindWeaponIndexByName;
+		BG_FindWeaponIndexForName;
 
 	API extern Function<void(trace_t* result, const vec3_t start, const vec3_t mins, const vec3_t maxs,
 		const vec3_t end, int skipEntity, int tracemask)>
