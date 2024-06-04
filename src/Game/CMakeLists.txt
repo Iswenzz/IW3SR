@@ -19,13 +19,6 @@ target_sources(IW3SR PRIVATE
 	Base.hpp
 	Plugin.hpp)
 
-# Tests
-if(BUILD_TESTING)
-	add_executable(IW3SR.Tests)
-	target_link_libraries(IW3SR.Tests PRIVATE IzEngine.Tests IW3SR)
-	add_test(NAME Game COMMAND IW3SR.Tests)
-endif()
-
 # Build
 target_include_directories(IW3SR PUBLIC ..)
 target_link_libraries(IW3SR PUBLIC IzEngine)

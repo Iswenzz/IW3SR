@@ -9,6 +9,13 @@ if(MSVC)
 	set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD true)
 endif()
 
+# Tests
+if(BUILD_TESTING)
+	add_executable(IW3SR.Tests)
+	add_test(NAME IW3SR COMMAND IW3SR.Tests)
+	target_link_libraries(IW3SR.Tests PRIVATE IzEngine.Tests IW3SR)
+endif()
+
 # Path
 if(NOT DEFINED ENV{COD4})
 	message(FATAL_ERROR "ERROR: COD4 environment variable is required to locate the game directory.")
