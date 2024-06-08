@@ -85,25 +85,30 @@ namespace IW3SR::UC
 
 		IW3SR::Modules::Release();
 		IW3SR::Settings::Release();
-
 		Plugins::Shutdown();
+
 		std::thread([this] { Compile(); }).detach();
 	}
 
 	void Toolbar::Compile()
 	{
-		if (std::filesystem::exists(CMAKE_BINARY_DIR))
-		{
-			constexpr auto command = R"(cd "{}" && cmake --build . --config Debug --target Install)";
-			system(std::format(command, CMAKE_BINARY_DIR).c_str());
-		}
-		Plugins::Initialize();
-		EventPluginInitialize event;
-		Plugins::Dispatch(event);
+		if (!std::filesystem::exists(CMAKE_BINARY_DIR))
+			return;
 
-		IW3SR::Modules::Initialize();
-		IW3SR::Settings::Initialize();
+		system("cd \"" CMAKE_BINARY_DIR "\" && cmake --build . --config Debug --target Install");
 
-		IsReloading = false;
+		Actions::Add(
+			[this]()
+			{
+				EventPluginInitialize event;
+
+				Plugins::Initialize();
+				Plugins::Dispatch(event);
+
+				IW3SR::Modules::Initialize();
+				IW3SR::Settings::Initialize();
+
+				IsReloading = false;
+			});
 	}
 }

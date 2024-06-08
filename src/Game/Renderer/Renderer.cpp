@@ -59,6 +59,8 @@ namespace IW3SR
 
 	void GRenderer::Render()
 	{
+		Actions::Submit();
+
 		GConsole::Frame();
 		Renderer::Begin();
 		GUI::Get().Render();
