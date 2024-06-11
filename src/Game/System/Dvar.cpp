@@ -4,8 +4,7 @@ namespace IW3SR
 {
 	void Dvar::Initialize()
 	{
-		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version",
-			CMAKE_PROJECT_VERSION);
+		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
 	}
 
 	dvar_s* Dvar::RegisterInt(const char* name, DvarFlags flags, const char* description, int value, int min, int max)
