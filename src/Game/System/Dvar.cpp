@@ -5,6 +5,7 @@ namespace IW3SR
 	void Dvar::Initialize()
 	{
 		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
+		RegisterInt("pm_mode", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Movement mode.", 0, 0, 2);
 	}
 
 	dvar_s* Dvar::RegisterInt(const char* name, DvarFlags flags, const char* description, int value, int min, int max)

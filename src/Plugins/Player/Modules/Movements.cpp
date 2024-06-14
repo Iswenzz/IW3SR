@@ -6,8 +6,6 @@ namespace IW3SR::Addons
 {
 	Movements::Movements() : Module("sr.player.movements", "Player", "Movements")
 	{
-		Dvar::RegisterInt("pm_mode", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Movement mode.", 0, 0, 2);
-
 		BhopText = Text("BHOP", FONT_SPACERANGER, -35, 8, 0.8, { 1, 1, 1, 1 });
 		BhopText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
 		BhopText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
