@@ -54,11 +54,11 @@ namespace IW3SR
 	extern Hook<void()>
 		R_Init_h;
 
-	extern Hook<void(void* cmds)>
-		R_RenderAllLeftovers_h;
-
 	extern Hook<void(int window)>
 		R_Shutdown_h;
+
+	extern Hook<void(void* cmds)>
+		RB_ExecuteRendererCommandsLoop_h;
 
 	extern Hook<void(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)>
 		RB_EndSceneRendering_h;
@@ -69,5 +69,5 @@ namespace IW3SR
 // clang-format on
 namespace IW3SR
 {
-	ASM_FUNCTION(R_RenderAllLeftovers_h);
+	ASM_FUNCTION(RB_ExecuteRendererCommandsLoop_h);
 }
