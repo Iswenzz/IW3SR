@@ -31,7 +31,7 @@ namespace IW3SR
 	{
 		COD4X bg_weaponNames = Signature(0x402D8C).DeRef();
 		COD4X MainWndProc_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 84 00 00 00 C7 04 24 02");
-		COD4X R_RenderAllLeftovers_h < Signature(COD4X_BIN, "55 89 E5 83 EC 38 89 45 E4 8B 45 E4 89 45 F4");
+		COD4X RB_ExecuteRendererCommandsLoop_h < Signature(COD4X_BIN, "55 89 E5 83 EC 38 89 45 E4 8B 45 E4 89 45 F4");
 	}
 
 	void Patch::Renderer()
@@ -96,7 +96,7 @@ namespace IW3SR
 		PM_AirMove_h.Install();
 		PM_GroundTrace_h.Install();
 		R_Init_h.Install();
-		R_RenderAllLeftovers_h.Install();
+		RB_ExecuteRendererCommandsLoop_h.Install();
 		R_Shutdown_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();
@@ -120,7 +120,7 @@ namespace IW3SR
 		PM_AirMove_h.Remove();
 		PM_GroundTrace_h.Remove();
 		R_Init_h.Remove();
-		R_RenderAllLeftovers_h.Remove();
+		RB_ExecuteRendererCommandsLoop_h.Remove();
 		R_Shutdown_h.Remove();
 		RB_EndSceneRendering_h.Remove();
 		Script_ScriptMenuResponse_h.Remove();
