@@ -29,7 +29,7 @@ namespace IW3SR
 
 	void Patch::Definitions()
 	{
-		COD4X bg_weaponNames = Signature(0x402D8C).DeRef();
+		COD4X bg_weaponNames = Signature(COD4X_BASE + 0x443DDE0).DeRef();
 		COD4X MainWndProc_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 84 00 00 00 C7 04 24 02");
 		COD4X R_RenderAllLeftovers_h < Signature(COD4X_BIN, "55 89 E5 83 EC 38 89 45 E4 8B 45 E4 89 45 F4");
 	}
@@ -41,7 +41,7 @@ namespace IW3SR
 
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
-		COD4X Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
+		//COD4X Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
 	}
 
 	void Patch::Database()

@@ -2,8 +2,23 @@
 
 namespace IW3SR
 {
+	usercmd_s* PMove::GetUserCommand(int cmdNumber)
+	{
+		return &clients->cmds[cmdNumber & 0x7F];
+	}
+
+	vec3 PMove::GetEyePos()
+	{
+		vec3 org = cgs->predictedPlayerState.origin;
+		org.z += cgs->predictedPlayerState.viewHeightCurrent;
+		return org;
+	}
+
 	void PMove::FinishMove(usercmd_s* cmd)
 	{
+		if (cgs->predictedPlayerState.pm_type != PM_NORMAL)
+			return CL_FinishMove_h(cmd);
+
 		CL_FinishMove_h(cmd);
 
 		EventPMoveFinish event(cmd);
@@ -78,8 +93,8 @@ namespace IW3SR
 
 	void PMove::SetAngles(usercmd_s* cmd, const vec3& target)
 	{
-		SetYaw(cmd, target);
 		SetPitch(cmd, target);
+		SetYaw(cmd, target);
 		SetRoll(cmd, target);
 	}
 
@@ -96,5 +111,27 @@ namespace IW3SR
 	bool PMove::InAir()
 	{
 		return cgs->predictedPlayerState.groundEntityNum == ENTITYNUM_NONE;
+	}
+
+	pmove_t PMove::CreatePM(playerState_s* ps, usercmd_s* cmd)
+	{
+		std::unordered_map<int, int> stance = { { 60, 70 }, { 40, 50 }, { 11, 30 } };
+		usercmd_s* oldcmd = GetUserCommand(clients->cmdNumber - 1);
+		pmove_t pm{};
+
+		pm.ps = ps;
+		pm.cmd = *cmd;
+		pm.oldcmd = *oldcmd;
+
+		pm.mins[0] = -15;
+		pm.mins[1] = -15;
+		pm.mins[2] = 0;
+		pm.maxs[0] = 15;
+		pm.maxs[1] = 15;
+		pm.maxs[2] = stance.find(int(ps->viewHeightCurrent))->second;
+		pm.tracemask = 42008593;
+		pm.handler = 1;
+
+		return pm;
 	}
 }

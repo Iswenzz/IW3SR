@@ -11,6 +11,19 @@ namespace IW3SR
 	{
 	public:
 		/// <summary>
+		/// Get the user command.
+		/// </summary>
+		/// <param name="cmdNumber">The command number.</param>
+		/// <returns></returns>
+		static usercmd_s* GetUserCommand(int cmdNumber);
+
+		/// <summary>
+		/// Get the eye position.
+		/// </summary>
+		/// <returns></returns>
+		static vec3 GetEyePos();
+
+		/// <summary>
 		/// Finish moving.
 		/// </summary>
 		/// <param name="cmd">The user command.</param>
@@ -82,5 +95,12 @@ namespace IW3SR
 		/// </summary>
 		/// <returns></returns>
 		static bool InAir();
+
+		/// <summary>
+		/// Create PM.
+		/// </summary>
+		/// <param name="cmd"></param>
+		/// <returns></returns>
+		static pmove_t CreatePM(playerState_s* ps, usercmd_s* cmd);
 	};
 }

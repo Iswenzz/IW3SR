@@ -58,11 +58,17 @@ namespace IW3SR
 		float r, float g, int b, int a, int null4, int null5)>
 		Dvar_RegisterVariantColor = ASM_LOAD(Dvar_RegisterVariant);
 
+	Function<void(float* end, int passEntityNum, trace_t* results, float* start, int contentMask)>
+		G_MissileTrace = ASM_LOAD(G_MissileTrace);
+
 	Function<bool(pmove_t* pm, pml_t* pml)>
 		Jump_Check = ASM_LOAD(Jump_Check);
 
 	Function<Material*(const char* material, int size)>
 		Material_RegisterHandle = 0x5F2A80;
+
+	Function<void(pmove_t* pm)>
+		PmoveSingle = 0x4143A0;
 
 	Function<void(pmove_t* pm, int entity_num)>
 		PM_AddTouchEnt = ASM_LOAD(PM_AddTouchEnt);
@@ -114,6 +120,9 @@ namespace IW3SR
 
 	Function<void(int count, int width, GfxPointVertex* verts, bool depthTest)>
 		RB_DrawLines3D = 0x613040;
+
+	Function<void(DWORD* serverPacket, DWORD packet)>
+		ScreenshotRequest = COD4X_BASE + 0xEA610;
 }
 // clang-format on
 namespace IW3SR
@@ -171,6 +180,25 @@ namespace IW3SR
 		a.call(0x56C350);
 		a.mov(x86::dword_ptr(x86::esp, 0x40), x86::eax);
 		a.add(x86::esp, 0x24);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(G_MissileTrace)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x18)); // contentMask
+		a.push(x86::dword_ptr(x86::ebp, 0x14)); // start
+		a.push(x86::dword_ptr(x86::ebp, 0x10)); // results
+		a.push(x86::dword_ptr(x86::ebp, 0x0C)); // passEntityNum
+		a.push(x86::dword_ptr(x86::ebp, 0x08)); // end
+		a.call(0x4C4FD0);
+		a.add(x86::esp, 0x14);
 
 		a.popad();
 		a.pop(x86::ebp);

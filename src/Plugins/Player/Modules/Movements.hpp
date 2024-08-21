@@ -68,6 +68,11 @@ namespace IW3SR::Addons
 		void OnFinishMove(EventPMoveFinish& event) override;
 
 		/// <summary>
+		/// Load position.
+		/// </summary>
+		void OnLoadPosition() override;
+
+		/// <summary>
 		/// Render frame.
 		/// </summary>
 		void OnRender() override;

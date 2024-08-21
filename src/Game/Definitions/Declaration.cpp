@@ -26,6 +26,8 @@ namespace IW3SR
 	int* g_entities = Signature(0x12885C4);
 	int* g_clients = Signature(0x13255A8);
 	pmove_t* pmove = Signature(0x8C9C90);
+	playerState_s* ps_loc = Signature(0x13255A8);
+
 	const char* g_entityBeginParsePoint = Signature(0x1113674);
 	const char* g_entityEndParsePoint = Signature(0x1113678);
 	int* client_activeNumber = Signature(0xCC5FF8);
@@ -33,6 +35,7 @@ namespace IW3SR
 	WeaponDef** bg_weaponNames = Signature(0x736DB8);
 	dvar_s** dvars = Signature(0xCBA7408);
 	int& dvarCount = Signature(0xCBA73F8);
+	int* server_fps = reinterpret_cast<int*>(0xCBAB908);
 
 	// Render
 	DxGlobals* dx = Signature(0xCC9A400);

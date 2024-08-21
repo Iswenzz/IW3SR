@@ -92,13 +92,14 @@ namespace IW3SR::UC
 
 	void Toolbar::Compile()
 	{
-		if (std::filesystem::exists(CMAKE_BINARY_DIR))
-		{
-			constexpr auto command = R"(cd "{}" && cmake --build . --config Debug --target Install)";
-			system(std::format(command, CMAKE_BINARY_DIR).c_str());
-		}
-		Plugins::Initialize();
+		if (!std::filesystem::exists(CMAKE_BINARY_DIR))
+			return;
+
+		system("cd \"" CMAKE_BINARY_DIR "\" && cmake --build . --config Debug --target Install");
+
 		EventPluginInitialize event;
+
+		Plugins::Initialize();
 		Plugins::Dispatch(event);
 
 		IW3SR::Modules::Initialize();

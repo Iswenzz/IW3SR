@@ -127,13 +127,16 @@ namespace IW3SR::Addons
 	void Movements::Bhop(usercmd_s* cmd)
 	{
 		if (BhopKey.IsPressed())
-			UseBhopToggle = true;
+			UseBhopToggle = !UseBhopToggle;
 
 		if (UseBhop && (cmd->buttons & BUTTON_JUMP))
 		{
 			usercmd_s* oldcmd = &clients->cmds[clients->cmdNumber - 1 & 0x7F];
 			if (cmd->buttons & BUTTON_JUMP && oldcmd->buttons & BUTTON_JUMP)
+			{
+				cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD);
 				cmd->buttons -= BUTTON_JUMP;
+			}
 		}
 		if (UseBhopToggle && PMove::OnGround())
 		{
@@ -177,6 +180,11 @@ namespace IW3SR::Addons
 			deltaAngles[1] += delta.y;
 			deltaAngles[2] += delta.z;
 		}
+	}
+
+	void Movements::OnLoadPosition()
+	{
+		UseBhopToggle = false;
 	}
 
 	void Movements::OnRender()

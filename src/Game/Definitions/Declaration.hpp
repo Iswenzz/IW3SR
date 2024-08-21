@@ -26,6 +26,7 @@ namespace IW3SR
 	API extern int* g_entities;
 	API extern int* g_clients;
 	API extern pmove_t* pmove;
+	API extern playerState_s* ps_loc;
 	extern const char* g_entityBeginParsePoint;
 	extern const char* g_entityEndParsePoint;
 	API extern int* clientActiveCmdNumber;
@@ -62,7 +63,7 @@ namespace IW3SR
 	extern UiContext* ui_context;
 	extern WinMouseVars_t* s_wmv;
 	extern PlayerKeyState* player_keys;
-	extern clientUIActive_t* client_ui;
+	API extern clientUIActive_t* client_ui;
 	extern Fonts_t* g_fonts;
 
 	// GSC

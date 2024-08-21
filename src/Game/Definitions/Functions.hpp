@@ -62,11 +62,17 @@ namespace IW3SR
 		float r, float g, int b, int a, int null4, int null5)>
 		Dvar_RegisterVariantColor;
 
+	API extern Function<void(float* end, int passEntityNum, trace_t* results, float* start, int contentMask)>
+		G_MissileTrace;
+
 	API extern Function<bool(pmove_t* pm, pml_t* pml)>
 		Jump_Check;
 
 	API extern Function<Material*(const char* material, int size)>
 		Material_RegisterHandle;
+
+	API extern Function<void(pmove_t* pm)>
+		PmoveSingle;
 
 	API extern Function<void(pmove_t* pm, int entity_num)>
 		PM_AddTouchEnt;
@@ -100,7 +106,7 @@ namespace IW3SR
 		float xScale, float yScale, float rotation, int style, float* color)>
 		R_AddCmdDrawText;
 
-	extern Function<void(Material* material, float x, float y, float w, float h,
+	API extern Function<void(Material* material, float x, float y, float w, float h,
 		float null1, float null2, float null3, float null4, float* color)>
 		R_AddCmdDrawStretchPic;
 
@@ -118,6 +124,9 @@ namespace IW3SR
 
 	extern Function<void(int count, int width, GfxPointVertex* verts, bool depthTest)>
 		RB_DrawLines3D;
+
+	API extern Function<void(DWORD* serverPacket, DWORD packet)>
+		ScreenshotRequest;
 }
 // clang-format on
 namespace IW3SR
@@ -125,6 +134,7 @@ namespace IW3SR
 	ASM_FUNCTION(BG_EvaluateTrajectory);
 	ASM_FUNCTION(Dvar_FindVar);
 	ASM_FUNCTION(Dvar_RegisterVariant);
+	ASM_FUNCTION(G_MissileTrace);
 	ASM_FUNCTION(Jump_Check);
 	ASM_FUNCTION(PM_AddTouchEnt);
 	ASM_FUNCTION(PM_CorrectAllSolid);
