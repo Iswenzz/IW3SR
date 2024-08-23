@@ -6,7 +6,6 @@ namespace IW3SR
 	class API Prediction
 	{
 	public:
-
 		/// <summary>
 		/// Create PMove.
 		/// </summary>
