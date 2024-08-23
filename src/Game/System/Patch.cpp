@@ -41,7 +41,7 @@ namespace IW3SR
 
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
-		//COD4X Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
+		COD4X Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
 	}
 
 	void Patch::Database()

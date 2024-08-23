@@ -33,7 +33,7 @@ namespace IW3SR
 	void Prediction::PredictPmoveSingle(pmove_t* pm, int numRep)
 	{
 		Memory::Write(0x537D10, "\xC3");
-		for (int i = 0; i < numRep; i++)
+		for ([[unused]] int i : std::views::iota(1, numRep))
 			PmoveSingle(pm);
 		Memory::Write(0x537D10, "\x81");
 	}
