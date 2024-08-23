@@ -7,7 +7,7 @@ namespace IW3SR
 		BG_EvaluateTrajectory = ASM_LOAD(BG_EvaluateTrajectory);
 
 	Function<int(const char* name)>
-		BG_FindWeaponIndexByName = 0x416610;
+		BG_FindWeaponIndexForName = 0x416610;
 
 	Function<void(trace_t* result, const vec3_t start, const vec3_t mins, const vec3_t maxs,
 		const vec3_t end, int skipEntity, int tracemask)>

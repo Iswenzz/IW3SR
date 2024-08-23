@@ -85,8 +85,8 @@ namespace IW3SR::UC
 
 		IW3SR::Modules::Release();
 		IW3SR::Settings::Release();
-
 		Plugins::Shutdown();
+
 		std::thread([this] { Compile(); }).detach();
 	}
 
@@ -102,9 +102,18 @@ namespace IW3SR::UC
 		Plugins::Initialize();
 		Plugins::Dispatch(event);
 
-		IW3SR::Modules::Initialize();
-		IW3SR::Settings::Initialize();
+		Actions::Add(
+			[this]()
+			{
+				EventPluginInitialize event;
 
-		IsReloading = false;
+				Plugins::Initialize();
+				Plugins::Dispatch(event);
+
+				IW3SR::Modules::Initialize();
+				IW3SR::Settings::Initialize();
+
+				IsReloading = false;
+			});
 	}
 }

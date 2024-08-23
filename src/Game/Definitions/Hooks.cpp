@@ -20,9 +20,6 @@ namespace IW3SR
 	Hook<IDirect3D9* STDCALL(UINT sdk)>
 		Direct3DCreate9_h(Direct3DCreate9, D3D9::Direct3DCreate9);
 
-	Hook<int(char *dest, size_t size, const char *fmt, va_list va)>
-		Vsnprintf_h(0x6706F5, GSystem::Vsnprintf);
-
 	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
 
@@ -62,11 +59,11 @@ namespace IW3SR
 	Hook<void()>
 		R_Init_h(0x5F4EE0, GRenderer::Initialize);
 
-	Hook<void(void* cmds)>
-		R_RenderAllLeftovers_h(0x6156EC, ASM_LOAD(R_RenderAllLeftovers_h));
-
 	Hook<void(int window)>
 		R_Shutdown_h(0x5F4F90, GRenderer::Shutdown);
+
+	Hook<void(void* cmds)>
+		RB_ExecuteRendererCommandsLoop_h(0x6156EC, ASM_LOAD(RB_ExecuteRendererCommandsLoop_h));
 
 	Hook<void(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)>
 		RB_EndSceneRendering_h(0x6496EC, GRenderer::Draw3D);
@@ -79,7 +76,7 @@ namespace IW3SR
 {
 	using namespace asmjit;
 
-	ASM_FUNCTION(R_RenderAllLeftovers_h)
+	ASM_FUNCTION(RB_ExecuteRendererCommandsLoop_h)
 	{
 		a.push(x86::ebp);
 		a.mov(x86::ebp, x86::esp);
@@ -91,7 +88,7 @@ namespace IW3SR
 
 		a.popad();
 		a.pop(x86::ebp);
-		a.call(ASM_TRAMPOLINE(R_RenderAllLeftovers_h));
+		a.call(ASM_TRAMPOLINE(RB_ExecuteRendererCommandsLoop_h));
 		a.ret();
 	}
 }

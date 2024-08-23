@@ -15,9 +15,6 @@ namespace IW3SR
 	extern Hook<IDirect3D9* STDCALL(UINT sdk)>
 		Direct3DCreate9_h;
 
-	extern Hook<int(char *dest, size_t size, const char *fmt, va_list va)>
-		Vsnprintf_h;
-
 	extern Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h;
 
@@ -57,11 +54,11 @@ namespace IW3SR
 	extern Hook<void()>
 		R_Init_h;
 
-	extern Hook<void(void* cmds)>
-		R_RenderAllLeftovers_h;
-
 	extern Hook<void(int window)>
 		R_Shutdown_h;
+
+	extern Hook<void(void* cmds)>
+		RB_ExecuteRendererCommandsLoop_h;
 
 	extern Hook<void(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)>
 		RB_EndSceneRendering_h;
@@ -72,5 +69,5 @@ namespace IW3SR
 // clang-format on
 namespace IW3SR
 {
-	ASM_FUNCTION(R_RenderAllLeftovers_h);
+	ASM_FUNCTION(RB_ExecuteRendererCommandsLoop_h);
 }

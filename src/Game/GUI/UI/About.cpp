@@ -5,7 +5,7 @@ namespace IW3SR::UC
 {
 	About::About() : Window("About")
 	{
-		SetRect(-200, -95, 400, 190);
+		SetRect(-200, -95, 400, 200);
 		SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
 	}
 
@@ -30,6 +30,7 @@ Iswenzz Dualite xoxor4d)";
 		ImGui::PopFont();
 
 		ImGui::Markdown(markdown);
+		ImGui::Text("Version " APPLICATION_VERSION);
 		End();
 	}
 }
