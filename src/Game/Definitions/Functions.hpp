@@ -124,9 +124,6 @@ namespace IW3SR
 
 	extern Function<void(int count, int width, GfxPointVertex* verts, bool depthTest)>
 		RB_DrawLines3D;
-
-	API extern Function<void(DWORD* serverPacket, DWORD packet)>
-		ScreenshotRequest;
 }
 // clang-format on
 namespace IW3SR

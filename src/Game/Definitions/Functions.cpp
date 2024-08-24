@@ -120,9 +120,6 @@ namespace IW3SR
 
 	Function<void(int count, int width, GfxPointVertex* verts, bool depthTest)>
 		RB_DrawLines3D = 0x613040;
-
-	Function<void(DWORD* serverPacket, DWORD packet)>
-		ScreenshotRequest = COD4X_BASE + 0xEA610;
 }
 // clang-format on
 namespace IW3SR
@@ -192,13 +189,13 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.push(x86::dword_ptr(x86::ebp, 0x18)); // contentMask
-		a.push(x86::dword_ptr(x86::ebp, 0x14)); // start
-		a.push(x86::dword_ptr(x86::ebp, 0x10)); // results
-		a.push(x86::dword_ptr(x86::ebp, 0x0C)); // passEntityNum
-		a.push(x86::dword_ptr(x86::ebp, 0x08)); // end
+		a.push(x86::dword_ptr(x86::ebp, 0x18));			 // contentMask
+		a.push(x86::dword_ptr(x86::ebp, 0x14));			 // start
+		a.push(x86::dword_ptr(x86::ebp, 0x10));			 // results
+		a.mov(x86::edx, x86::dword_ptr(x86::ebp, 0x0C)); // passEntityNum
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // end
 		a.call(0x4C4FD0);
-		a.add(x86::esp, 0x14);
+		a.add(x86::esp, 12);
 
 		a.popad();
 		a.pop(x86::ebp);
