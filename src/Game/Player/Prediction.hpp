@@ -3,6 +3,9 @@
 
 namespace IW3SR
 {
+	/// <summary>
+	/// Game prediction.
+	/// </summary>
 	class API Prediction
 	{
 	public:
@@ -18,7 +21,7 @@ namespace IW3SR
 		/// Predict next frame pmove.
 		/// </summary>
 		/// <param name="pm">The player movement.</param>
-		/// <param name="numRep">The number of frames to simulate ahead.</param>
-		static void PredictPmoveSingle(pmove_t* pm, int numRep = 1);
+		/// <param name="amount">The number of frames to simulate ahead.</param>
+		static void PredictPmoveSingle(pmove_t* pm, int amount = 1);
 	};
 }

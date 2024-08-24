@@ -31,4 +31,16 @@
 #define TS_UNUSED_6 0xA
 #define TS_WATER_MAP 0xB
 
+#define CONTENTS_SOLID 0x1		   // An eye is never valid in a solid
+#define CONTENTS_WINDOW 0x2		   // Translucent, but not watery (glass)
+#define CONTENTS_GRATE 0x8		   // Alpha-tested "grate" textures. Bullets/sight pass through, but solids don't
+#define CONTENTS_MOVEABLE 0x4000   // Hits entities which are MOVETYPE_PUSH (doors, plats, etc.)
+#define CONTENTS_MONSTER 0x2000000 // Should never be on a brush, only in game
+
+#define MASK_SOLID (CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | CONTENTS_GRATE)
+#define MASK_SHOT (CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_WINDOW | CONTENTS_MONSTER | 0x4000000 | 0x40000000)
+#define MASK_PLAYERSOLID 0x02810011
+
+#define GENTITYNUM_BITS 10
+#define MAX_GENTITIES (1 << GENTITYNUM_BITS)
 #define ENTITYNUM_NONE 1023

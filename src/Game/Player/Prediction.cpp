@@ -4,15 +4,12 @@
 #include "Game/System/Dvar.hpp"
 #include "PMove.hpp"
 
-#define MASK_PLAYERSOLID (0x02810011)
-
 namespace IW3SR
 {
 	pmove_t Prediction::CreatePM(playerState_s* ps, usercmd_s* cmd)
 	{
-		std::unordered_map<int, int> stance = { { 60, 70 }, { 40, 50 }, { 11, 30 } };
 		usercmd_s* oldcmd = PMove::GetUserCommand(clients->cmdNumber - 1);
-		pmove_t pm{};
+		pmove_t pm = { 0 };
 
 		pm.ps = ps;
 		pm.cmd = *cmd;
@@ -23,17 +20,22 @@ namespace IW3SR
 		pm.mins[2] = 0;
 		pm.maxs[0] = 15;
 		pm.maxs[1] = 15;
-		pm.maxs[2] = stance.find(ps->viewHeightCurrent)->second;
+		if (ps->viewHeightCurrent == 60)
+			pm.maxs[2] = 70;
+		if (ps->viewHeightCurrent == 40)
+			pm.maxs[2] = 50;
+		if (ps->viewHeightCurrent == 11)
+			pm.maxs[2] = 30;
 		pm.tracemask = MASK_PLAYERSOLID;
 		pm.handler = 1;
 
 		return pm;
 	}
 
-	void Prediction::PredictPmoveSingle(pmove_t* pm, int numRep)
+	void Prediction::PredictPmoveSingle(pmove_t* pm, int amount)
 	{
 		Memory::Write(0x537D10, "\xC3");
-		for ([[unused]] int i : std::views::iota(1, numRep))
+		for (int i = 0; i < amount; i++)
 			PmoveSingle(pm);
 		Memory::Write(0x537D10, "\x81");
 	}
