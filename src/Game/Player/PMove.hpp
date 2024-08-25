@@ -95,12 +95,5 @@ namespace IW3SR
 		/// </summary>
 		/// <returns></returns>
 		static bool InAir();
-
-		/// <summary>
-		/// Create PM.
-		/// </summary>
-		/// <param name="cmd"></param>
-		/// <returns></returns>
-		static pmove_t CreatePM(playerState_s* ps, usercmd_s* cmd);
 	};
 }

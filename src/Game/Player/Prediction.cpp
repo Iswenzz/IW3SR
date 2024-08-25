@@ -6,7 +6,7 @@
 
 namespace IW3SR
 {
-	pmove_t Prediction::CreatePM(playerState_s* ps, usercmd_s* cmd)
+	pmove_t Prediction::CreatePmove(playerState_s* ps, usercmd_s* cmd)
 	{
 		usercmd_s* oldcmd = PMove::GetUserCommand(clients->cmdNumber - 1);
 		pmove_t pm = { 0 };

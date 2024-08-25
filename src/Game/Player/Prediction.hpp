@@ -10,15 +10,15 @@ namespace IW3SR
 	{
 	public:
 		/// <summary>
-		/// Create PMove.
+		/// Create player movement.
 		/// </summary>
 		/// <param name="ps">The player state.</param>
 		/// <param name="cmd">The user command.</param>
 		/// <returns></returns>
-		static pmove_t CreatePM(playerState_s* ps, usercmd_s* cmd);
+		static pmove_t CreatePmove(playerState_s* ps, usercmd_s* cmd);
 
 		/// <summary>
-		/// Predict next frame pmove.
+		/// Predict player movement.
 		/// </summary>
 		/// <param name="pm">The player movement.</param>
 		/// <param name="amount">The number of frames to simulate ahead.</param>
