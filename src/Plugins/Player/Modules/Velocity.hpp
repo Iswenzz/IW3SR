@@ -47,7 +47,7 @@ namespace IW3SR::Addons
 		/// <summary>
 		/// Menu drawing.
 		/// </summary>
-		void OnMenu() override;
+		void Menu() override;
 
 		/// <summary>
 		/// Client spawn.

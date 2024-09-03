@@ -19,16 +19,21 @@ namespace IW3SR::UC
 		virtual ~Toolbar() = default;
 
 		/// <summary>
-		/// Reload plugins.
+		/// Begin window.
 		/// </summary>
-		void Reload();
+		void Begin() override;
 
 		/// <summary>
 		/// Render frame.
 		/// </summary>
-		void Render();
+		void OnRender() override;
 
 	private:
+		/// <summary>
+		/// Reload plugins.
+		/// </summary>
+		void Reload();
+
 		/// <summary>
 		/// Compile plugins.
 		/// </summary>

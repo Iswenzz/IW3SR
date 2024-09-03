@@ -42,23 +42,6 @@ namespace IW3SR
 		/// <param name="type">The messsage type.</param>
 		static void Write(ConChannel channel, const char* msg, int type);
 
-		/// <summary>
-		/// Execute command.
-		/// </summary>
-		/// <param name="event">The event.</param>
-		static void Command(EventConsoleCommand& event);
-
-		/// <summary>
-		/// Dispatch event.
-		/// </summary>
-		/// <param name="event">The event.</param>
-		static void Dispatch(Event& event);
-
-		/// <summary>
-		/// Console frame.
-		/// </summary>
-		static void Frame();
-
 	private:
 		/// <summary>
 		/// Converts Q3 colors to ANSI.

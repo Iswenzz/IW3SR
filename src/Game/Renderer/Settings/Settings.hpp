@@ -9,33 +9,24 @@ namespace IW3SR
 	class API Settings
 	{
 	public:
-		static inline std::map<std::string, Ref<Setting>> Entries;
+		static inline std::unordered_map<std::string, Ref<Setting>> Entries;
 		static inline nlohmann::json Serialized;
-
-		/// <summary>
-		/// Initialize the settings.
-		/// </summary>
-		static void Initialize();
-
-		/// <summary>
-		/// Release the settings.
-		/// </summary>
-		static void Release();
 
 		/// <summary>
 		/// Load a setting.
 		/// </summary>
-		/// <typeparam name="F">The setting type.</typeparam>
-		template <class F = Setting>
+		/// <typeparam name="T">The setting type.</typeparam>
+		template <class T = Setting>
 		static void Load()
 		{
-			auto entry = CreateRef<F>();
+			auto entry = CreateRef<T>();
 			bool isSerialized = Serialized.contains(entry->ID);
 
 			if (isSerialized)
 				entry->Deserialize(Serialized[entry->ID]);
+			entry->Initialize();
 
-			Entries.insert({ entry->ID, std::move(entry) });
+			Entries[entry->ID] = entry;
 		}
 
 		/// <summary>

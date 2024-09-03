@@ -18,8 +18,6 @@ namespace IW3SR
 
 	LRESULT GSystem::MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
-		const auto& UI = UI::Get();
-
 		switch (msg)
 		{
 		case WM_KEYDOWN:
@@ -29,14 +27,17 @@ namespace IW3SR
 			Keyboard::Process(msg, wParam);
 			break;
 		}
-		if (UI.Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-			return true;
+		if (UI::Active)
+		{
+			if (UI::Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+				return true;
 
-		ImGuiIO& io = ImGui::GetIO();
-		io.MouseDrawCursor = UI.Open;
-		s_wmv->mouseInitialized = !UI.Open;
+			ImGuiIO& io = ImGui::GetIO();
+			io.MouseDrawCursor = UI::Open;
+		}
+		s_wmv->mouseInitialized = !UI::Open;
 
-		return UI.Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
+		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
 	void GSystem::ExecuteSingleCommand(int localClientNum, int controllerIndex, char* cmd)
@@ -47,10 +48,10 @@ namespace IW3SR
 		if (command == "openscriptmenu cj load")
 		{
 			EventClientLoadPosition event;
-			Application::Get().Dispatch(event);
+			Application::Dispatch(event);
 		}
 		EventClientCommand event(command);
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 
 	void GSystem::ScriptMenuResponse(int localClientNum, itemDef_s* item, const char** args)
@@ -62,6 +63,6 @@ namespace IW3SR
 		Script_ScriptMenuResponse_h(localClientNum, item, args);
 
 		EventScriptMenuResponse event(item->parent->window.name, response);
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 }

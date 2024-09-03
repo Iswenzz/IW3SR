@@ -10,10 +10,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-		Application::Get().Start();
+		Application::Start();
 		break;
 	case DLL_PROCESS_DETACH:
-		Application::Get().Shutdown();
+		Application::Shutdown();
 		break;
 	}
 	return TRUE;

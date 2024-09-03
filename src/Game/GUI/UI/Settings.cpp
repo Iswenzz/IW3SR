@@ -11,11 +11,8 @@ namespace IW3SR::UC
 		SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_TOP);
 	}
 
-	void Settings::Render()
+	void Settings::OnRender()
 	{
-		if (!Open)
-			return;
-
 		Begin();
 		const float frameWidth = ImGui::GetWindowContentRegionMax().x - 30;
 		std::set<std::string> groups;
@@ -36,14 +33,13 @@ namespace IW3SR::UC
 
 				ImGui::Text(entry->Name.c_str());
 				ImGui::SameLine(frameWidth);
+				ImGui::Button(ICON_FA_GEAR, entry->ID + "menu", &entry->MenuWindow.Open);
 
-				// Draw setting menu
-				ImGui::Button(ICON_FA_GEAR, entry->ID + "menu", &entry->Menu.Open);
-				if (entry->Menu.Open)
+				if (entry->MenuWindow.Open)
 				{
-					entry->Menu.Begin();
-					entry->OnMenu();
-					entry->Menu.End();
+					entry->MenuWindow.Begin();
+					entry->Menu();
+					entry->MenuWindow.End();
 				}
 			}
 		}

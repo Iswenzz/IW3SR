@@ -44,6 +44,6 @@ namespace IW3SR
 		/// <summary>
 		/// Render frame.
 		/// </summary>
-		static void Render();
+		static void Frame();
 	};
 }

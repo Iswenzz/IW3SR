@@ -32,7 +32,7 @@ namespace IW3SR::Addons
 		KeyReset = Keyboard(Key_R);
 	}
 
-	void Velocity::OnMenu()
+	void Velocity::Menu()
 	{
 		ImGui::Checkbox("Velocity", &ShowVelocity);
 		ImGui::Checkbox("Average", &ShowAverage);
@@ -76,7 +76,7 @@ namespace IW3SR::Addons
 			GroundTime = 0;
 		}
 		if (onGround)
-			GroundTime += UI::Get().DeltaTimeMS();
+			GroundTime += UI::DeltaTimeMS();
 
 		Value = VectorLength2(pmove->ps->velocity);
 		BufferValues.Add(Value);

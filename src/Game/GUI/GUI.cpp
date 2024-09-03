@@ -1,47 +1,36 @@
 #include "GUI.hpp"
 
+#include "UI/About.hpp"
+#include "UI/Binds.hpp"
+#include "UI/Modules.hpp"
+#include "UI/Settings.hpp"
+#include "UI/Toolbar.hpp"
+
 #include "Core/System/Environment.hpp"
 
 namespace IW3SR
 {
-	GUI::GUI()
+	void GUI::Initialize()
 	{
 		KeyOpen = Keyboard(Key_F10);
 
-		About = UC::About();
-		Binds = UC::Binds();
-		Modules = UC::Modules();
-		Settings = UC::Settings();
-		Toolbar = UC::Toolbar();
+		UI::CreateWindow<UC::About>();
+		UI::CreateWindow<UC::Binds>();
+		UI::CreateWindow<UC::Modules>();
+		UI::CreateWindow<UC::Settings>();
+		UI::CreateWindow<UC::Toolbar>();
 	}
 
-	void GUI::Initialize()
-	{
-		Environment::Deserialize("GUI", *this);
-	}
+	void GUI::Shutdown() { }
 
-	void GUI::Shutdown()
+	void GUI::Frame()
 	{
-		Environment::Serialize("GUI", *this);
-	}
-
-	void GUI::Render()
-	{
-		auto& UI = UI::Get();
+		if (Keyboard::IsPressed(Key_Escape))
+			UI::Open = false;
 
 		if (KeyOpen.IsPressed())
-			UI.Open = !UI.Open;
+			UI::Open = !UI::Open;
 
-		if (Keyboard::IsPressed(Key_Escape))
-			UI.Open = false;
-
-		if (UI.Open)
-		{
-			Toolbar.Render();
-			Binds.Render();
-			Modules.Render();
-			Settings.Render();
-			About.Render();
-		}
+		UI::Windows["Toolbar"]->Open = UI::Open;
 	}
 }

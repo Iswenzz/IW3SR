@@ -9,48 +9,27 @@ namespace IW3SR
 	class API Modules
 	{
 	public:
-		static inline std::map<std::string, Ref<Module>> Entries;
+		static inline std::unordered_map<std::string, Ref<Module>> Entries;
 		static inline nlohmann::json Serialized;
-
-		/// <summary>
-		/// Initialize the modules.
-		/// </summary>
-		static void Initialize();
-
-		/// <summary>
-		/// Release the modules.
-		/// </summary>
-		static void Release();
 
 		/// <summary>
 		/// Load a module.
 		/// </summary>
-		/// <typeparam name="M">The module type.</typeparam>
-		/// <param name="enabled">Is enabled by default.</param>
-		template <class M = Module>
-		static void Load(bool enabled = true)
+		/// <typeparam name="T">The module type.</typeparam>
+		template <class T = Module>
+		static void Load()
 		{
-			auto entry = CreateRef<M>();
+			auto entry = CreateRef<T>();
 			bool isSerialized = Serialized.contains(entry->ID);
 
-			entry->IsEnabled = enabled;
 			if (isSerialized)
 				entry->Deserialize(Serialized[entry->ID]);
 
-			Entries.insert({ entry->ID, std::move(entry) });
+			if (entry->IsEnabled)
+				entry->Initialize();
+
+			Entries[entry->ID] = entry;
 		}
-
-		/// <summary>
-		/// Enable a module.
-		/// </summary>
-		/// <param name="id">The module id.</param>
-		static void Enable(const std::string& id);
-
-		/// <summary>
-		/// Disable a module.
-		/// </summary>
-		/// <param name="id">The module id.</param>
-		static void Disable(const std::string& id);
 
 		/// <summary>
 		/// Remove a module.

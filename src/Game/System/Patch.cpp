@@ -88,7 +88,7 @@ namespace IW3SR
 		Com_PrintMessage_h.Install();
 		CG_DrawCrosshair_h.Install();
 		CG_PredictPlayerState_Internal_h.Install();
-		COD4X CG_Respawn_h.Install();
+		CG_Respawn_h.Install();
 		CL_Connect_h.Install();
 		CL_Disconnect_h.Install();
 		CL_FinishMove_h.Install();
@@ -112,7 +112,7 @@ namespace IW3SR
 		Com_PrintMessage_h.Remove();
 		CG_DrawCrosshair_h.Remove();
 		CG_PredictPlayerState_Internal_h.Remove();
-		COD4X CG_Respawn_h.Remove();
+		CG_Respawn_h.Remove();
 		CL_Connect_h.Remove();
 		CL_Disconnect_h.Remove();
 		CL_FinishMove_h.Remove();

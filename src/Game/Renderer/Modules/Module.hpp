@@ -12,13 +12,14 @@ namespace IW3SR
 		std::string ID;
 		std::string Name;
 		std::string Group;
-		Window Menu;
+		Window MenuWindow;
 		bool IsEnabled = false;
 
 		/// <summary>
 		/// Initialize the module.
 		/// </summary>
 		Module() = default;
+		virtual ~Module();
 
 		/// <summary>
 		/// Initialize the module.
@@ -27,11 +28,6 @@ namespace IW3SR
 		/// <param name="group">The group.</param>
 		/// <param name="name">The name.</param>
 		Module(const std::string& id, const std::string& group, const std::string& name);
-
-		/// <summary>
-		/// Release the module.
-		/// </summary>
-		virtual ~Module();
 
 		/// <summary>
 		/// Initialize the module.
@@ -44,15 +40,9 @@ namespace IW3SR
 		virtual void Release();
 
 		/// <summary>
-		/// Event dispatch.
-		/// </summary>
-		/// <param name="event">The event.</param>
-		virtual void OnEvent(Event& event) override;
-
-		/// <summary>
 		/// Menu drawing.
 		/// </summary>
-		virtual void OnMenu();
+		virtual void Menu();
 
 		/// <summary>
 		/// Client connect.
@@ -136,6 +126,12 @@ namespace IW3SR
 		/// </summary>
 		virtual void OnRender();
 
-		SERIALIZE_POLY_BASE(Module, IsEnabled, Menu)
+		/// <summary>
+		/// Event dispatch.
+		/// </summary>
+		/// <param name="event">The event.</param>
+		virtual void OnEvent(Event& event) override;
+
+		SERIALIZE_POLY_BASE(Module, IsEnabled, MenuWindow)
 	};
 }

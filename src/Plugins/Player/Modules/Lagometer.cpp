@@ -30,7 +30,7 @@ namespace IW3SR::Addons
 		Dvar::Set("cg_drawLagometer", 0);
 	}
 
-	void Lagometer::OnMenu()
+	void Lagometer::Menu()
 	{
 		ImGui::Checkbox("Snapshot", &ShowSnap);
 		ImGui::Checkbox("Snapshot Flags", &ShowSnapFlag);

@@ -22,23 +22,6 @@ namespace IW3SR
 		Com_PrintMessage_h(channel, msg, type);
 	}
 
-	void GConsole::Command(EventConsoleCommand& event)
-	{
-		Cmd_ExecuteSingleCommand(0, 0, event.command.c_str());
-	}
-
-	void GConsole::Dispatch(Event& event)
-	{
-		EventDispatcher dispatcher(event);
-
-		dispatcher.Dispatch<EventConsoleCommand>(Command);
-	}
-
-	void GConsole::Frame()
-	{
-		Console::Frame();
-	}
-
 	std::string GConsole::Q3(const std::string& msg)
 	{
 		std::string result;

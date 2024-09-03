@@ -12,26 +12,29 @@ namespace IW3SR::UC
 	Toolbar::Toolbar() : Window("Toolbar")
 	{
 		SetRectAlignment(HORIZONTAL_FULLSCREEN, VERTICAL_FULLSCREEN);
+		SetFlags(ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar
+			| ImGuiWindowFlags_NoMove);
 	}
 
-	void Toolbar::Render()
+	void Toolbar::Begin()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0, 0 });
+		Window::Begin();
+		ImGui::PopStyleVar(2);
+	}
+
+	void Toolbar::OnRender()
+	{
 		SetRect(0, 0, 640, 14);
-
-		Begin(ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar
-			| ImGuiWindowFlags_NoMove);
-
-		auto& GUI = GUI::Get();
-		auto& UI = UI::Get();
+		Begin();
 
 		const vec2& position = RenderPosition;
 		const vec2& size = RenderSize;
-		const vec2 buttonSize = vec2{ 14, 14 } * UI::Get().Size;
+		const vec2 buttonSize = vec2{ 14, 14 } * UI::Size;
 
 		ImGui::Rainbow(position + vec2{ 0, size.y }, position + vec2{ size.x, size.y + 2 });
-		ImGui::Button(ICON_FA_GAMEPAD, "Modules", &GUI.Modules.Open, buttonSize);
+		ImGui::Button(ICON_FA_GAMEPAD, "Modules", &UI::Windows["Modules"]->Open, buttonSize);
 		ImGui::Tooltip("Modules");
 		ImGui::SameLine();
 
@@ -39,16 +42,17 @@ namespace IW3SR::UC
 		{
 			if (ImGui::Button(ICON_FA_ROTATE_RIGHT, "Reload", nullptr, buttonSize))
 				Reload();
+
 			ImGui::Tooltip("Reload plugins");
 			ImGui::SameLine();
 		}
-		ImGui::ButtonToggle(ICON_FA_GRIP, "Design", &UI.DesignMode, buttonSize);
+		ImGui::ButtonToggle(ICON_FA_GRIP, "Design", &UI::DesignMode, buttonSize);
 		ImGui::Tooltip("Design mode");
 		ImGui::SameLine();
-		ImGui::Button(ICON_FA_PAINTBRUSH, "Themes", &UI.Themes.Open, buttonSize);
+		ImGui::Button(ICON_FA_PAINTBRUSH, "Themes", &UI::Windows["Themes"]->Open, buttonSize);
 		ImGui::Tooltip("Themes");
 		ImGui::SameLine();
-		ImGui::Button(ICON_FA_KEYBOARD, "Binds", &GUI.Binds.Open, buttonSize);
+		ImGui::Button(ICON_FA_KEYBOARD, "Binds", &UI::Windows["Binds"]->Open, buttonSize);
 		ImGui::Tooltip("Binds");
 		ImGui::SameLine();
 
@@ -63,29 +67,28 @@ namespace IW3SR::UC
 				ImGui::ShowDebugLogWindow(&IsDebug);
 				ImGui::ShowStackToolWindow(&IsDebug);
 			}
-			ImGui::Button(ICON_FA_MEMORY, "Memory", &UI.Memory.Open, buttonSize);
+			ImGui::Button(ICON_FA_MEMORY, "Memory", &UI::Windows["Memory"]->Open, buttonSize);
 			ImGui::Tooltip("Memory");
 			ImGui::SameLine();
 		}
-		ImGui::Button(ICON_FA_CIRCLE_INFO, "About", &GUI.About.Open, buttonSize);
+		ImGui::Button(ICON_FA_CIRCLE_INFO, "About", &UI::Windows["About"]->Open, buttonSize);
 		ImGui::Tooltip("About");
 		ImGui::SameLine();
-		ImGui::Button(ICON_FA_GEAR, "Settings", &GUI.Settings.Open, buttonSize);
+		ImGui::Button(ICON_FA_GEAR, "Settings", &UI::Windows["Settings"]->Open, buttonSize);
 		ImGui::Tooltip("Settings");
-
 		End();
-		ImGui::PopStyleVar(2);
 	}
 
 	void Toolbar::Reload()
 	{
 		if (IsReloading)
 			return;
+
 		IsReloading = true;
 
-		IW3SR::Modules::Release();
-		IW3SR::Settings::Release();
 		Plugins::Shutdown();
+		IW3SR::Modules::Serialize();
+		IW3SR::Settings::Serialize();
 
 		std::thread([this] { Compile(); }).detach();
 	}
@@ -97,22 +100,12 @@ namespace IW3SR::UC
 
 		system("cd \"" CMAKE_BINARY_DIR "\" && cmake --build . --config Debug --target Install");
 
-		EventPluginInitialize event;
-
-		Plugins::Initialize();
-		Plugins::Dispatch(event);
-
 		Actions::Add(
 			[this]()
 			{
-				EventPluginInitialize event;
-
+				IW3SR::Settings::Deserialize();
+				IW3SR::Modules::Deserialize();
 				Plugins::Initialize();
-				Plugins::Dispatch(event);
-
-				IW3SR::Modules::Initialize();
-				IW3SR::Settings::Initialize();
-
 				IsReloading = false;
 			});
 	}

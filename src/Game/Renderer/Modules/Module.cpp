@@ -7,7 +7,7 @@ namespace IW3SR
 		ID = id;
 		Name = name;
 		Group = group;
-		Menu = Window(name);
+		MenuWindow = Window(name);
 	}
 
 	Module::~Module()
@@ -17,10 +17,29 @@ namespace IW3SR
 
 	void Module::Initialize() { }
 	void Module::Release() { }
+	void Module::Menu() { }
+
+	void Module::OnConnect(EventClientConnect& event) { }
+	void Module::OnDisconnect(EventClientDisconnect& event) { }
+	void Module::OnSpawn(EventClientSpawn& event) { }
+	void Module::OnPredict(EventClientPredict& event) { }
+
+	void Module::OnWalkMove(EventPMoveWalk& event) { }
+	void Module::OnAirMove(EventPMoveAir& event) { }
+	void Module::OnGroundTrace(EventPMoveGroundTrace& event) { }
+	void Module::OnFinishMove(EventPMoveFinish& event) { }
+	void Module::OnLoadPosition() { }
+
+	void Module::OnExecuteCommand(EventClientCommand& event) { }
+	void Module::OnMenuResponse(EventScriptMenuResponse& event) { }
+
+	void Module::OnDraw3D(EventRenderer3D& event) { }
+	void Module::OnDraw2D(EventRenderer2D& event) { }
+	void Module::OnRender() { }
 
 	void Module::OnEvent(Event& event)
 	{
-		if (!IsEnabled)
+		if (!IsEnabled || client_ui->connectionState != CA_ACTIVE)
 			return;
 
 		EventDispatcher dispatcher(event);
@@ -43,24 +62,4 @@ namespace IW3SR
 		dispatcher.Dispatch<EventRenderer2D>(EVENT_BIND(OnDraw2D));
 		dispatcher.Dispatch<EventRendererRender>(EVENT_BIND_VOID(OnRender));
 	}
-
-	void Module::OnMenu() { }
-
-	void Module::OnConnect(EventClientConnect& event) { }
-	void Module::OnDisconnect(EventClientDisconnect& event) { }
-	void Module::OnSpawn(EventClientSpawn& event) { }
-	void Module::OnPredict(EventClientPredict& event) { }
-
-	void Module::OnWalkMove(EventPMoveWalk& event) { }
-	void Module::OnAirMove(EventPMoveAir& event) { }
-	void Module::OnGroundTrace(EventPMoveGroundTrace& event) { }
-	void Module::OnFinishMove(EventPMoveFinish& event) { }
-	void Module::OnLoadPosition() { }
-
-	void Module::OnExecuteCommand(EventClientCommand& event) { }
-	void Module::OnMenuResponse(EventScriptMenuResponse& event) { }
-
-	void Module::OnDraw3D(EventRenderer3D& event) { }
-	void Module::OnDraw2D(EventRenderer2D& event) { }
-	void Module::OnRender() { }
 }

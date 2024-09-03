@@ -12,12 +12,13 @@ namespace IW3SR
 		std::string ID;
 		std::string Name;
 		std::string Group;
-		Window Menu;
+		Window MenuWindow;
 
 		/// <summary>
 		/// Initialize the setting.
 		/// </summary>
 		Setting() = default;
+		virtual ~Setting();
 
 		/// <summary>
 		/// Initialize the setting.
@@ -26,11 +27,6 @@ namespace IW3SR
 		/// <param name="group">The group.</param>
 		/// <param name="name">The name.</param>
 		Setting(const std::string& id, const std::string& group, const std::string& name);
-
-		/// <summary>
-		/// Release the setting.
-		/// </summary>
-		virtual ~Setting();
 
 		/// <summary>
 		/// Initialize the setting.
@@ -43,15 +39,9 @@ namespace IW3SR
 		virtual void Release();
 
 		/// <summary>
-		/// Event dispatch.
-		/// </summary>
-		/// <param name="event">The event.</param>
-		virtual void OnEvent(Event& event) override;
-
-		/// <summary>
 		/// Menu drawing.
 		/// </summary>
-		virtual void OnMenu();
+		virtual void Menu();
 
 		/// <summary>
 		/// Draw 3D.
@@ -70,6 +60,12 @@ namespace IW3SR
 		/// </summary>
 		virtual void OnRender();
 
-		SERIALIZE_POLY_BASE(Setting, Menu)
+		/// <summary>
+		/// Event dispatch.
+		/// </summary>
+		/// <param name="event">The event.</param>
+		virtual void OnEvent(Event& event) override;
+
+		SERIALIZE_POLY_BASE(Setting, MenuWindow)
 	};
 }

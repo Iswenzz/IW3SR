@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Compilers
 if(MSVC)
 	set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD true)
+	# add_compile_options(/fsanitize=address)
 endif()
 
 # Tests

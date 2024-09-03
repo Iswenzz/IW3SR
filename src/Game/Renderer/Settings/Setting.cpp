@@ -7,7 +7,7 @@ namespace IW3SR
 		ID = id;
 		Name = name;
 		Group = group;
-		Menu = Window(name);
+		MenuWindow = Window(name);
 	}
 
 	Setting::~Setting()
@@ -17,18 +17,21 @@ namespace IW3SR
 
 	void Setting::Initialize() { }
 	void Setting::Release() { }
+	void Setting::Menu() { }
+
+	void Setting::OnDraw3D(EventRenderer3D& event) { }
+	void Setting::OnDraw2D(EventRenderer2D& event) { }
+	void Setting::OnRender() { }
 
 	void Setting::OnEvent(Event& event)
 	{
+		if (client_ui->connectionState != CA_ACTIVE)
+			return;
+
 		EventDispatcher dispatcher(event);
 
 		dispatcher.Dispatch<EventRenderer3D>(EVENT_BIND(OnDraw3D));
 		dispatcher.Dispatch<EventRenderer2D>(EVENT_BIND(OnDraw2D));
 		dispatcher.Dispatch<EventRendererRender>(EVENT_BIND_VOID(OnRender));
 	}
-
-	void Setting::OnMenu() { }
-	void Setting::OnDraw3D(EventRenderer3D& event) { }
-	void Setting::OnDraw2D(EventRenderer2D& event) { }
-	void Setting::OnRender() { }
 }

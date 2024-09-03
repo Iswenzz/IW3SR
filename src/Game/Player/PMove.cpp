@@ -22,13 +22,13 @@ namespace IW3SR
 		CL_FinishMove_h(cmd);
 
 		EventPMoveFinish event(cmd);
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 
 	void PMove::WalkMove(pmove_t* pm, pml_t* pml)
 	{
 		EventPMoveWalk event(pm, pml);
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 
 		if (!event.PreventDefault)
 			PM_WalkMove_h(pm, pml);
@@ -37,7 +37,7 @@ namespace IW3SR
 	void PMove::AirMove(pmove_t* pm, pml_t* pml)
 	{
 		EventPMoveAir event(pm, pml);
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 
 		if (!event.PreventDefault)
 			PM_AirMove_h(pm, pml);
@@ -46,7 +46,7 @@ namespace IW3SR
 	void PMove::GroundTrace(pmove_t* pm, pml_t* pml)
 	{
 		EventPMoveGroundTrace event(pm, pml);
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 
 		if (!event.PreventDefault)
 			PM_GroundTrace_h(pm, pml);

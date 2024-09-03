@@ -6,14 +6,11 @@ namespace IW3SR::UC
 {
 	Binds::Binds() : Window("Binds") { }
 
-	void Binds::Render()
+	void Binds::OnRender()
 	{
-		if (!Open)
-			return;
-
 		Begin();
 		if (ImGui::CollapsingHeader("General", ImGuiTreeNodeFlags_DefaultOpen))
-			ImGui::Keybind("Menu", &GUI::Get().KeyOpen.Key, false);
+			ImGui::Keybind("Menu", &GUI::KeyOpen.Key, false);
 		End();
 	}
 }

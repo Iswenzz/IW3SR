@@ -16,18 +16,20 @@ namespace IW3SR
 
 		Device::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize();
-		GUI::Get().Initialize();
+		GUI::Initialize();
 
-		Modules::Initialize();
-		Settings::Initialize();
+		Settings::Deserialize();
+		Modules::Deserialize();
+		Plugins::Initialize();
 	}
 
 	void GRenderer::Shutdown(int window)
 	{
-		Settings::Release();
-		Modules::Release();
+		Plugins::Shutdown();
+		Modules::Serialize();
+		Settings::Serialize();
 
-		GUI::Get().Shutdown();
+		GUI::Shutdown();
 		Renderer::Shutdown();
 
 		R_Shutdown_h(window);
@@ -38,7 +40,7 @@ namespace IW3SR
 		CG_DrawCrosshair_h(localClientNum);
 
 		EventRenderer2D event;
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 
 	void GRenderer::Draw3D(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)
@@ -47,29 +49,26 @@ namespace IW3SR
 		GDraw3D::Render();
 
 		EventRenderer3D event;
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 
 	void GRenderer::Commands(void* cmds)
 	{
 		// HLSL offline gameTime constants
 		if (client_ui->connectionState != CA_ACTIVE)
-			R_SetGameTime(gfx_cmdBufSourceState, UI::Get().Time());
+			R_SetGameTime(gfx_cmdBufSourceState, UI::Time());
 	}
 
-	void GRenderer::Render()
+	void GRenderer::Frame()
 	{
 		Actions::Submit();
+		GUI::Frame();
 
-		GConsole::Frame();
 		Renderer::Begin();
-		GUI::Get().Render();
 
-		if (client_ui->connectionState == CA_ACTIVE)
-		{
-			EventRendererRender event;
-			Application::Get().Dispatch(event);
-		}
+		EventRendererRender event;
+		Application::Dispatch(event);
+
 		Renderer::End();
 	}
 }

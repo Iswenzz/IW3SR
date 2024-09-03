@@ -16,7 +16,7 @@ namespace IW3SR::Addons
 		UseInterpolateMovers = true;
 	}
 
-	void Movements::OnMenu()
+	void Movements::Menu()
 	{
 		int mode = Dvar::Get<int>("pm_mode");
 

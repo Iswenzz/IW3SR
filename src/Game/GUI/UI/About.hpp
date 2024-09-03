@@ -18,6 +18,6 @@ namespace IW3SR::UC
 		/// <summary>
 		/// Render frame.
 		/// </summary>
-		void Render();
+		void OnRender() override;
 	};
 }

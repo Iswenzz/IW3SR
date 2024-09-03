@@ -34,14 +34,9 @@ namespace IW3SR::Addons
 		virtual ~Tweaks() = default;
 
 		/// <summary>
-		/// Initialize setting.
-		/// </summary>
-		void Initialize() override;
-
-		/// <summary>
 		/// Menu drawing.
 		/// </summary>
-		void OnMenu() override;
+		void Menu() override;
 
 		/// <summary>
 		/// Render frame.

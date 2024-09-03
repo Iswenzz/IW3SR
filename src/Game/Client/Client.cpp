@@ -16,7 +16,7 @@ namespace IW3SR
 		CL_Connect_h();
 
 		EventClientConnect event;
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 
 	void Client::Disconnect(int localClientNum)
@@ -24,7 +24,7 @@ namespace IW3SR
 		CL_Disconnect_h(localClientNum);
 
 		EventClientDisconnect event;
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 
 	void Client::Respawn()
@@ -32,7 +32,7 @@ namespace IW3SR
 		CG_Respawn_h();
 
 		EventClientSpawn event;
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 
 	void Client::Predict(int localClientNum)
@@ -40,6 +40,6 @@ namespace IW3SR
 		CG_PredictPlayerState_Internal_h(localClientNum);
 
 		EventClientPredict event;
-		Application::Get().Dispatch(event);
+		Application::Dispatch(event);
 	}
 }

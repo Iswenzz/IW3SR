@@ -395,8 +395,8 @@ namespace IW3SR
 
 	HRESULT D3D9Device::EndScene()
 	{
-		if (UI::Get().Active)
-			GRenderer::Render();
+		if (UI::Active)
+			GRenderer::Frame();
 		return pIDirect3DDevice9->EndScene();
 	}
 

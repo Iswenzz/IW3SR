@@ -23,14 +23,7 @@ namespace IW3SR::Addons
 		SunDirection = { 0, 0, 0 };
 	}
 
-	void Tweaks::Initialize()
-	{
-		DrawTweaks = false;
-		DrawGlow = false;
-		DrawSun = true;
-	}
-
-	void Tweaks::OnMenu()
+	void Tweaks::Menu()
 	{
 		if (ImGui::CollapsingHeader("Tweaks"))
 		{

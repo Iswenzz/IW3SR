@@ -1,5 +1,6 @@
 #include "About.hpp"
-#include "ImGUI/UI.hpp"
+
+#include "ImGUI/UI/Themes.hpp"
 
 namespace IW3SR::UC
 {
@@ -9,11 +10,8 @@ namespace IW3SR::UC
 		SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
 	}
 
-	void About::Render()
+	void About::OnRender()
 	{
-		if (!Open)
-			return;
-
 		constexpr auto IW3SR = "IW3SR";
 		constexpr auto markdown = R"(
 IW3SR is a client modification for Call of Duty 4 powered by IzEngine.
@@ -23,7 +21,7 @@ IW3SR (c) 2023-2024
 Iswenzz Dualite xoxor4d)";
 
 		Begin();
-		ImGui::PushFont(UI::Get().Themes.H1);
+		ImGui::PushFont(IzEngine::UC::Themes::H1);
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize(IW3SR).x) * 0.5f);
 		ImGui::Text(IW3SR);
 		ImGui::Separator();

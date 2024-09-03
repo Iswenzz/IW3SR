@@ -72,13 +72,13 @@ namespace IW3SR
 			SetFont(FontName);
 
 		RenderSize = GDraw2D::TextSize(Value, Font) * FontSize;
-		Size = UI::Get().Screen.RealToVirtual * RenderSize;
+		Size = UI::Screen.RealToVirtual * RenderSize;
 
 		vec2 position = Position;
 		vec2 size = Size;
 
 		ComputeAlignment(position);
-		UI::Get().Screen.Apply(position, HorizontalAlign, VerticalAlign);
+		UI::Screen.Apply(position, HorizontalAlign, VerticalAlign);
 		RenderPosition = position;
 
 		GDraw2D::Text(Value, Font, RenderPosition, FontSize, Color);

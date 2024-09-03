@@ -22,7 +22,7 @@ namespace IW3SR::Addons
 		UseGroundZones = true;
 	}
 
-	void CGAZ::OnMenu()
+	void CGAZ::Menu()
 	{
 		ImGui::Checkbox("Ground Zones", &UseGroundZones);
 
@@ -312,7 +312,7 @@ namespace IW3SR::Addons
 
 	void CGAZ::DrawAngleYaw(float start, float end, float yaw, const vec4& color)
 	{
-		const auto& scale = UI::Get().Screen.VirtualToFull;
+		const auto& scale = UI::Screen.VirtualToFull;
 		const vec3 range = Math::AnglesToRange(start, end, yaw, cgs->refdef.tanHalfFovX);
 
 		if (!range.z)

@@ -11,11 +11,8 @@ namespace IW3SR::UC
 		SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_TOP);
 	}
 
-	void Modules::Render()
+	void Modules::OnRender()
 	{
-		if (!Open)
-			return;
-
 		Begin();
 		const float frameWidth = ImGui::GetWindowContentRegionMax().x - 30;
 		std::set<std::string> groups;
@@ -34,20 +31,19 @@ namespace IW3SR::UC
 				if (current->Group != entry->Group)
 					continue;
 
-				// Enable/Disable module
 				if (ImGui::Toggle(entry->ID + "toggle", &entry->IsEnabled))
-					entry->IsEnabled ? IW3SR::Modules::Enable(entry->ID) : IW3SR::Modules::Disable(entry->ID);
+					entry->IsEnabled ? entry->Initialize() : entry->Release();
+
 				ImGui::SameLine();
 				ImGui::Text(entry->Name.c_str());
 				ImGui::SameLine(frameWidth);
+				ImGui::Button(ICON_FA_GEAR, entry->ID + "menu", &entry->MenuWindow.Open);
 
-				// Draw module menu
-				ImGui::Button(ICON_FA_GEAR, entry->ID + "menu", &entry->Menu.Open);
-				if (entry->Menu.Open)
+				if (entry->MenuWindow.Open)
 				{
-					entry->Menu.Begin();
-					entry->OnMenu();
-					entry->Menu.End();
+					entry->MenuWindow.Begin();
+					entry->Menu();
+					entry->MenuWindow.End();
 				}
 			}
 		}

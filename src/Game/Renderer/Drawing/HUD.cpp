@@ -68,7 +68,7 @@ namespace IW3SR
 		vec2 size = Size;
 
 		ComputeAlignment(position);
-		UI::Get().Screen.Apply(position, size, HorizontalAlign, VerticalAlign);
+		UI::Screen.Apply(position, size, HorizontalAlign, VerticalAlign);
 		RenderPosition = position;
 		RenderSize = size;
 
