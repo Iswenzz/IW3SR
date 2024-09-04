@@ -16,8 +16,8 @@ namespace IW3SR
 
 		Device::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize();
-		GUI::Initialize();
 
+		GUI::Initialize();
 		Settings::Deserialize();
 		Modules::Deserialize();
 		Plugins::Initialize();
@@ -28,8 +28,6 @@ namespace IW3SR
 		Plugins::Shutdown();
 		Modules::Serialize();
 		Settings::Serialize();
-
-		GUI::Shutdown();
 		Renderer::Shutdown();
 
 		R_Shutdown_h(window);
