@@ -22,11 +22,6 @@ namespace IW3SR
 		Hook();
 	}
 
-	void Patch::Shutdown()
-	{
-		Unhook();
-	}
-
 	void Patch::Definitions()
 	{
 		COD4X bg_weaponNames = Signature(0x402D8C).DeRef();
@@ -100,29 +95,5 @@ namespace IW3SR
 		R_Shutdown_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();
-	}
-
-	void Patch::Unhook()
-	{
-		CreateWindowExA_h.Remove();
-		Direct3DCreate9_h.Remove();
-		MainWndProc_h.Remove();
-
-		Cmd_ExecuteSingleCommand_h.Remove();
-		Com_PrintMessage_h.Remove();
-		CG_DrawCrosshair_h.Remove();
-		CG_PredictPlayerState_Internal_h.Remove();
-		CG_Respawn_h.Remove();
-		CL_Connect_h.Remove();
-		CL_Disconnect_h.Remove();
-		CL_FinishMove_h.Remove();
-		PM_WalkMove_h.Remove();
-		PM_AirMove_h.Remove();
-		PM_GroundTrace_h.Remove();
-		R_Init_h.Remove();
-		RB_ExecuteRendererCommandsLoop_h.Remove();
-		R_Shutdown_h.Remove();
-		RB_EndSceneRendering_h.Remove();
-		Script_ScriptMenuResponse_h.Remove();
 	}
 }

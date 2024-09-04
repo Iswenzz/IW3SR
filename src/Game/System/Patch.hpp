@@ -14,11 +14,6 @@ namespace IW3SR
 		/// </summary>
 		static void Initialize();
 
-		/// <summary>
-		/// Shutdown patch.
-		/// </summary>
-		static void Shutdown();
-
 	private:
 		/// <summary>
 		/// Patch definitions.
@@ -54,10 +49,5 @@ namespace IW3SR
 		/// Hook application.
 		/// </summary>
 		static void Hook();
-
-		/// <summary>
-		/// Unhook application.
-		/// </summary>
-		static void Unhook();
 	};
 }

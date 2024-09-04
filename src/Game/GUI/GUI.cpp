@@ -21,8 +21,6 @@ namespace IW3SR
 		UI::CreateWindow<UC::Toolbar>();
 	}
 
-	void GUI::Shutdown() { }
-
 	void GUI::Frame()
 	{
 		if (Keyboard::IsPressed(Key_Escape))

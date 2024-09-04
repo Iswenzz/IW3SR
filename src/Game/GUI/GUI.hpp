@@ -19,11 +19,6 @@ namespace IW3SR
 		static void Initialize();
 
 		/// <summary>
-		/// Release GUI.
-		/// </summary>
-		static void Shutdown();
-
-		/// <summary>
 		/// Frame GUI.
 		/// </summary>
 		static void Frame();

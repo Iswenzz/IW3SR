@@ -27,8 +27,6 @@ void Application::Shutdown()
 {
 	if (System::IsDebug())
 		GConsole::Shutdown();
-
-	Patch::Shutdown();
 }
 
 void Application::Dispatch(Event& event)
