@@ -62,6 +62,7 @@ namespace IW3SR
 	{
 		if (UI::Active)
 			Renderer::Frame();
+
 		IDirect3DDevice9_EndScene_h(device);
 	}
 
