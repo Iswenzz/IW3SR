@@ -6,7 +6,6 @@
 #include "Settings/Settings.hpp"
 
 #include "Game/GUI/GUI.hpp"
-#include "Game/System/Console.hpp"
 
 namespace IW3SR
 {
@@ -17,21 +16,20 @@ namespace IW3SR
 		IDirect3DDevice9_Reset_h.Update(VTABLE(dx->device, 15));
 		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
 
+		Settings::Deserialize();
+		Modules::Deserialize();
+
 		Device::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize();
 		GUI::Initialize();
-
-		Settings::Deserialize();
-		Modules::Deserialize();
-		Plugins::Initialize();
 	}
 
 	void GRenderer::Shutdown(int window)
 	{
-		Plugins::Shutdown();
+		Renderer::Shutdown();
+
 		Modules::Serialize();
 		Settings::Serialize();
-		Renderer::Shutdown();
 
 		R_Shutdown_h(window);
 	}
