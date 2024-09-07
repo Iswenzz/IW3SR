@@ -3,9 +3,10 @@
 #include "Core/System/Plugins.hpp"
 #include "Core/System/System.hpp"
 
-#include "Game/GUI/GUI.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Settings/Settings.hpp"
+
+#include "ImGUI/UI.hpp"
 
 namespace IW3SR::UC
 {
