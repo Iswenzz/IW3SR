@@ -15,7 +15,7 @@ namespace IW3SR
 		/// <summary>
 		/// Load a module.
 		/// </summary>
-		/// <typeparam name="T">The module type.</typeparam> 
+		/// <typeparam name="T">The module type.</typeparam>
 		template <class T = Module>
 		static void Load()
 		{
