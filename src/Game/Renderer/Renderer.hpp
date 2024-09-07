@@ -44,6 +44,15 @@ namespace IW3SR
 		/// <summary>
 		/// Render frame.
 		/// </summary>
-		static void Frame();
+		/// <param name="device">The device.</param>
+		static void STDCALL Frame(IDirect3DDevice9* device);
+
+		/// <summary>
+		/// Reset device.
+		/// </summary>
+		/// <param name="device">The device.</param>
+		/// <param name="pPresentationParameters">The presentation parameters.</param>
+		/// <returns></returns>
+		static HRESULT STDCALL Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters);
 	};
 }

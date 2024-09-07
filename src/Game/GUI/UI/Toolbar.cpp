@@ -11,22 +11,18 @@ namespace IW3SR::UC
 {
 	Toolbar::Toolbar() : Window("Toolbar")
 	{
+		Open = true;
 		SetRectAlignment(HORIZONTAL_FULLSCREEN, VERTICAL_FULLSCREEN);
 		SetFlags(ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar
 			| ImGuiWindowFlags_NoMove);
 	}
 
-	void Toolbar::Begin()
+	void Toolbar::OnRender()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0, 0 });
-		Window::Begin();
-		ImGui::PopStyleVar(2);
-	}
-
-	void Toolbar::OnRender()
-	{
 		SetRect(0, 0, 640, 14);
+
 		Begin();
 
 		const vec2& position = RenderPosition;
@@ -76,7 +72,9 @@ namespace IW3SR::UC
 		ImGui::SameLine();
 		ImGui::Button(ICON_FA_GEAR, "Settings", &UI::Windows["Settings"]->Open, buttonSize);
 		ImGui::Tooltip("Settings");
+
 		End();
+		ImGui::PopStyleVar(2);
 	}
 
 	void Toolbar::Reload()

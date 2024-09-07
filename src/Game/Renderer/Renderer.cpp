@@ -14,10 +14,13 @@ namespace IW3SR
 	{
 		R_Init_h();
 
+		IDirect3DDevice9_Reset_h.Update(VTABLE(dx->device, 15));
+		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
+
 		Device::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize();
-
 		GUI::Initialize();
+
 		Settings::Deserialize();
 		Modules::Deserialize();
 		Plugins::Initialize();
@@ -57,16 +60,18 @@ namespace IW3SR
 			R_SetGameTime(gfx_cmdBufSourceState, UI::Time());
 	}
 
-	void GRenderer::Frame()
+	void GRenderer::Frame(IDirect3DDevice9* device)
 	{
-		Actions::Submit();
-		GUI::Frame();
+		if (UI::Active)
+			Renderer::Frame();
+		IDirect3DDevice9_EndScene_h(device);
+	}
 
-		Renderer::Begin();
-
-		EventRendererRender event;
-		Application::Dispatch(event);
-
-		Renderer::End();
+	HRESULT GRenderer::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)
+	{
+		ImGui_ImplAPI_InvalidateDeviceObjects();
+		IDirect3DDevice9_Reset_h(device, pPresentationParameters);
+		ImGui_ImplAPI_CreateDeviceObjects();
+		return IDirect3DDevice9_Reset_h(device, pPresentationParameters);
 	}
 }

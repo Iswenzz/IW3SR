@@ -9,13 +9,13 @@ namespace IW3SR
 	class API Modules
 	{
 	public:
-		static inline std::unordered_map<std::string, Ref<Module>> Entries;
+		static inline std::map<std::string, Ref<Module>> Entries;
 		static inline nlohmann::json Serialized;
 
 		/// <summary>
 		/// Load a module.
 		/// </summary>
-		/// <typeparam name="T">The module type.</typeparam>
+		/// <typeparam name="T">The module type.</typeparam> 
 		template <class T = Module>
 		static void Load()
 		{

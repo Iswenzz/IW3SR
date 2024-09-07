@@ -19,11 +19,6 @@ namespace IW3SR::UC
 		virtual ~Toolbar() = default;
 
 		/// <summary>
-		/// Begin window.
-		/// </summary>
-		void Begin() override;
-
-		/// <summary>
 		/// Render frame.
 		/// </summary>
 		void OnRender() override;

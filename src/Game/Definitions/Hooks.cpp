@@ -1,6 +1,5 @@
 #include "Hooks.hpp"
 
-#include "Game/Renderer/Backends/D3D9.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Renderer.hpp"
 #include "Game/Renderer/Settings/Settings.hpp"
@@ -17,8 +16,11 @@ namespace IW3SR
 		HINSTANCE hInstance, LPVOID lpParam)>
 		CreateWindowExA_h(CreateWindowExA, GSystem::CreateMainWindow);
 
-	Hook<IDirect3D9* STDCALL(UINT sdk)>
-		Direct3DCreate9_h(Direct3DCreate9, D3D9::Direct3DCreate9);
+	Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
+		IDirect3DDevice9_Reset_h(GRenderer::Reset);
+
+	Hook<void STDCALL(IDirect3DDevice9* device)>
+		IDirect3DDevice9_EndScene_h(GRenderer::Frame);
 
 	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h(0x57BB20, GSystem::MainWndProc);

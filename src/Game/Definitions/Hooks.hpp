@@ -12,8 +12,11 @@ namespace IW3SR
 		HINSTANCE hInstance, LPVOID lpParam)>
 		CreateWindowExA_h;
 
-	extern Hook<IDirect3D9* STDCALL(UINT sdk)>
-		Direct3DCreate9_h;
+	extern Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
+		IDirect3DDevice9_Reset_h;
+
+	extern Hook<void STDCALL(IDirect3DDevice9* device)>
+		IDirect3DDevice9_EndScene_h;
 
 	extern Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h;

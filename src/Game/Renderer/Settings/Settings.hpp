@@ -9,7 +9,7 @@ namespace IW3SR
 	class API Settings
 	{
 	public:
-		static inline std::unordered_map<std::string, Ref<Setting>> Entries;
+		static inline std::map<std::string, Ref<Setting>> Entries;
 		static inline nlohmann::json Serialized;
 
 		/// <summary>

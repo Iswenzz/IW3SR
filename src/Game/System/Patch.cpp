@@ -11,7 +11,7 @@ namespace IW3SR
 	void Patch::Initialize()
 	{
 		System::MapProcesses();
-		System::MapModules(System::Modules[IW3MP_BIN]);
+		System::MapModules(System::Processes[IW3MP_BIN]);
 
 		CoD4X();
 		Definitions();
@@ -76,7 +76,6 @@ namespace IW3SR
 	void Patch::Hook()
 	{
 		CreateWindowExA_h.Install();
-		Direct3DCreate9_h.Install();
 		MainWndProc_h.Install();
 
 		Cmd_ExecuteSingleCommand_h.Install();
