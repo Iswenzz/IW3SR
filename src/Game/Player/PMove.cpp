@@ -21,7 +21,7 @@ namespace IW3SR
 
 		CL_FinishMove_h(cmd);
 
-		EventPMoveFinish event(cmd);
+		EventPMoveFinish event(cmd, &cgs->predictedPlayerState);
 		Application::Dispatch(event);
 	}
 

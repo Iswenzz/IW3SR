@@ -92,8 +92,9 @@ namespace IW3SR
 	class EventPMoveFinish : public Event
 	{
 		EVENT_CLASS("pmove.finish")
-		EventPMoveFinish(usercmd_s* cmd) : cmd(cmd) { }
+		EventPMoveFinish(usercmd_s* cmd, playerState_s* ps) : cmd(cmd), ps(ps) { }
 		usercmd_s* cmd;
+		playerState_s* ps;
 	};
 
 	class EventScriptMenuResponse : public Event
