@@ -29,7 +29,7 @@ namespace IW3SR::Addons
 		ShowGroundTime = true;
 		ShowGraph = false;
 
-		KeyReset = Keyboard(Key_R);
+		KeyReset = Bind(Key_R);
 	}
 
 	void Velocity::Menu()

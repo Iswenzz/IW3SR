@@ -19,7 +19,7 @@ namespace IW3SR::Addons
 	class Movements : public Module
 	{
 	public:
-		Keyboard BhopKey;
+		Bind KeyBhop;
 		Text BhopText;
 
 		bool UseBhop;
@@ -95,6 +95,6 @@ namespace IW3SR::Addons
 		/// </summary>
 		void InterpolateViewForMover();
 
-		SERIALIZE_POLY(Movements, Module, BhopKey, BhopText, UseBhop, UseInterpolateMovers)
+		SERIALIZE_POLY(Movements, Module, KeyBhop, BhopText, UseBhop, UseInterpolateMovers)
 	};
 }

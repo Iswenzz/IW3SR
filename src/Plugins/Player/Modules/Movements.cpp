@@ -9,7 +9,7 @@ namespace IW3SR::Addons
 		BhopText = Text("BHOP", FONT_SPACERANGER, -35, 8, 0.8, { 1, 1, 1, 1 });
 		BhopText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
 		BhopText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
-		BhopKey = Keyboard(Key_None);
+		KeyBhop = Bind(Key_None);
 
 		UseBhop = false;
 		UseBhopToggle = false;
@@ -71,7 +71,7 @@ namespace IW3SR::Addons
 		ImGui::Checkbox("Bhop", &UseBhop);
 
 		ImGui::SameLine();
-		ImGui::Keybind("Bhop Landing", &BhopKey.Key);
+		ImGui::Keybind("Bhop Landing", &KeyBhop.Key);
 		BhopText.Menu("Bhop Indicator");
 	}
 
@@ -124,7 +124,7 @@ namespace IW3SR::Addons
 
 	void Movements::Bhop(usercmd_s* cmd)
 	{
-		if (BhopKey.IsPressed())
+		if (KeyBhop.IsPressed())
 			UseBhopToggle = !UseBhopToggle;
 
 		if (UseBhop && (cmd->buttons & BUTTON_JUMP))
