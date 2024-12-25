@@ -1,5 +1,5 @@
 add_library(Graphics SHARED main.cpp)
-add_subdirectory(Settings)
+add_subdirectory(Modules)
 
 # Build
 target_link_libraries(Graphics PRIVATE IW3SR.API)

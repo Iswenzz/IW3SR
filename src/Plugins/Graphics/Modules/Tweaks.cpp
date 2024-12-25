@@ -2,16 +2,17 @@
 
 namespace IW3SR::Addons
 {
-	Tweaks::Tweaks() : Setting("sr.graphics.tweaks", "Graphics", "Tweaks")
+	Tweaks::Tweaks() : Module("sr.graphics.tweaks", "Graphics", "Tweaks")
 	{
 		DrawTweaks = false;
 		DrawGlow = false;
 		DrawSun = true;
 
 		TweakBrightness = 0;
-		TweakDesaturation = 0.2;
-		TweakLightTint = { 1.1, 1.05, 0.85 };
-		TweakDarkTint = { 0.7, 0.85, 1 };
+		TweakContrast = 1;
+		TweakDesaturation = 0;
+		TweakLightTint = { 1, 1, 1 };
+		TweakDarkTint = { 1, 1, 1 };
 
 		GlowRadius = 5;
 		GlowBloomDesaturation = 0;
@@ -19,8 +20,8 @@ namespace IW3SR::Addons
 		GlowBloomCutoff = 0.5;
 
 		SunIntensity = 1;
-		SunColor = { 1, 0.749, 0, 1 };
-		SunDirection = { 0, 0, 0 };
+		SunColor = { 1, 1, 1, 1 };
+		SunDirection = { 270, 90, 0 };
 	}
 
 	void Tweaks::Menu()
@@ -29,6 +30,7 @@ namespace IW3SR::Addons
 		{
 			ImGui::Checkbox("Enabled", &DrawTweaks);
 			ImGui::SliderFloat("Brightness", &TweakBrightness, -1, 1);
+			ImGui::SliderFloat("Contrast", &TweakContrast, 0, 4);
 			ImGui::SliderFloat("Desaturation", &TweakDesaturation, 0, 1);
 			ImGui::ColorEdit3("Light Tint", TweakLightTint, ImGuiColorEditFlags_Float);
 			ImGui::ColorEdit3("Dark Tint", TweakDarkTint, ImGuiColorEditFlags_Float);
@@ -59,6 +61,7 @@ namespace IW3SR::Addons
 		Dvar::Set<bool>("r_drawSun", DrawSun);
 
 		Dvar::Set<float>("r_filmTweakBrightness", TweakBrightness);
+		Dvar::Set<float>("r_filmTweakContrast", TweakContrast);
 		Dvar::Set<float>("r_filmTweakDesaturation", TweakDesaturation);
 		Dvar::Set<vec3>("r_filmTweakLightTint", TweakLightTint);
 		Dvar::Set<vec3>("r_filmTweakDarkTint", TweakDarkTint);

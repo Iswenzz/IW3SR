@@ -1,17 +1,17 @@
 #include "Game/Plugin.hpp"
 
-#include "Settings/Tweaks.hpp"
+#include "Modules/Tweaks.hpp"
 
 PLUGIN void Initialize()
 {
 	UI::InitializeContext();
 
-	Settings::Load<Tweaks>();
+	Modules::Load<Tweaks>();
 }
 
 PLUGIN void Shutdown()
 {
-	Settings::Remove("sr.graphics.tweaks");
+	Modules::Remove("sr.graphics.tweaks");
 }
 
 PLUGIN void Info(Plugin* plugin)

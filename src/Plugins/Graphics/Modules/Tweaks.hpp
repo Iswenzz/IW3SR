@@ -6,7 +6,7 @@ namespace IW3SR::Addons
 	/// <summary>
 	/// Graphics tweaks.
 	/// </summary>
-	class Tweaks : public Setting
+	class Tweaks : public Module
 	{
 	public:
 		bool DrawTweaks;
@@ -14,6 +14,7 @@ namespace IW3SR::Addons
 		bool DrawSun;
 
 		float TweakBrightness;
+		float TweakContrast;
 		float TweakDesaturation;
 		vec3 TweakLightTint;
 		vec3 TweakDarkTint;
@@ -28,7 +29,7 @@ namespace IW3SR::Addons
 		vec3 SunDirection;
 
 		/// <summary>
-		/// Create the setting.
+		/// Create the module.
 		/// </summary>
 		Tweaks();
 		virtual ~Tweaks() = default;
