@@ -41,7 +41,7 @@ namespace IW3SR::Addons
 		if (ShowMax)
 		{
 			ImGui::SameLine();
-			ImGui::Keybind("Reset", &KeyReset.Key);
+			ImGui::Keybind("Reset", &KeyReset.Input);
 		}
 		ImGui::Checkbox("Ground", &ShowGround);
 

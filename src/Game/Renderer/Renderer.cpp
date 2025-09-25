@@ -62,6 +62,7 @@ namespace IW3SR
 	{
 		if (UI::Active)
 			Renderer::Frame();
+		Input::Reset();
 
 		IDirect3DDevice9_EndScene_h(device);
 	}

@@ -12,7 +12,7 @@ namespace IW3SR
 
 		const std::string_view windowName = lpWindowName;
 		if (windowName == "Call of Duty 4" || windowName == "Call of Duty 4 X")
-			OSWindow::Handle = hwnd;
+			OSWindow::Swap(hwnd);
 		return hwnd;
 	}
 
@@ -20,6 +20,10 @@ namespace IW3SR
 	{
 		switch (msg)
 		{
+		case WM_INPUT:
+			Mouse::Process(msg, lParam);
+			break;
+
 		case WM_KEYDOWN:
 		case WM_KEYUP:
 		case WM_SYSKEYDOWN:

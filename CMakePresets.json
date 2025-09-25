@@ -8,7 +8,7 @@
 	"configurePresets": [
 		{
 			"name": "x86-windows-dx9",
-			"generator": "Visual Studio 17 2022",
+			"generator": "Visual Studio 18 2026",
 			"architecture": "Win32",
 			"cacheVariables": {
 				"CMAKE_TOOLCHAIN_FILE": "engine/.vcpkg/x86-windows.cmake",
