@@ -21,7 +21,7 @@ IW3SR (c) 2023-2024
 Iswenzz Dualite xoxor4d)";
 
 		Begin();
-		ImGui::PushFont(IzEngine::UC::Themes::H1);
+		ImGui::PushFont(ImGui::H1);
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize(IW3SR).x) * 0.5f);
 		ImGui::Text(IW3SR);
 		ImGui::Separator();

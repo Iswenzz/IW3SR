@@ -10,9 +10,6 @@ namespace IW3SR
 {
 	void Patch::Initialize()
 	{
-		System::MapProcesses();
-		System::MapModules(System::Processes[IW3MP_BIN]);
-
 		CoD4X();
 		Definitions();
 		Renderer();
@@ -63,10 +60,13 @@ namespace IW3SR
 
 	void Patch::CoD4X()
 	{
-		auto cod4x = std::ranges::find_if(System::Modules,
+		auto processes = System::MapProcesses();
+		auto modules = System::MapModules(processes[IW3MP_BIN]);
+
+		auto cod4x = std::ranges::find_if(modules,
 			[](const auto& pair) { return pair.first.find("cod4x_") != std::string::npos; });
 
-		if (cod4x == System::Modules.end())
+		if (cod4x == modules.end())
 			return;
 
 		COD4X_BIN = cod4x->first;
@@ -90,8 +90,8 @@ namespace IW3SR
 		PM_AirMove_h.Install();
 		PM_GroundTrace_h.Install();
 		R_Init_h.Install();
-		RB_ExecuteRendererCommandsLoop_h.Install();
 		R_Shutdown_h.Install();
+		RB_ExecuteRendererCommandsLoop_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();
 	}
