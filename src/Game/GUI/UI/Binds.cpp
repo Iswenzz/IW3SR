@@ -4,7 +4,7 @@
 
 namespace IW3SR::UC
 {
-	Binds::Binds() : Window("Binds") { }
+	Binds::Binds() : Frame("Binds") { }
 
 	void Binds::OnRender()
 	{

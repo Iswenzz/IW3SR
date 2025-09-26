@@ -4,7 +4,7 @@
 
 namespace IW3SR::UC
 {
-	About::About() : Window("About")
+	About::About() : Frame("About")
 	{
 		SetRect(-200, -95, 400, 200);
 		SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);

@@ -1,16 +1,16 @@
 #pragma once
-#include "ImGUI/Drawing/Window.hpp"
+#include "ImGUI/Drawing/Frame.hpp"
 
 namespace IW3SR::UC
 {
 	/// <summary>
-	/// Settings window.
+	/// Settings frame.
 	/// </summary>
-	class Settings : public Window
+	class Settings : public Frame
 	{
 	public:
 		/// <summary>
-		/// Initialize the settings window.
+		/// Initialize the settings frame.
 		/// </summary>
 		Settings();
 		virtual ~Settings() = default;

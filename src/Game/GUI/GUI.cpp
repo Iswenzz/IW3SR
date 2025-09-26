@@ -10,10 +10,10 @@ namespace IW3SR
 {
 	void GUI::Initialize()
 	{
-		UI::CreateWindow<UC::About>();
-		UI::CreateWindow<UC::Binds>();
-		UI::CreateWindow<UC::Modules>();
-		UI::CreateWindow<UC::Settings>();
-		UI::CreateWindow<UC::Toolbar>();
+		UI::Add<UC::About>();
+		UI::Add<UC::Binds>();
+		UI::Add<UC::Modules>();
+		UI::Add<UC::Settings>();
+		UI::Add<UC::Toolbar>();
 	}
 }

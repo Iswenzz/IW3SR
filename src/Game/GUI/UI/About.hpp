@@ -1,16 +1,16 @@
 #pragma once
-#include "ImGUI/Drawing/Window.hpp"
+#include "ImGUI/Drawing/Frame.hpp"
 
 namespace IW3SR::UC
 {
 	/// <summary>
-	/// About window.
+	/// About frame.
 	/// </summary>
-	class About : public Window
+	class About : public Frame
 	{
 	public:
 		/// <summary>
-		/// Initialize the about window.
+		/// Initialize the about frame.
 		/// </summary>
 		About();
 		virtual ~About() = default;

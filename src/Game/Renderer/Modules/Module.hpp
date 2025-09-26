@@ -12,7 +12,7 @@ namespace IW3SR
 		std::string ID;
 		std::string Name;
 		std::string Group;
-		Window MenuWindow;
+		Frame MenuFrame;
 		bool IsEnabled = false;
 
 		/// <summary>
@@ -132,6 +132,6 @@ namespace IW3SR
 		/// <param name="event">The event.</param>
 		virtual void OnEvent(Event& event) override;
 
-		SERIALIZE_POLY_BASE(Module, IsEnabled, MenuWindow)
+		SERIALIZE_POLY_BASE(Module, IsEnabled, MenuFrame)
 	};
 }

@@ -1,12 +1,12 @@
 #pragma once
-#include "ImGUI/Drawing/Window.hpp"
+#include "ImGUI/Drawing/Frame.hpp"
 
 namespace IW3SR::UC
 {
 	/// <summary>
 	/// Main toolbar.
 	/// </summary>
-	class Toolbar : public Window
+	class Toolbar : public Frame
 	{
 	public:
 		bool IsReloading = false;

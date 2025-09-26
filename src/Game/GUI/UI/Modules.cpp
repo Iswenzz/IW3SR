@@ -5,7 +5,7 @@
 
 namespace IW3SR::UC
 {
-	Modules::Modules() : Window("Modules")
+	Modules::Modules() : Frame("Modules")
 	{
 		SetRect(-170, 20, 150, 185);
 		SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_TOP);
@@ -37,13 +37,13 @@ namespace IW3SR::UC
 				ImGui::SameLine();
 				ImGui::Text(entry->Name.c_str());
 				ImGui::SameLine(frameWidth);
-				ImGui::Button(ICON_FA_GEAR, entry->ID + "menu", &entry->MenuWindow.Open);
+				ImGui::Button(ICON_FA_GEAR, entry->ID + "menu", &entry->MenuFrame.Open);
 
-				if (entry->MenuWindow.Open)
+				if (entry->MenuFrame.Open)
 				{
-					entry->MenuWindow.Begin();
+					entry->MenuFrame.Begin();
 					entry->Menu();
-					entry->MenuWindow.End();
+					entry->MenuFrame.End();
 				}
 			}
 		}

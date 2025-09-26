@@ -1,16 +1,16 @@
 #pragma once
-#include "ImGUI/Drawing/Window.hpp"
+#include "ImGUI/Drawing/Frame.hpp"
 
 namespace IW3SR::UC
 {
 	/// <summary>
-	/// Modules window.
+	/// Modules frame.
 	/// </summary>
-	class Modules : public Window
+	class Modules : public Frame
 	{
 	public:
 		/// <summary>
-		/// Initialize the modules.
+		/// Initialize the modules frame.
 		/// </summary>
 		Modules();
 		virtual ~Modules() = default;

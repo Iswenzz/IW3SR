@@ -1,16 +1,16 @@
 #pragma once
-#include "ImGUI/Drawing/Window.hpp"
+#include "ImGUI/Drawing/Frame.hpp"
 
 namespace IW3SR::UC
 {
 	/// <summary>
-	/// Binds window.
+	/// Binds frame.
 	/// </summary>
-	class Binds : public Window
+	class Binds : public Frame
 	{
 	public:
 		/// <summary>
-		/// Initialize the binds window.
+		/// Initialize the binds frame.
 		/// </summary>
 		Binds();
 		virtual ~Binds() = default;

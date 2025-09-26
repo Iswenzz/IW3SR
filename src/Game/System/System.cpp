@@ -12,7 +12,7 @@ namespace IW3SR
 
 		const std::string_view windowName = lpWindowName;
 		if (windowName == "Call of Duty 4" || windowName == "Call of Duty 4 X")
-			OSWindow::Swap(hwnd);
+			Window::Swap(hwnd);
 		return hwnd;
 	}
 

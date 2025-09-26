@@ -7,7 +7,7 @@ namespace IW3SR
 		ID = id;
 		Name = name;
 		Group = group;
-		MenuWindow = Window(name);
+		MenuFrame = Frame(name);
 	}
 
 	Module::~Module()
