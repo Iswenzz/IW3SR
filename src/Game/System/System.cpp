@@ -31,16 +31,10 @@ namespace IW3SR
 			Keyboard::Process(msg, wParam);
 			break;
 		}
-		if (UI::Active)
-		{
-			if (UI::Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-				return true;
-
-			ImGuiIO& io = ImGui::GetIO();
-			io.MouseDrawCursor = UI::Open;
-		}
-		s_wmv->mouseInitialized = !UI::Open;
-
+		if (UI::KeyOpen.IsPressed())
+			return true;
+		if (UI::Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+			return true;
 		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
