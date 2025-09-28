@@ -13,7 +13,7 @@ namespace IW3SR
 	{
 		R_Init_h();
 
-		IDirect3DDevice9_Reset_h.Update(VTABLE(dx->device, 15));
+		IDirect3DDevice9_Reset_h.Update(VTABLE(dx->device, 16));
 		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
 
 		Settings::Deserialize();
