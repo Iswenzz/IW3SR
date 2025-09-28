@@ -15,7 +15,7 @@ namespace IW3SR::UC
 		Open = true;
 		SetRectAlignment(HORIZONTAL_FULLSCREEN, VERTICAL_FULLSCREEN);
 		SetFlags(ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar
-			| ImGuiWindowFlags_NoMove);
+			| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground);
 	}
 
 	void Toolbar::OnRender()
@@ -28,7 +28,10 @@ namespace IW3SR::UC
 
 		const vec2& position = RenderPosition;
 		const vec2& size = RenderSize;
-		const vec2 buttonSize = vec2{ 14, 14 } * UI::Size;
+		const vec2 buttonSize = { size.y, size.y };
+
+		ImDrawList* draw = ImGui::GetBackgroundDrawList();
+		draw->AddRectFilled(position, vec2(position + size), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_FrameBg)));
 
 		ImGui::Rainbow(position + vec2{ 0, size.y }, position + vec2{ size.x, size.y + 2 });
 		ImGui::Button(ICON_FA_GAMEPAD, "Modules", &UI::Frames["Modules"]->Open, buttonSize);

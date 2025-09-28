@@ -60,9 +60,7 @@ namespace IW3SR
 
 	void GRenderer::Frame(IDirect3DDevice9* device)
 	{
-		if (UI::Active)
-			Renderer::Frame();
-
+		Renderer::Frame();
 		IDirect3DDevice9_EndScene_h(device);
 	}
 

@@ -28,8 +28,8 @@
 		"glm"
 	],
 	"overrides": [
-		{ "name": "imgui", "version": "1.90.7" },
-		{ "name": "implot", "version": "0.16" },
+		{ "name": "imgui", "version": "1.92.3#1" },
+        { "name": "implot", "version": "0.16#1" },
 		{ "name": "directxsdk", "version-string": "jun10#8" },
 		{ "name": "polyhook2", "version": "2024-02-08" },
 		{ "name": "nlohmann-json", "version": "3.11.3" },
