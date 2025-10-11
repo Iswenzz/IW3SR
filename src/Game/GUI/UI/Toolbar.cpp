@@ -88,6 +88,7 @@ namespace IW3SR::UC
 
 		IsReloading = true;
 
+		Plugins::Shutdown();
 		Plugins::Free();
 		IW3SR::Modules::Serialize();
 		IW3SR::Settings::Serialize();
@@ -100,7 +101,7 @@ namespace IW3SR::UC
 		if (!std::filesystem::exists(CMAKE_BINARY_DIR))
 			return;
 
-		system("cd \"" CMAKE_BINARY_DIR "\" && cmake --build . --config Debug --target Install");
+		system("cd /d \"" CMAKE_BINARY_DIR "\" && cmake --build . --config Debug --target Install");
 
 		Actions::Add(
 			[this]()
@@ -108,6 +109,7 @@ namespace IW3SR::UC
 				IW3SR::Settings::Deserialize();
 				IW3SR::Modules::Deserialize();
 				Plugins::Load();
+				Plugins::Initialize();
 				IsReloading = false;
 			});
 	}
