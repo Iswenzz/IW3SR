@@ -1,11 +1,15 @@
 #include "Console.hpp"
 
 #include "Core/Console/Console.hpp"
+#include "Core/System/System.hpp"
 
 namespace IW3SR
 {
 	void GConsole::Initialize()
 	{
+		if (!System::IsDebug())
+			return;
+
 		Console::Initialize("IW3SR");
 		for (int i = 0; i <= dvarCount - 1; i++)
 			Console::AddCommand(dvars[i]->name);
@@ -13,6 +17,9 @@ namespace IW3SR
 
 	void GConsole::Shutdown()
 	{
+		if (!System::IsDebug())
+			return;
+
 		Console::Shutdown();
 	}
 

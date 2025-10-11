@@ -25,8 +25,3 @@ PLUGIN void Shutdown()
 	Modules::Remove("sr.player.movements");
 	Modules::Remove("sr.player.velocity");
 }
-
-PLUGIN void Info(Plugin* plugin)
-{
-	plugin->SetInfos("sr.player", "Player");
-}

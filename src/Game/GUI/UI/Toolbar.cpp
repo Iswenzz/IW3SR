@@ -88,7 +88,7 @@ namespace IW3SR::UC
 
 		IsReloading = true;
 
-		Plugins::Shutdown();
+		Plugins::Free();
 		IW3SR::Modules::Serialize();
 		IW3SR::Settings::Serialize();
 
@@ -107,7 +107,7 @@ namespace IW3SR::UC
 			{
 				IW3SR::Settings::Deserialize();
 				IW3SR::Modules::Deserialize();
-				Plugins::Initialize();
+				Plugins::Load();
 				IsReloading = false;
 			});
 	}

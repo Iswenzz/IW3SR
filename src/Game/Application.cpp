@@ -14,19 +14,18 @@ void Application::Start()
 {
 	Crash::Setup();
 	Environment::Binary();
+	GConsole::Initialize();
+	Plugins::Load();
 
 	Dvar::Initialize();
 	Patch::Initialize();
 	Client::Initialize();
-
-	if (System::IsDebug())
-		GConsole::Initialize();
 }
 
 void Application::Shutdown()
 {
-	if (System::IsDebug())
-		GConsole::Shutdown();
+	Plugins::Free();
+	GConsole::Shutdown();
 }
 
 void Application::Dispatch(Event& event)

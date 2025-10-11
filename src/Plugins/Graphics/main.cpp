@@ -13,8 +13,3 @@ PLUGIN void Shutdown()
 {
 	Modules::Remove("sr.graphics.tweaks");
 }
-
-PLUGIN void Info(Plugin* plugin)
-{
-	plugin->SetInfos("sr.graphics", "Graphics");
-}
