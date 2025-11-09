@@ -139,14 +139,17 @@ namespace IW3SR::Addons
 	{
 		float x = (AnglesDelta[1] * CameraPower) * UI::DeltaTime();
 		float y = (AnglesDelta[0] * CameraPower) * UI::DeltaTime();
-		return { x * 20, y * 20 };
+		x = std::clamp(x * 20, -0.5f, 0.5f);
+		y = std::clamp(y * 20, -0.5f, 0.5f);
+		return { x, y };
 	}
 
 	float KMOV::Jump()
 	{
-		double jumpOrigin = std::min(std::max(JumpOrigin, -JumpMax), JumpMax);
+		float jumpOrigin = std::min(std::max(JumpOrigin, -JumpMax), JumpMax);
 		int multiplier = IsBouncing ? -15 : -25;
-		return ((JumpOrigin * multiplier) * JumpPower) * UI::DeltaTime();
+		float jumpValue = ((JumpOrigin * multiplier) * JumpPower) * UI::DeltaTime();
+		return std::clamp(jumpValue, -0.5f, 0.5f);
 	}
 
 	vec2 KMOV::Fire()
@@ -251,10 +254,11 @@ namespace IW3SR::Addons
 		CurrentOffset.x = std::clamp(CurrentOffset.x, -maxOffset, maxOffset);
 		CurrentOffset.y = std::clamp(CurrentOffset.y, -maxOffset, maxOffset);
 
-		const float lerpSpeed = 2.0f;
-		float t = 1.0f - std::exp(-lerpSpeed * UI::DeltaTime());
-		CurrentOffset.x = CurrentOffset.x * (1.0f - t);
-		CurrentOffset.y = CurrentOffset.y * (1.0f - t);
+		const float lerpSpeed = 3.0f;
+		float deltaTime = std::clamp(UI::DeltaTime(), 0.0f, 0.1f);
+		float t = 1.0f - std::exp(-lerpSpeed * deltaTime);
+		CurrentOffset.x *= (1.0f - t);
+		CurrentOffset.y *= (1.0f - t);
 
 		TextLT.Position = OriginalPositionLT + CurrentOffset;
 		TextLT.Value = ComputeValue(DisplayLT);
