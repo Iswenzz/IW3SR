@@ -241,9 +241,6 @@ namespace IW3SR::Addons
 		Compute();
 
 		vec2 offset = Fire();
-
-		Log::WriteLine("{} {}", offset.x, offset.y);
-
 		offset.y += Jump();
 		offset.x += Angles().x;
 
