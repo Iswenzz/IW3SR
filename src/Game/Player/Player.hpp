@@ -52,7 +52,7 @@ namespace IW3SR
 		/// <summary>
 		/// Check if the player is active.
 		/// </summary>
-		inline operator bool() const;
+		operator bool() const;
 
 	public:
 		/// <summary>
@@ -66,13 +66,13 @@ namespace IW3SR
 		/// </summary>
 		/// <param name="index">The player index.</param>
 		/// <returns></returns>
-		static inline Ref<Player>& Get(int index);
+		static Ref<Player>& Get(int index);
 
 		/// <summary>
 		/// Get self.
 		/// </summary>
 		/// <returns></returns>
-		static inline Ref<Player>& Self();
+		static Ref<Player>& Self();
 
 	private:
 		static inline std::array<Ref<Player>, 64> Players;

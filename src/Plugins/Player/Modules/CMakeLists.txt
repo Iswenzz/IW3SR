@@ -3,6 +3,8 @@ target_sources(Player PRIVATE
 	CGAZ.cpp
 	FPS.hpp
 	FPS.cpp
+	KMOV.hpp
+	KMOV.cpp
 	Lagometer.hpp
 	Lagometer.cpp
 	Movements.hpp

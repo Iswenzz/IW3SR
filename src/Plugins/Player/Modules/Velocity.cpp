@@ -34,9 +34,9 @@ namespace IW3SR::Addons
 
 	void Velocity::Menu()
 	{
-		ImGui::Checkbox("Velocity", &ShowVelocity);
-		ImGui::Checkbox("Average", &ShowAverage);
-		ImGui::Checkbox("Max", &ShowMax);
+		ImGui::Checkbox("Display Velocity", &ShowVelocity);
+		ImGui::Checkbox("Display Average", &ShowAverage);
+		ImGui::Checkbox("Display Max", &ShowMax);
 
 		if (ShowMax)
 		{
