@@ -33,7 +33,7 @@ namespace IW3SR
 	extern Hook<void(int localClientNum)>
 		CG_PredictPlayerState_Internal_h;
 
-	extern Hook<void()>
+	extern Hook<void(int localClientNum)>
 		CG_Respawn_h;
 
 	extern Hook<void()>
@@ -72,5 +72,6 @@ namespace IW3SR
 // clang-format on
 namespace IW3SR
 {
+	ASM_FUNCTION(CG_Respawn_h);
 	ASM_FUNCTION(RB_ExecuteRendererCommandsLoop_h);
 }

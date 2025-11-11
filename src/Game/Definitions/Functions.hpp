@@ -133,6 +133,7 @@ namespace IW3SR
 	ASM_FUNCTION(Dvar_RegisterVariant);
 	ASM_FUNCTION(G_MissileTrace);
 	ASM_FUNCTION(Jump_Check);
+	ASM_FUNCTION(Material_RegisterHandle);
 	ASM_FUNCTION(PM_AddTouchEnt);
 	ASM_FUNCTION(PM_CorrectAllSolid);
 	ASM_FUNCTION(PM_CrashLand);

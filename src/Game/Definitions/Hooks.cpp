@@ -37,8 +37,8 @@ namespace IW3SR
 	Hook<void(int localClientNum)>
 		CG_PredictPlayerState_Internal_h(0x447260, Client::Predict);
 
-	Hook<void()>
-		CG_Respawn_h(0x445FA0, Client::Respawn);
+	Hook<void(int localClientNum)>
+		CG_Respawn_h(0x445FA0, ASM_LOAD(CG_Respawn_h));
 
 	Hook<void()>
 		CL_Connect_h(0x471050, Client::Connect);
@@ -77,6 +77,21 @@ namespace IW3SR
 namespace IW3SR
 {
 	using namespace asmjit;
+
+	ASM_FUNCTION(CG_Respawn_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x08)); // localClientNum
+		a.call(Client::Respawn);
+		a.mov(x86::dword_ptr(x86::esp, 0x1C), x86::eax);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
 
 	ASM_FUNCTION(RB_ExecuteRendererCommandsLoop_h)
 	{

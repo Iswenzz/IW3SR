@@ -65,7 +65,7 @@ namespace IW3SR
 		Jump_Check = ASM_LOAD(Jump_Check);
 
 	Function<Material*(const char* material, int size)>
-		Material_RegisterHandle = 0x5F2A80;
+		Material_RegisterHandle = ASM_LOAD(Material_RegisterHandle);
 
 	Function<void(pmove_t* pm)>
 		PmoveSingle = 0x4143A0;
@@ -213,6 +213,22 @@ namespace IW3SR
 		a.call(0x407D90);
 		a.mov(x86::dword_ptr(x86::esp, 0x20), x86::eax);
 		a.add(x86::esp, 4);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(Material_RegisterHandle)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::edx, x86::dword_ptr(x86::ebp, 0x0C)); // size
+		a.mov(x86::ecx, x86::dword_ptr(x86::ebp, 0x08)); // material
+		a.call(0x5F2AA0);
+		a.mov(x86::dword_ptr(x86::esp, 0x1C), x86::eax);
 
 		a.popad();
 		a.pop(x86::ebp);

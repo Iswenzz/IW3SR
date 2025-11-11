@@ -9,7 +9,7 @@
 
 PLUGIN void Initialize()
 {
-	UI::InitializeContext();
+	UI::UpdateContext();
 
 	Modules::Load<CGAZ>();
 	Modules::Load<FPS>();

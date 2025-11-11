@@ -4,7 +4,7 @@
 
 PLUGIN void Initialize()
 {
-	UI::InitializeContext();
+	UI::UpdateContext();
 
 	Modules::Load<Tweaks>();
 }

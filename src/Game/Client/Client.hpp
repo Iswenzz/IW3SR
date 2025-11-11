@@ -28,7 +28,8 @@ namespace IW3SR
 		/// <summary>
 		/// Client respawn.
 		/// </summary>
-		static void Respawn();
+		/// <param name="localClientNum">Local client num.</param>
+		static void Respawn(int localClientNum);
 
 		/// <summary>
 		/// Predict player state.
