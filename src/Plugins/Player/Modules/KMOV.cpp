@@ -2,75 +2,81 @@
 
 #include <random>
 
-constexpr const char* displays = "Player\0Mode\0FPS\0Velocity\0Map\0Time\0Health\0";
+constexpr const char* types = "Player\0FPS\0Velocity\0Map\0Timer\0Health\0Hook\0";
 
 namespace IW3SR::Addons
 {
 	KMOV::KMOV() : Module("sr.player.kmov", "Player", "KMOV")
 	{
-		TextLT = Text("0", FONT_SPACERANGER, 20, -100, 2, { 1, 1, 1, 1 });
-		TextLB = Text("0", FONT_SPACERANGER, 20, -75, 2, { 1, 1, 1, 1 });
-		TextRT = Text("0", FONT_SPACERANGER, -20, -185, 2, { 0, 1, 1, 1 });
-		TextRB = Text("0", FONT_SPACERANGER, -20, -160, 2, { 1, 1, 1, 1 });
+		NodeLT.Element = Text("0", FONT_SPACERANGER, 20, -100, 2, { 1, 1, 1, 1 });
+		NodeLT.Element.SetRectAlignment(HORIZONTAL_LEFT, VERTICAL_BOTTOM);
+		NodeLT.Element.SetAlignment(ALIGN_LEFT, ALIGN_BOTTOM);
+		NodeLT.Element.Skew.y = -0.1f;
+		NodeLT.Type = NodeEnum::Player;
+
+		NodeLB.Element = Text("0", FONT_SPACERANGER, 20, -75, 2, { 1, 1, 1, 1 });
+		NodeLB.Element.SetRectAlignment(HORIZONTAL_LEFT, VERTICAL_BOTTOM);
+		NodeLB.Element.SetAlignment(ALIGN_LEFT, ALIGN_BOTTOM);
+		NodeLB.Element.Skew.y = -0.1f;
+		NodeLB.Type = NodeEnum::Timer;
+
+		NodeRT.Element = Text("0", FONT_SPACERANGER, -20, -185, 2, { 0, 1, 1, 1 });
+		NodeRT.Element.SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_BOTTOM);
+		NodeRT.Element.SetAlignment(ALIGN_RIGHT, ALIGN_BOTTOM);
+		NodeRT.Element.Skew.y = 0.1f;
+		NodeRT.Type = NodeEnum::FPS;
+
+		NodeRB.Element = Text("0", FONT_SPACERANGER, -20, -160, 2, { 1, 1, 1, 1 });
+		NodeRB.Element.SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_BOTTOM);
+		NodeRB.Element.SetAlignment(ALIGN_RIGHT, ALIGN_BOTTOM);
+		NodeRB.Element.Skew.y = 0.1f;
+		NodeRB.Type = NodeEnum::Velocity;
 	}
 
 	void KMOV::Initialize()
 	{
-		TextLT.Position = vec2(20, -100);
-		TextLT.FontSize = 2;
-		TextLT.Skew.y = -0.1f;
-		TextLT.SetRectAlignment(HORIZONTAL_LEFT, VERTICAL_BOTTOM);
-		TextLT.SetAlignment(ALIGN_LEFT, ALIGN_BOTTOM);
-		OriginalPositionLT = TextLT.Position;
-
-		TextLB.Position = vec2(20, -75);
-		TextLB.FontSize = 2;
-		TextLB.Skew.y = -0.1f;
-		TextLB.SetRectAlignment(HORIZONTAL_LEFT, VERTICAL_BOTTOM);
-		TextLB.SetAlignment(ALIGN_LEFT, ALIGN_BOTTOM);
-		OriginalPositionLB = TextLB.Position;
-
-		TextRT.Position = vec2(-20, -185);
-		TextRT.FontSize = 2;
-		TextRT.Skew.y = 0.1f;
-		TextRT.SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_BOTTOM);
-		TextRT.SetAlignment(ALIGN_RIGHT, ALIGN_BOTTOM);
-		OriginalPositionRT = TextRT.Position;
-
-		TextRB.Position = vec2(-20, -160);
-		TextRB.FontSize = 2;
-		TextRB.Skew.y = 0.1f;
-		TextRB.SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_BOTTOM);
-		TextRB.SetAlignment(ALIGN_RIGHT, ALIGN_BOTTOM);
-		OriginalPositionRB = TextRB.Position;
+		if (!CurrentOffset)
+		{
+			NodeLT.OriginalPosition = NodeLT.Element.Position;
+			NodeLB.OriginalPosition = NodeLB.Element.Position;
+			NodeRT.OriginalPosition = NodeRT.Element.Position;
+			NodeRB.OriginalPosition = NodeRB.Element.Position;
+		}
+		NodeLT.Element.Position = NodeLT.OriginalPosition;
+		NodeLB.Element.Position = NodeLB.OriginalPosition;
+		NodeRT.Element.Position = NodeRT.OriginalPosition;
+		NodeRB.Element.Position = NodeRB.OriginalPosition;
 
 		CurrentOffset = { 0, 0 };
 	}
 
 	void KMOV::Menu()
 	{
-		if (ImGui::CollapsingHeader("Displays"))
+		ImGui::DragFloat("Jump Power", &JumpPower, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Angles Power", &AnglesPower, 0.1f, 0.0f, 100.0f);
+		ImGui::DragFloat("Fire Power", &FirePower, 0.1f, 0.0f, 10.0f);
+
+		if (ImGui::CollapsingHeader("LT"))
+			MenuNode(NodeLT);
+		if (ImGui::CollapsingHeader("LB"))
+			MenuNode(NodeLB);
+		if (ImGui::CollapsingHeader("RT"))
+			MenuNode(NodeRT);
+		if (ImGui::CollapsingHeader("RB"))
+			MenuNode(NodeRB);
+	}
+
+	void KMOV::MenuNode(Node& node)
+	{
+		ImGui::Combo("Type", reinterpret_cast<int*>(&node.Type), types);
+		if (node.Type == NodeEnum::Hook)
 		{
-			ImGui::Combo("Display LT", reinterpret_cast<int*>(&DisplayLT), displays);
-			ImGui::Combo("Display LB", reinterpret_cast<int*>(&DisplayLB), displays);
-			ImGui::Combo("Display RT", reinterpret_cast<int*>(&DisplayRT), displays);
-			ImGui::Combo("Display RB", reinterpret_cast<int*>(&DisplayRB), displays);
+			ImGui::InputInt("Hook HUD", &node.Hook);
+			ImGui::InputText("Hook Value", &node.HookString);
+			ImGui::Tooltip("Display the value of a HUD element. Insert '{}' where you want the value to appear.");
+			ImGui::Checkbox("Hook Float", &node.HookFloat);
 		}
-		if (ImGui::CollapsingHeader("Variables"))
-		{
-			ImGui::DragFloat("Jump Power", &JumpPower, 0.1f, 0.0f, 10.0f);
-			ImGui::DragFloat("Jump Max", &JumpMax, 0.1f, -100.0f, 100.0f);
-			ImGui::DragFloat("Camera Power", &CameraPower, 0.1f, 0.0f, 10.0f);
-			ImGui::DragFloat("Fire Magnitude", &FireMagnitude, 0.1f, 0.0f, 2.0f);
-			ImGui::DragFloat("Fire Speed", &FireSpeed, 0.1f, 0.0f, 100.0f);
-		}
-		if (ImGui::CollapsingHeader("Texts"))
-		{
-			TextLT.Menu("LT");
-			TextLB.Menu("LB");
-			TextRT.Menu("RT");
-			TextRB.Menu("RB");
-		}
+		node.Element.Menu("Text");
 	}
 
 	void KMOV::Compute()
@@ -106,24 +112,32 @@ namespace IW3SR::Addons
 		const auto q3rl = BG_FindWeaponIndexForName("gl_ak47_mp");
 		const auto q3pg = BG_FindWeaponIndexForName("gl_g3_mp");
 		const auto portal = BG_FindWeaponIndexForName("portalgun_mp");
-		IsAttacking = pmove->cmd.buttons & 0x1;
+		const bool isFire = pmove->cmd.buttons & KEY_MASK_FIRE;
+		const bool isAds = pmove->cmd.buttons & KEY_MASK_ADS;
 
-		if (IsAttacking && (ps.weapon == q3rl || ps.weapon == q3pg || ps.weapon == portal))
+		// Q3
+		if (isFire && (ps.weapon == q3rl || ps.weapon == q3pg))
 		{
 			if (ps.weapon == q3rl)
 				FireDuration = 0.5f;
 			if (ps.weapon == q3pg)
 				FireDuration = 0.1f;
-			if (ps.weapon == portal)
-				FireDuration = 0.2f;
 
 			IsShaking = true;
 		}
+		// Portal
+		else if ((isFire || isAds) && ps.weapon == portal)
+		{
+			FireDuration = 0.2f;
+			IsShaking = true;
+		}
+		// RPG
 		else if (ps.weapon == rpg && ps.weaponstate == 5 && !ps.weaponTime)
 		{
 			FireDuration = 0.5f;
 			IsShaking = true;
 		}
+		// Weapons
 		else if (ps.weaponstate == 5)
 		{
 			FireDuration = ps.weaponTime / 1000.0f;
@@ -137,19 +151,20 @@ namespace IW3SR::Addons
 
 	vec2 KMOV::Angles()
 	{
-		float x = (AnglesDelta[1] * CameraPower) * UI::DeltaTime();
-		float y = (AnglesDelta[0] * CameraPower) * UI::DeltaTime();
-		x = std::clamp(x * 20, -0.5f, 0.5f);
-		y = std::clamp(y * 20, -0.5f, 0.5f);
+		float x = (AnglesDelta[1] * AnglesPower) * UI::DeltaTime();
+		float y = (AnglesDelta[0] * AnglesPower) * UI::DeltaTime();
+		x = std::clamp(x, -0.5f, 0.5f);
+		y = std::clamp(y, -0.5f, 0.5f);
 		return { x, y };
 	}
 
 	float KMOV::Jump()
 	{
-		float jumpOrigin = std::min(std::max(JumpOrigin, -JumpMax), JumpMax);
-		int multiplier = IsBouncing ? -15 : -25;
+		const float jumpMax = 40;
+		float jumpOrigin = std::min(std::max(JumpOrigin, -jumpMax), jumpMax);
+		float multiplier = IsBouncing ? 0.5f : 1.0f;
 		float jumpValue = ((JumpOrigin * multiplier) * JumpPower) * UI::DeltaTime();
-		return std::clamp(jumpValue, -0.5f, 0.5f);
+		return std::clamp(-jumpValue, -0.5f, 0.5f);
 	}
 
 	vec2 KMOV::Fire()
@@ -190,8 +205,8 @@ namespace IW3SR::Addons
 		y += std::sin(phaseY * 1.3f + time * freqY * 1.8f) * 0.3f;
 		y += std::sin(phaseY * 0.9f + time * freqY * 0.7f) * 0.1f;
 
-		x *= FireMagnitude * damper * fadeIn * 4;
-		y *= FireMagnitude * damper * fadeIn * 4;
+		x *= FirePower * damper * fadeIn;
+		y *= FirePower * damper * fadeIn;
 
 		x = std::clamp(x, -0.1f, 0.1f);
 		y = std::clamp(y, -0.1f, 0.1f);
@@ -204,30 +219,66 @@ namespace IW3SR::Addons
 		return { x, y };
 	}
 
-	const std::string KMOV::ComputeValue(Display display)
+	void KMOV::RenderNode(Node& node)
 	{
-		if (display == Display::Player)
-			return std::string(Dvar::Get<const char*>("name"));
-		if (display == Display::Mode)
-			return "Defrag";
-		if (display == Display::FPS)
-			return std::format("{} FPS", Dvar::Get<int>("com_maxfps"));
-		if (display == Display::Velocity)
-			return std::format("{} UPS", static_cast<int>(VectorLength2(pmove->ps->velocity)));
-		if (display == Display::Map)
-			return "";
-		if (display == Display::Time)
+		node.Element.Value = "";
+
+		switch (node.Type)
+		{
+		case NodeEnum::Player:
+			node.Element.Value = std::string(Dvar::Get<const char*>("name"));
+			break;
+		case NodeEnum::FPS:
+			node.Element.Value = std::format("{} FPS", Dvar::Get<int>("com_maxfps"));
+			break;
+		case NodeEnum::Velocity:
+			node.Element.Value = std::format("{} UPS", static_cast<int>(VectorLength2(pmove->ps->velocity)));
+			break;
+		case NodeEnum::Map:
+			node.Element.Value = std::string(Dvar::Get<const char*>("mapname"));
+			break;
+		case NodeEnum::Timer:
 		{
 			float seconds = UI::Time() - StartTime;
 			int minutes = static_cast<int>(seconds) / 60;
 			float secs = fmod(seconds, 60.0f);
 			char buffer[16];
 			snprintf(buffer, sizeof(buffer), "%d:%06.3f", minutes, secs);
-			return std::string(buffer);
+			node.Element.Value = std::string(buffer);
+			break;
 		}
-		if (display == Display::Health)
-			return std::format("{} HP", Player::Self()->info->health);
-		return "";
+		case NodeEnum::Health:
+			node.Element.Value = std::format("{} HP", Player::Self()->info->health);
+			break;
+		case NodeEnum::Hook:
+		{
+			const auto& ps = cgs->predictedPlayerState;
+			const hudelem_s* huds = node.Hook < 31 ? ps.hud.current : ps.hud.archival;
+			int index = node.Hook < 31 ? node.Hook : node.Hook - 31;
+			std::string value = "";
+			switch (huds[index].type)
+			{
+			case HE_TYPE_TEXT:
+				value = ""; // GetHudElemInfo
+				break;
+			case HE_TYPE_VALUE:
+				value = node.HookFloat ? std::to_string(huds[index].value)
+									   : std::to_string(static_cast<int>(huds[index].value));
+				break;
+			}
+			try
+			{
+				node.Element.Value = std::vformat(node.HookString, std::make_format_args(value));
+			}
+			catch (const std::format_error& e)
+			{
+				node.Element.Value = node.HookString;
+			}
+			break;
+		}
+		}
+		node.Element.Position = node.OriginalPosition + CurrentOffset;
+		node.Element.Render();
 	}
 
 	void KMOV::OnSpawn(EventClientSpawn& event)
@@ -240,12 +291,14 @@ namespace IW3SR::Addons
 	{
 		Compute();
 
-		vec2 offset = Fire();
-		offset.y += Jump();
-		offset.x += Angles().x;
+		const auto fire = Fire();
+		const auto jump = Jump();
+		const auto angles = Angles();
 
-		CurrentOffset.x += offset.x;
-		CurrentOffset.y += offset.y;
+		CurrentOffset.x += fire.x;
+		CurrentOffset.y += fire.y;
+		CurrentOffset.y += jump;
+		CurrentOffset.x += angles.x;
 
 		const float maxOffset = 10.0f;
 		CurrentOffset.x = std::clamp(CurrentOffset.x, -maxOffset, maxOffset);
@@ -257,20 +310,9 @@ namespace IW3SR::Addons
 		CurrentOffset.x *= (1.0f - t);
 		CurrentOffset.y *= (1.0f - t);
 
-		TextLT.Position = OriginalPositionLT + CurrentOffset;
-		TextLT.Value = ComputeValue(DisplayLT);
-		TextLT.Render();
-
-		TextLB.Position = OriginalPositionLB + CurrentOffset;
-		TextLB.Value = ComputeValue(DisplayLB);
-		TextLB.Render();
-
-		TextRT.Position = OriginalPositionRT + CurrentOffset;
-		TextRT.Value = ComputeValue(DisplayRT);
-		TextRT.Render();
-
-		TextRB.Position = OriginalPositionRB + CurrentOffset;
-		TextRB.Value = ComputeValue(DisplayRB);
-		TextRB.Render();
+		RenderNode(NodeLT);
+		RenderNode(NodeLB);
+		RenderNode(NodeRT);
+		RenderNode(NodeRB);
 	}
 }

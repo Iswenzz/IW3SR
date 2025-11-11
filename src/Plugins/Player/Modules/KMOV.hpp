@@ -4,17 +4,32 @@
 namespace IW3SR::Addons
 {
 	/// <summary>
-	/// Display type.
+	/// Node types.
 	/// </summary>
-	enum class Display
+	enum class NodeEnum
 	{
 		Player,
-		Mode,
 		FPS,
 		Velocity,
 		Map,
-		Time,
-		Health
+		Timer,
+		Health,
+		Hook
+	};
+
+	/// <summary>
+	/// Node element.
+	/// </summary>
+	struct Node
+	{
+		Text Element;
+		NodeEnum Type;
+		int Hook = 0;
+		std::string HookString;
+		bool HookFloat = false;
+		vec2 OriginalPosition;
+
+		SERIALIZE(Node, Element, Type, Hook, HookString, HookFloat)
 	};
 
 	/// <summary>
@@ -23,21 +38,14 @@ namespace IW3SR::Addons
 	class KMOV : public Module
 	{
 	public:
-		float JumpPower = 1;
-		float JumpMax = 10;
-		float CameraPower = 1;
-		float FireMagnitude = 0.5;
-		float FireSpeed = 20;
+		float JumpPower = 50;
+		float AnglesPower = 70;
+		float FirePower = 5;
 
-		Text TextLT;
-		Text TextLB;
-		Text TextRT;
-		Text TextRB;
-
-		Display DisplayLT = Display::Player;
-		Display DisplayLB = Display::Mode;
-		Display DisplayRT = Display::FPS;
-		Display DisplayRB = Display::Velocity;
+		Node NodeLT;
+		Node NodeLB;
+		Node NodeRT;
+		Node NodeRB;
 
 		/// <summary>
 		/// Create the module.
@@ -56,6 +64,12 @@ namespace IW3SR::Addons
 		void Menu() override;
 
 		/// <summary>
+		/// Menu node drawing.
+		/// </summary>
+		/// <param name="node">The node.</param>
+		void MenuNode(Node& node);
+
+		/// <summary>
 		/// Client spawn.
 		/// </summary>
 		/// <param name="event">The event.</param>
@@ -67,10 +81,6 @@ namespace IW3SR::Addons
 		void OnRender() override;
 
 	private:
-		vec2 OriginalPositionLT;
-		vec2 OriginalPositionLB;
-		vec2 OriginalPositionRT;
-		vec2 OriginalPositionRB;
 		vec2 CurrentOffset;
 
 		int StartTime = 0;
@@ -79,7 +89,6 @@ namespace IW3SR::Addons
 		vec3 AnglesDelta;
 		float FireDuration = 0;
 
-		bool IsAttacking = false;
 		bool IsShaking = false;
 		bool IsBouncing = false;
 
@@ -107,12 +116,11 @@ namespace IW3SR::Addons
 		vec2 Fire();
 
 		/// <summary>
-		/// Get the value for display.
+		/// Compute the node value.
 		/// </summary>
-		/// <param name="display">The display.</param>
-		/// <returns></returns>
-		const std::string ComputeValue(Display display);
+		/// <param name="node">The node.</param>
+		void RenderNode(Node& node);
 
-		SERIALIZE_POLY(KMOV, Module, TextLT, TextLB, TextRT, TextRB, DisplayLT, DisplayLB, DisplayRT, DisplayRB)
+		SERIALIZE_POLY(KMOV, Module, JumpPower, AnglesPower, FirePower, NodeLT, NodeLB, NodeRT, NodeRB)
 	};
 }
