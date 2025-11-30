@@ -810,7 +810,7 @@ namespace IW3SR
 	{
 		int serverTime;
 		int buttons;
-		vec3 angles;
+		int angles[3];
 		char weapon;
 		char offHandIndex;
 		char forwardmove;
@@ -6507,8 +6507,8 @@ namespace IW3SR
 		char mapname[64];
 		int parseEntitiesNum;
 		int parseClientsNum;
-		vec2 mouseDx;
-		vec2 mouseDy;
+		int mouseDx[2];
+		int mouseDy[2];
 		int mouseIndex;
 		bool stanceHeld;
 		StanceState stance;
