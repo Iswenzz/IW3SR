@@ -1,7 +1,5 @@
 #include "Binds.hpp"
 
-#include "Game/GUI/GUI.hpp"
-
 namespace IW3SR::UC
 {
 	Binds::Binds() : Frame("Binds") { }

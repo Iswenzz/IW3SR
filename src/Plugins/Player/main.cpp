@@ -1,4 +1,4 @@
-#include "Game/Plugin.hpp"
+#include "Base.hpp"
 
 #include "Modules/CGAZ.hpp"
 #include "Modules/FPS.hpp"

@@ -7,8 +7,8 @@ namespace IW3SR::Addons
 	Movements::Movements() : Module("sr.player.movements", "Player", "Movements")
 	{
 		BhopText = Text("BHOP", FONT_SPACERANGER, -35, 8, 0.8, { 1, 1, 1, 1 });
-		BhopText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
-		BhopText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
+		BhopText.SetRectAlignment(Horizontal::Center, Vertical::Center);
+		BhopText.SetAlignment(Alignment::Center, Alignment::Bottom);
 		KeyBhop = Bind(Input_None);
 
 		UseBhop = false;
@@ -72,7 +72,7 @@ namespace IW3SR::Addons
 
 		ImGui::SameLine();
 		ImGui::Keybind("Bhop Landing", &KeyBhop.Input);
-		BhopText.Menu("Bhop Indicator");
+		BhopText.Menu("Bhop Options");
 	}
 
 	void Movements::OnPredict(EventClientPredict& event)

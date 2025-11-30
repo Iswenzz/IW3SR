@@ -1,7 +1,5 @@
 #include "Modules.hpp"
 
-#include "Core/System/Environment.hpp"
-
 namespace IW3SR
 {
 	void Modules::Remove(const std::string& id)

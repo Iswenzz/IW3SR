@@ -9,7 +9,7 @@
 
 #define cpm_air_control 150.0f
 #define cpm_air_accelerate 1.0f
-#define cpm_airstop_accelerate 3.0f // 2.5
+#define cpm_airstop_accelerate 3.0f
 #define cpm_strafe_accelerate 70.0f
 
 #define OVERCLIP 1.001f
@@ -43,19 +43,18 @@ namespace IW3SR::Addons
 		ClipVelocity(pml->forward, pml->groundTrace.normal, pml->forward, OVERCLIP);
 		ClipVelocity(pml->right, pml->groundTrace.normal, pml->right, OVERCLIP);
 
-		Math::VectorNormalize3(pml->forward);
-		Math::VectorNormalize3(pml->right);
+		pml->forward = glm::normalize(pml->forward);
+		pml->right = glm::normalize(pml->right);
 
 		float speed = static_cast<float>(pm->ps->speed);
 
 		vec3 wishvel;
 		for (int i = 0; i < 3; i++)
 			wishvel[i] = pml->forward[i] * forwardmove + pml->right[i] * rightmove;
-		vec3 wishdir = wishvel;
 
-		float wishspeed;
-		wishdir.Normalize(wishspeed);
-		wishspeed *= scale;
+		vec3 wishdir = wishvel;
+		float wishspeed = glm::length(wishdir) * scale;
+		wishdir = glm::normalize(wishdir);
 
 		// Clamp the speed lower if ducking
 		if ((pm->ps->pm_flags & PMF_DUCKED) && (wishspeed > speed * pm_duck_scale))
@@ -78,14 +77,13 @@ namespace IW3SR::Addons
 		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || (pm->ps->pm_flags & PMF_TIME_KNOCKBACK))
 			pm->ps->velocity[2] -= static_cast<float>(pm->ps->gravity) * pml->frametime;
 
-		float vel = VectorLength3(pm->ps->velocity);
+		float vel = glm::length(pm->ps->velocity);
 
 		// Slide along the ground plane
 		ClipVelocity(pm->ps->velocity, pml->groundTrace.normal, pm->ps->velocity, OVERCLIP);
 
 		// Don't decrease velocity when going up or down a slope
-		Math::VectorNormalize3(pm->ps->velocity);
-		VectorScale3(pm->ps->velocity, vel, pm->ps->velocity);
+		pm->ps->velocity = glm::normalize(pm->ps->velocity) * vel;
 
 		// Don't do anything if standing still
 		if (pm->ps->velocity[0] == 0.0f && pm->ps->velocity[1] == 0.0f)
@@ -112,22 +110,22 @@ namespace IW3SR::Addons
 		pml->forward[2] = 0.0f;
 		pml->right[2] = 0.0f;
 
-		Math::VectorNormalize3(pml->forward);
-		Math::VectorNormalize3(pml->right);
+		pml->forward = glm::normalize(pml->forward);
+		pml->right = glm::normalize(pml->right);
 
 		// Determine x and y parts of velocity
 		for (int i = 0; i < 2; i++)
 			wishvel[i] = pml->forward[i] * fmove + pml->right[i] * smove;
 
-		wishvel[2] = 0; // Zero out z part of velocity
-		VectorCopy3(wishvel, wishdir);
-		wishspeed = Math::VectorNormalize3(wishdir);
-		wishspeed *= scale;
+		wishvel[2] = 0;
+		wishdir = wishvel;
+		wishspeed = glm::length(wishdir) * scale;
+		wishdir = glm::normalize(wishdir);
 
 		float accel;
 		const float wishspeed2 = wishspeed;
 
-		if (DotProduct3(ps->velocity, wishdir) < 0)
+		if (glm::dot(ps->velocity, wishdir) < 0)
 			accel = cpm_airstop_accelerate;
 		else
 			accel = 1.0f;
@@ -145,7 +143,7 @@ namespace IW3SR::Addons
 		if (pml->groundPlane)
 			ClipVelocity(ps->velocity, pml->groundTrace.normal, ps->velocity, OVERCLIP);
 
-		// RampSliding and RampJumping
+		// Ramp sliding and ramp jumping
 		StepSlideMove(pm, pml, true);
 	}
 
@@ -174,7 +172,7 @@ namespace IW3SR::Addons
 			return;
 		}
 		// Check if getting thrown off the ground
-		if (pm->ps->velocity[2] > 0.0f && DotProduct3(pm->ps->velocity, trace.normal) > 10.0f)
+		if (pm->ps->velocity[2] > 0.0f && glm::dot(pm->ps->velocity, trace.normal) > 10.0f)
 		{
 			// Go into jump animation
 			if (pm->cmd.forwardmove >= 0)
@@ -216,7 +214,7 @@ namespace IW3SR::Addons
 	}
 
 	// https://github.com/xzero450/revolution/blob/8d0b37ba438e65e19d5a5e77f5b9c2076b7900bc/game/bg_promode.c#L303
-	void Q3::AirControl(pmove_t* pm, pml_t* pml, vec3_t wishdir_b, float wishspeed_b)
+	void Q3::AirControl(pmove_t* pm, pml_t* pml, const vec3& wishdir_b, float wishspeed_b)
 	{
 		const auto ps = pm->ps;
 
@@ -227,15 +225,16 @@ namespace IW3SR::Addons
 		const float zspeed = ps->velocity[2];
 		ps->velocity[2] = 0.0f;
 
-		const float speed = Math::VectorNormalize3(ps->velocity);
-		const float dot = DotProduct3(ps->velocity, wishdir_b);
+		const float speed = glm::length(ps->velocity);
+		ps->velocity = glm::normalize(ps->velocity);
+		const float dot = glm::dot(ps->velocity, wishdir_b);
 		float k = 32.0f * cpm_air_control * dot * dot * pml->frametime * cpm_air_accelerate;
 
 		if (dot > 0)
 		{
 			for (int i = 0; i < 2; i++)
 				ps->velocity[i] = ps->velocity[i] * speed + wishdir_b[i] * k;
-			Math::VectorNormalize3(ps->velocity);
+			ps->velocity = glm::normalize(ps->velocity);
 		}
 		for (int i = 0; i < 2; i++)
 			ps->velocity[i] *= speed;
@@ -243,9 +242,9 @@ namespace IW3SR::Addons
 	}
 
 	// https://github.com/xzero450/revolution/blob/master/game/bg_pmove.c#L221
-	void Q3::Accelerate(playerState_s* ps, pml_t* pml, vec3_t wishdir_b, float wishspeed_b, float accel_b)
+	void Q3::Accelerate(playerState_s* ps, pml_t* pml, const vec3& wishdir_b, float wishspeed_b, float accel_b)
 	{
-		const float currentspeed = DotProduct3(ps->velocity, wishdir_b);
+		const float currentspeed = glm::dot(ps->velocity, wishdir_b);
 		const float addspeed = wishspeed_b - currentspeed;
 
 		if (addspeed <= 0)
@@ -259,11 +258,11 @@ namespace IW3SR::Addons
 			ps->velocity[i] += accelspeed * wishdir_b[i];
 	}
 
-	void Q3::AccelerateWalk(float* wishdir, pml_t* pml, playerState_s* ps, float wishspeed, float accel)
+	void Q3::AccelerateWalk(const vec3& wishdir, pml_t* pml, playerState_s* ps, float wishspeed, float accel)
 	{
 		PMove::DisableSprint(ps);
 
-		const float currentspeed = DotProduct3(ps->velocity, wishdir);
+		const float currentspeed = glm::dot(ps->velocity, wishdir);
 		const float addspeed = wishspeed - currentspeed;
 
 		if (addspeed <= 0)
@@ -322,7 +321,7 @@ namespace IW3SR::Addons
 		if (pml->walking)
 			vel[2] = 0.0f; // Ignore slope movement
 
-		const float speed = vel.Length();
+		const float speed = glm::length(vel);
 		if (speed < 1.0f)
 		{
 			pm->ps->velocity[0] = 0.0f;
@@ -357,9 +356,9 @@ namespace IW3SR::Addons
 			pm->ps->velocity[i] *= newspeed;
 	}
 
-	void Q3::ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
+	void Q3::ClipVelocity(const vec3& in, const vec3& normal, vec3& out, float overbounce)
 	{
-		float backoff = DotProduct3(in, normal);
+		float backoff = glm::dot(in, normal);
 		if (backoff < 0.0f)
 			backoff *= overbounce;
 		else
@@ -381,11 +380,11 @@ namespace IW3SR::Addons
 		float time_left, into;
 
 		trace_t trace = {};
-		VectorCopy3(pm->ps->velocity, primal_velocity);
+		primal_velocity = pm->ps->velocity;
 
 		if (gravity)
 		{
-			VectorCopy3(pm->ps->velocity, end_velocity);
+			end_velocity = pm->ps->velocity;
 			end_velocity[2] -= static_cast<float>(pm->ps->gravity) * pml->frametime;
 
 			pm->ps->velocity[2] = (pm->ps->velocity[2] + end_velocity[2]) * 0.5f;
@@ -401,20 +400,20 @@ namespace IW3SR::Addons
 		if (pml->groundPlane)
 		{
 			numplanes = 1;
-			VectorCopy3(pml->groundTrace.normal, planes[0]);
+			planes[0] = pml->groundTrace.normal;
 		}
 		else
 			numplanes = 0;
 
 		// Never turn against original velocity
 		planes[numplanes] = pm->ps->velocity;
-		planes[numplanes].Normalize();
+		planes[numplanes] = glm::normalize(planes[numplanes]);
 		numplanes++;
 
 		for (bumpcount = 0; bumpcount < NUM_BUMPS; bumpcount++)
 		{
 			// Calculate position we are trying to move to
-			VectorMultiplyAdd3(pm->ps->origin, time_left, pm->ps->velocity, end);
+			end = pm->ps->origin + pm->ps->velocity * time_left;
 
 			// See if we can make it there
 			PM_PlayerTrace(pm, &trace, pm->ps->origin, pm->mins, pm->maxs, end, pm->ps->clientNum, pm->tracemask);
@@ -429,8 +428,8 @@ namespace IW3SR::Addons
 			// Actually covered some distance
 			if (trace.fraction > 0.0f)
 			{
-				Math::VectorLerp3(pm->ps->origin, end, trace.fraction, end_pos);
-				VectorCopy3(end_pos, pm->ps->origin);
+				end_pos = glm::mix(pm->ps->origin, end, trace.fraction);
+				pm->ps->origin = end_pos;
 			}
 			// Moved the entire distance
 			if (trace.fraction == 1.0f)
@@ -442,30 +441,30 @@ namespace IW3SR::Addons
 
 			if (numplanes >= MAX_CLIP_PLANES)
 			{
-				VectorClear3(pm->ps->velocity);
+				pm->ps->velocity = { 0, 0, 0 };
 				return true;
 			}
 			// If this is the same plane we hit before, nudge velocity out along it,
 			// which fixes some epsilon issues with non-axial planes
 			for (i = 0; i < numplanes; i++)
 			{
-				if (DotProduct3(trace.normal, planes[i]) > 0.99f)
+				if (glm::dot(trace.normal, planes[i]) > 0.99f)
 				{
-					VectorAdd3(trace.normal, pm->ps->velocity, pm->ps->velocity);
+					pm->ps->velocity += trace.normal;
 					break;
 				}
 			}
 			if (i < numplanes)
 				continue;
 
-			VectorCopy3(trace.normal, planes[numplanes]);
+			planes[numplanes] = trace.normal;
 			numplanes++;
 
 			// Modify velocity so it parallels all of the clip planes
 			// Find a plane that it enters
 			for (int i = 0; i < numplanes; i++)
 			{
-				into = DotProduct3(pm->ps->velocity, planes[i]);
+				into = glm::dot(pm->ps->velocity, planes[i]);
 
 				// Move doesn't interact with the plane
 				if (into >= 0.1f)
@@ -486,7 +485,7 @@ namespace IW3SR::Addons
 						continue;
 
 					// Move doesn't interact with the plane
-					if (DotProduct3(clip_velocity, planes[j]) >= 0.1f)
+					if (glm::dot(clip_velocity, planes[j]) >= 0.1f)
 						continue;
 
 					// Try clipping the move to the plane
@@ -494,21 +493,21 @@ namespace IW3SR::Addons
 					ClipVelocity(end_clip_velocity, planes[j], end_clip_velocity, OVERCLIP);
 
 					// See if it goes back into the first clip plane
-					if (DotProduct3(clip_velocity, planes[i]) >= 0)
+					if (glm::dot(clip_velocity, planes[i]) >= 0)
 						continue;
 
 					// Slide the original velocity along the crease
-					CrossProduct3(planes[i], planes[j], dir);
-					Math::VectorNormalize3(dir);
+					dir = glm::cross(planes[i], planes[j]);
+					dir = glm::normalize(dir);
 
-					float d = DotProduct3(dir, pm->ps->velocity);
-					VectorScale3(dir, d, clip_velocity);
+					float d = glm::dot(dir, pm->ps->velocity);
+					clip_velocity = dir * d;
 
-					CrossProduct3(planes[i], planes[j], dir);
-					Math::VectorNormalize3(dir);
+					dir = glm::cross(planes[i], planes[j]);
+					dir = glm::normalize(dir);
 
-					d = DotProduct3(dir, end_velocity);
-					VectorScale3(dir, d, end_clip_velocity);
+					d = glm::dot(dir, end_velocity);
+					end_clip_velocity = dir * d;
 
 					// See if there is a third plane the the new move enters
 					for (int k = 0; k < numplanes; k++)
@@ -517,26 +516,27 @@ namespace IW3SR::Addons
 							continue;
 
 						// Move doesn't interact with the plane
-						if (DotProduct3(clip_velocity, planes[k]) >= 0.1f)
+						if (glm::dot(clip_velocity, planes[k]) >= 0.1f)
 							continue;
 
 						// Stop dead at a tripple plane interaction
-						VectorClear3(pm->ps->velocity);
+						pm->ps->velocity = { 0, 0, 0 };
 						return true;
 					}
 				}
 				// If we have fixed all interactions, try another move
-				VectorCopy3(clip_velocity, pm->ps->velocity);
-				VectorCopy3(end_clip_velocity, end_velocity);
+				pm->ps->velocity = clip_velocity;
+				end_velocity = end_clip_velocity;
 				break;
 			}
 		}
 		if (gravity)
-			VectorCopy3(end_velocity, pm->ps->velocity);
+			pm->ps->velocity = end_velocity;
 
 		// Don't change velocity if in a timer, clipping is caused by this
 		if (pm->ps->pm_time)
-			VectorCopy3(primal_velocity, pm->ps->velocity);
+			pm->ps->velocity = primal_velocity;
+
 		return bumpcount != 0;
 	}
 
@@ -567,31 +567,31 @@ namespace IW3SR::Addons
 				pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFBFFF;
 			}
 		}
-		VectorCopy3(pm->ps->origin, start_o);
-		VectorCopy3(pm->ps->velocity, start_v);
+		start_o = pm->ps->origin;
+		start_v = pm->ps->velocity;
 
 		// We got exactly where we wanted to go first try
 		if (!SlideMove(pm, pml, gravity))
 			return;
 
-		VectorCopy3(start_o, down);
+		down = start_o;
 		down[2] -= jump_stepSize;
 
 		PM_PlayerTrace(pm, &trace, start_o, pm->mins, pm->maxs, down, pm->ps->clientNum, pm->tracemask);
-		VectorSet3(up, 0, 0, 1);
+		up = { 0, 0, 1 };
 
-		// Never step up when you still have up velocity // org
-		if (pm->ps->velocity[2] > 0.0f && (trace.fraction == 1.0f || DotProduct3(trace.normal, up) < 0.7f))
+		// Never step up when you still have up velocity
+		if (pm->ps->velocity[2] > 0.0f && (trace.fraction == 1.0f || glm::dot(trace.normal, up) < 0.7f))
 			return;
 
-		VectorCopy3(pm->ps->origin, down_o);
-		VectorCopy3(pm->ps->velocity, down_v);
-		VectorCopy3(start_o, up);
+		down_o = pm->ps->origin;
+		down_v = pm->ps->velocity;
+		up = start_o;
 		up[2] += jump_stepSize;
 
 		// Test the player position if they were a stepheight higher
 		PM_PlayerTrace(pm, &trace, start_o, pm->mins, pm->maxs, up, pm->ps->clientNum, pm->tracemask);
-		Math::VectorLerp3(pm->ps->origin, up, trace.fraction, endpos); // Q3 trace
+		endpos = glm::mix(pm->ps->origin, up, trace.fraction);
 
 		// Can't step up
 		if (trace.allsolid)
@@ -599,20 +599,20 @@ namespace IW3SR::Addons
 		float stepSize = endpos[2] - start_o[2];
 
 		// Try slidemove from this position
-		VectorCopy3(endpos, pm->ps->origin);
-		VectorCopy3(start_v, pm->ps->velocity);
+		pm->ps->origin = endpos;
+		pm->ps->velocity = start_v;
 
 		SlideMove(pm, pml, gravity);
 
 		// Push down the final amount
-		VectorCopy3(pm->ps->origin, down);
+		down = pm->ps->origin;
 		down[2] -= stepSize;
 
 		PM_PlayerTrace(pm, &trace, pm->ps->origin, pm->mins, pm->maxs, down, pm->ps->clientNum, pm->tracemask);
-		Math::VectorLerp3(pm->ps->origin, down, trace.fraction, endpos); // Q3 trace
+		endpos = glm::mix(pm->ps->origin, down, trace.fraction);
 
 		if (!trace.allsolid)
-			VectorCopy3(endpos, pm->ps->origin);
+			pm->ps->origin = endpos;
 
 		if (trace.fraction < 1.0f)
 		{
@@ -620,8 +620,8 @@ namespace IW3SR::Addons
 			{
 				if (!trace.walkable && trace.normal[2] < 0.30000001f)
 				{
-					VectorCopy3(start_o, pm->ps->velocity);
-					VectorCopy3(start_v, pm->ps->velocity);
+					pm->ps->velocity = start_o;
+					pm->ps->velocity = start_v;
 					return;
 				}
 				PM_ProjectVelocity(trace.normal, pm->ps->velocity, pm->ps->velocity);
@@ -629,10 +629,10 @@ namespace IW3SR::Addons
 			else
 			{
 				// Not in air
-				if (!((pm->ps->velocity[2] > 0.0f) && (trace.fraction == 1.0f || DotProduct3(trace.normal, up) < 0.7f)))
+				if (!((pm->ps->velocity[2] > 0.0f) && (trace.fraction == 1.0f || glm::dot(trace.normal, up) < 0.7f)))
 					ClipVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity, OVERCLIP);
 				else
-					VectorCopy3(start_v, pm->ps->velocity);
+					pm->ps->velocity = start_v;
 			}
 		}
 	}

@@ -1,6 +1,5 @@
 #pragma once
-#include "Core/Communication/Actions.hpp"
-#include "Core/Communication/Event.hpp"
+#include "Core/Communication/Events.hpp"
 
 namespace IW3SR
 {

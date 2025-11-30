@@ -7,20 +7,20 @@ namespace IW3SR::Addons
 		Graph = Plots();
 
 		VelocityText = Text("0", FONT_SPACERANGER, 0, 2, 1.4, { 0, 1, 1, 1 });
-		VelocityText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_TOP);
-		VelocityText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
+		VelocityText.SetRectAlignment(Horizontal::Center, Vertical::Top);
+		VelocityText.SetAlignment(Alignment::Center, Alignment::Bottom);
 
 		AverageText = Text("0", FONT_SPACERANGER, 50, 2, 1.4, { 1, 1, 0, 1 });
-		AverageText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_TOP);
-		AverageText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
+		AverageText.SetRectAlignment(Horizontal::Center, Vertical::Top);
+		AverageText.SetAlignment(Alignment::Center, Alignment::Bottom);
 
 		MaxText = Text("0", FONT_SPACERANGER, 100, 2, 1.4, { 1, 0, 0, 1 });
-		MaxText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_TOP);
-		MaxText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
+		MaxText.SetRectAlignment(Horizontal::Center, Vertical::Top);
+		MaxText.SetAlignment(Alignment::Center, Alignment::Bottom);
 
 		GroundText = Text("0", FONT_SPACERANGER, -50, 2, 1.4, { 0, 1, 0, 1 });
-		GroundText.SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_TOP);
-		GroundText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
+		GroundText.SetRectAlignment(Horizontal::Center, Vertical::Top);
+		GroundText.SetAlignment(Alignment::Center, Alignment::Bottom);
 
 		ShowVelocity = true;
 		ShowAverage = false;
@@ -34,9 +34,9 @@ namespace IW3SR::Addons
 
 	void Velocity::Menu()
 	{
-		ImGui::Checkbox("Display Velocity", &ShowVelocity);
-		ImGui::Checkbox("Display Average", &ShowAverage);
-		ImGui::Checkbox("Display Max", &ShowMax);
+		ImGui::Checkbox("Velocity", &ShowVelocity);
+		ImGui::Checkbox("Average", &ShowAverage);
+		ImGui::Checkbox("Max", &ShowMax);
 
 		if (ShowMax)
 		{
@@ -50,19 +50,19 @@ namespace IW3SR::Addons
 			ImGui::SameLine();
 			ImGui::Checkbox("Time", &ShowGroundTime);
 		}
-		ImGui::Checkbox("Display Graph", &ShowGraph);
+		ImGui::Checkbox("Graph", &ShowGraph);
 
-		VelocityText.Menu("Velocity");
-		AverageText.Menu("Average");
-		MaxText.Menu("Max");
-		GroundText.Menu("Ground");
-		Graph.Menu("Graph");
+		VelocityText.Menu("Velocity Options");
+		AverageText.Menu("Average Options");
+		MaxText.Menu("Max Options");
+		GroundText.Menu("Ground Options");
+		Graph.Menu("Graph Options");
 	}
 
 	void Velocity::Compute()
 	{
 		static bool prevOnGround = true;
-		int prevVelocity = VectorLength2(pmove->ps->oldVelocity);
+		int prevVelocity = glm::length(vec2(pmove->ps->oldVelocity));
 
 		bool onGround = PMove::OnGround();
 		bool landed = onGround && !prevOnGround;
@@ -78,7 +78,7 @@ namespace IW3SR::Addons
 		if (onGround)
 			GroundTime += UI::DeltaTimeMS();
 
-		Value = VectorLength2(pmove->ps->velocity);
+		Value = glm::length(vec2(pmove->ps->velocity));
 		BufferValues.Add(Value);
 		BufferAverages.Add(Average);
 
@@ -145,7 +145,7 @@ namespace IW3SR::Addons
 				if (ShowVelocity)
 				{
 					ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-					ImPlot::PushStyleColor(ImPlotCol_Line, VelocityText.Color.RGBA());
+					ImPlot::PushStyleColor(ImPlotCol_Line, Math::RGBA(VelocityText.Color));
 					ImPlot::PlotShaded("Velocity", BufferValues.Get(), BufferValues.Max(), -INFINITY, 1, 0, 0,
 						BufferValues.Offset);
 					ImPlot::PlotLine("Velocity", BufferValues.Get(), BufferValues.Max(), 1, 0, 0, BufferValues.Offset);
@@ -153,20 +153,20 @@ namespace IW3SR::Addons
 				}
 				if (ShowAverage)
 				{
-					ImPlot::PushStyleColor(ImPlotCol_Line, AverageText.Color.RGBA());
+					ImPlot::PushStyleColor(ImPlotCol_Line, Math::RGBA(AverageText.Color));
 					ImPlot::PlotLine("Average", BufferAverages.Get(), BufferAverages.Max(), 1, 0, 0,
 						BufferAverages.Offset);
 					ImPlot::PopStyleColor();
 				}
 				if (ShowMax)
 				{
-					ImPlot::PushStyleColor(ImPlotCol_Line, MaxText.Color.RGBA());
+					ImPlot::PushStyleColor(ImPlotCol_Line, Math::RGBA(MaxText.Color));
 					ImPlot::PlotLine("Max", BufferMaxs.Get(), BufferMaxs.Max(), 1, 0, 0, BufferMaxs.Offset);
 					ImPlot::PopStyleColor();
 				}
 				if (ShowGround)
 				{
-					ImPlot::PushStyleColor(ImPlotCol_Line, GroundText.Color.RGBA());
+					ImPlot::PushStyleColor(ImPlotCol_Line, Math::RGBA(GroundText.Color));
 					ImPlot::PlotLine("Ground", BufferGrounds.Get(), BufferGrounds.Max(), 1, 0, 0, BufferGrounds.Offset);
 					ImPlot::PopStyleColor();
 				}

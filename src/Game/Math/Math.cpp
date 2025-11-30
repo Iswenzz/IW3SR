@@ -1,5 +1,4 @@
 #include "Math.hpp"
-#include <utility>
 
 namespace IW3SR
 {
@@ -15,10 +14,10 @@ namespace IW3SR
 		const vec3 right = viewAxis[1];
 		const vec3 up = viewAxis[2];
 
-		const vec3 transform = { local.Dot(right), local.Dot(up), local.Dot(forward) };
+		const vec3 transform = { glm::dot(local, right), glm::dot(local, up), glm::dot(local, forward) };
 
 		if (transform[2] < 0.01f)
-			return vec2::Zero;
+			return { 0, 0 };
 
 		return { center.x * (1.0f - (transform[0] / tanHalfFov.x / transform[2])),
 			center.y * (1.0f - (transform[1] / tanHalfFov.y / transform[2])) };

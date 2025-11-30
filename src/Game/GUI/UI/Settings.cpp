@@ -1,4 +1,5 @@
 #include "Settings.hpp"
+
 #include "Game/Renderer/Settings/Settings.hpp"
 
 #include <set>
@@ -8,7 +9,7 @@ namespace IW3SR::UC
 	Settings::Settings() : Frame("Settings")
 	{
 		SetRect(-170, 20, 150, 100);
-		SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_TOP);
+		SetRectAlignment(Horizontal::Right, Vertical::Top);
 	}
 
 	void Settings::OnRender()

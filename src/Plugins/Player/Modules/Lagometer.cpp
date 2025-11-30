@@ -12,7 +12,7 @@ namespace IW3SR::Addons
 	{
 		Graph = Plots();
 		Graph.SetRect(-55, -140, 48, 48);
-		Graph.SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_BOTTOM);
+		Graph.SetRectAlignment(Horizontal::Right, Vertical::Bottom);
 
 		ColorSnap = { 0, 0, 1, 1 };
 		ColorSnapDelay = { 1, 1, 0, 1 };
@@ -35,7 +35,7 @@ namespace IW3SR::Addons
 		ImGui::Checkbox("Snapshot", &ShowSnap);
 		ImGui::Checkbox("Snapshot Flags", &ShowSnapFlag);
 		ImGui::Checkbox("Ping", &ShowPing);
-		Graph.Menu("Graph");
+		Graph.Menu("Graph Options");
 	}
 
 	void Lagometer::OnRender()

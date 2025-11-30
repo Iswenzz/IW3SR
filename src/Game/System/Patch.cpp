@@ -1,9 +1,5 @@
 #include "Patch.hpp"
 
-#include "Core/Memory/Memory.hpp"
-#include "Core/Memory/Signature.hpp"
-#include "Core/System/System.hpp"
-
 #define COD4X if (COD4X_BASE)
 
 namespace IW3SR

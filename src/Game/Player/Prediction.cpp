@@ -1,7 +1,5 @@
 #include "Prediction.hpp"
-#include "Engine/Core/Memory/Memory.hpp"
-#include "Game/Definitions/Structs.hpp"
-#include "Game/System/Dvar.hpp"
+
 #include "PMove.hpp"
 
 namespace IW3SR

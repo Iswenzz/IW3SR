@@ -32,14 +32,14 @@ namespace IW3SR
 
 	void GText::ComputeAlignment(vec2& position)
 	{
-		if (AlignX & ALIGN_CENTER)
+		if (AlignX == Alignment::Center)
 			position.x += -(Size.x / 2.f);
-		else if (AlignX & ALIGN_RIGHT)
+		else if (AlignX == Alignment::Right)
 			position.x += -Size.x;
 
-		if (AlignY & ALIGN_MIDDLE)
+		if (AlignY == Alignment::Middle)
 			position.y += Size.y / 2.f;
-		else if (AlignY & ALIGN_BOTTOM)
+		else if (AlignY == Alignment::Bottom)
 			position.y += Size.y;
 	}
 
@@ -50,8 +50,8 @@ namespace IW3SR
 
 		ImGui::PushID(label.c_str());
 
-		ImGui::DragFloat2("Position", Position);
-		ImGui::ColorEdit4("Color", Color, ImGuiColorEditFlags_Float);
+		ImGui::DragFloat2("Position", &Position.x);
+		ImGui::ColorEdit4("Color", &Color.x, ImGuiColorEditFlags_Float);
 
 		if (ImGui::InputFloat("Font Size", &FontSize, 0.1))
 			SetFont(FontName);

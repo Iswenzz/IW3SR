@@ -29,18 +29,16 @@ namespace IW3SR::Addons
 		ImGui::DragFloat("Y Position", &Y);
 		ImGui::DragFloat("Height", &Height);
 
-		ImGui::ColorEdit4("Background", ColorBackground, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Partial Accel", ColorPartialAccel, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Full Accel", ColorFullAccel, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Turn Zone", ColorTurnZone, ImGuiColorEditFlags_Float);
+		ImGui::ColorEdit4("Background", &ColorBackground.x, ImGuiColorEditFlags_Float);
+		ImGui::ColorEdit4("Partial Accel", &ColorPartialAccel.x, ImGuiColorEditFlags_Float);
+		ImGui::ColorEdit4("Full Accel", &ColorFullAccel.x, ImGuiColorEditFlags_Float);
+		ImGui::ColorEdit4("Turn Zone", &ColorTurnZone.x, ImGuiColorEditFlags_Float);
 	}
 
 	void CGAZ::PmoveSingle()
 	{
-		pml = { 0 };
 		pml.frametime = static_cast<float>(cgs->frametime) / 1000.f;
-
-		VectorCopy3(pm.ps->velocity, pml.previous_velocity);
+		pml.previous_velocity = pm.ps->velocity;
 		Math::AngleVectors(pm.ps->viewangles, pml.forward, pml.right, pml.up);
 
 		// Use default key combination when no user input
@@ -69,15 +67,15 @@ namespace IW3SR::Addons
 		pml.forward[2] = 0;
 		pml.right[2] = 0;
 
-		Math::VectorNormalize3(pml.forward);
-		Math::VectorNormalize3(pml.right);
+		pml.forward = glm::normalize(pml.forward);
+		pml.right = glm::normalize(pml.right);
 
 		for (int i = 0; i < 2; ++i)
 			w_vel[i] = static_cast<float>(pm.cmd.forwardmove) * pml.forward[i]
 				+ static_cast<float>(pm.cmd.rightmove) * pml.right[i];
 
 		const float dmg_scale = DamageScaleWalk(pm.ps->damageTimer) * CmdScaleWalk(&pm.cmd);
-		const float wishspeed = dmg_scale * VectorLength2(w_vel);
+		const float wishspeed = dmg_scale * glm::length(w_vel);
 
 		// When a player gets hit, they temporarily lose full control, which allows them to be moved a bit
 		if (pml.groundTrace.surfaceFlags & SURF_SLICK || pm.ps->pm_flags & PMF_TIME_KNOCKBACK)
@@ -102,21 +100,21 @@ namespace IW3SR::Addons
 		pml.forward[2] = 0;
 		pml.right[2] = 0;
 
-		Math::VectorNormalize3(pml.forward);
-		Math::VectorNormalize3(pml.right);
+		pml.forward = glm::normalize(pml.forward);
+		pml.right = glm::normalize(pml.right);
 
 		for (int i = 0; i < 2; ++i)
 			w_vel[i] = pm.cmd.forwardmove * pml.forward[i] + pm.cmd.rightmove * pml.right[i];
 
-		const float wishspeed = scale * VectorLength2(w_vel);
+		const float wishspeed = scale * glm::length(w_vel);
 		Accelerate(wishspeed, pm_airaccelerate);
 	}
 
 	void CGAZ::Compute(float wishspeed, float accel, float gravity)
 	{
 		g_squared = gravity * gravity;
-		v_squared = VectorLengthSquared2(pml.previous_velocity);
-		vf_squared = VectorLengthSquared2(pm.ps->velocity);
+		v_squared = glm::dot(vec2(pml.previous_velocity), vec2(pml.previous_velocity));
+		vf_squared = glm::dot(vec2(pm.ps->velocity), vec2(pm.ps->velocity));
 		w_speed = wishspeed;
 		a = accel * wishspeed * pml.frametime;
 		a_squared = a * a;
@@ -328,7 +326,7 @@ namespace IW3SR::Addons
 	{
 		pm = *pmove;
 
-		if (!(pm.ps->otherFlags & PMF_DUCKED) && VectorLength2(pm.ps->velocity))
+		if (!(pm.ps->otherFlags & PMF_DUCKED) && glm::length(vec2(pm.ps->velocity)))
 		{
 			PmoveSingle();
 

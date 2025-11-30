@@ -1,9 +1,11 @@
-add_library(Graphics SHARED main.cpp)
+add_library(Graphics SHARED)
 add_subdirectory(Modules)
 
 # Build
 target_link_libraries(Graphics PRIVATE IW3SR.API)
 target_include_directories(Graphics PRIVATE .)
+target_sources(Graphics PRIVATE main.cpp Base.hpp)
+target_precompile_headers(Graphics PRIVATE Base.hpp)
 
 # Tree
 set_target_properties(Graphics PROPERTIES FOLDER Plugins)

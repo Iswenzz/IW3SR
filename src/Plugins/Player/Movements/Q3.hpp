@@ -1,11 +1,11 @@
 #pragma once
-// https://github.com/xoxor4d/iw3xo-dev/blob/master/src/components/modules/movement.cpp
-#include "Game/Plugin.hpp"
+#include "Base.hpp"
 
 namespace IW3SR::Addons
 {
 	/// <summary>
 	/// Q3 Movements.
+	/// https://github.com/xoxor4d/iw3xo-dev/blob/master/src/components/modules/movement.cpp
 	/// </summary>
 	class Q3
 	{
@@ -38,7 +38,7 @@ namespace IW3SR::Addons
 		/// <param name="pml">Player move library.</param>
 		/// <param name="wishdir_b">The wish dir.</param>
 		/// <param name="wishspeed_b">The wish speed.</param>
-		static void AirControl(pmove_t* pm, pml_t* pml, vec3_t wishdir_b, float wishspeed_b);
+		static void AirControl(pmove_t* pm, pml_t* pml, const vec3& wishdir_b, float wishspeed_b);
 
 		/// <summary>
 		/// Accelerate.
@@ -48,7 +48,7 @@ namespace IW3SR::Addons
 		/// <param name="wishdir_b">The wish dir.</param>
 		/// <param name="wishspeed_b">The wish speed.</param>
 		/// <param name="accel_b">The accel.</param>
-		static void Accelerate(playerState_s* ps, pml_t* pml, vec3_t wishdir_b, float wishspeed_b, float accel_b);
+		static void Accelerate(playerState_s* ps, pml_t* pml, const vec3& wishdir_b, float wishspeed_b, float accel_b);
 
 		/// <summary>
 		/// Accelerate walk.
@@ -58,7 +58,7 @@ namespace IW3SR::Addons
 		/// <param name="ps">Player state.</param>
 		/// <param name="wishspeed">The wish speed.</param>
 		/// <param name="accel">The accel.</param>
-		static void AccelerateWalk(float* wishdir, pml_t* pml, playerState_s* ps, float wishspeed, float accel);
+		static void AccelerateWalk(const vec3& wishdir, pml_t* pml, playerState_s* ps, float wishspeed, float accel);
 
 		/// <summary>
 		/// Jump check.
@@ -81,7 +81,7 @@ namespace IW3SR::Addons
 		/// <param name="normal">Normal vector.</param>
 		/// <param name="out">Out velocity.</param>
 		/// <param name="overbounce">Overbounce value.</param>
-		static void ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce);
+		static void ClipVelocity(const vec3& in, const vec3& normal, vec3& out, float overbounce);
 
 		/// <summary>
 		/// Slide move.

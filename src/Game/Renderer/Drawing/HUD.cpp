@@ -31,14 +31,14 @@ namespace IW3SR
 
 	void GHUD::ComputeAlignment(vec2& position)
 	{
-		if (AlignX & ALIGN_CENTER)
+		if (AlignX == Alignment::Center)
 			position.x += -(Size.x / 2.f);
-		else if (AlignX & ALIGN_RIGHT)
+		else if (AlignX == Alignment::Right)
 			position.x += -Size.x;
 
-		if (AlignY & ALIGN_MIDDLE)
+		if (AlignY == Alignment::Middle)
 			position.y += Size.y / 2.f;
-		else if (AlignY & ALIGN_BOTTOM)
+		else if (AlignY == Alignment::Bottom)
 			position.y += Size.y;
 	}
 
@@ -49,9 +49,9 @@ namespace IW3SR
 
 		ImGui::PushID(label.c_str());
 
-		ImGui::DragFloat2("Position", Position);
-		ImGui::DragFloat2("Size", Size);
-		ImGui::ColorEdit4("Color", Color, ImGuiColorEditFlags_Float);
+		ImGui::DragFloat2("Position", &Position.x);
+		ImGui::DragFloat2("Size", &Size.x);
+		ImGui::ColorEdit4("Color", &Color.x, ImGuiColorEditFlags_Float);
 
 		ImGui::ComboAlign(&AlignX, &AlignY);
 		ImGui::ComboAlignRect(&HorizontalAlign, &VerticalAlign);

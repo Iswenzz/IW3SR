@@ -18,13 +18,13 @@ namespace IW3SR
 		R_ConvertColorToBytes(color, Verts[Vertex].color);
 		R_ConvertColorToBytes(color, Verts[Vertex + 1].color);
 
-		Verts[Vertex].xyz[0] = start.x;
-		Verts[Vertex].xyz[1] = start.y;
-		Verts[Vertex].xyz[2] = start.z;
+		Verts[Vertex].position[0] = start.x;
+		Verts[Vertex].position[1] = start.y;
+		Verts[Vertex].position[2] = start.z;
 
-		Verts[Vertex + 1].xyz[0] = end.x;
-		Verts[Vertex + 1].xyz[1] = end.y;
-		Verts[Vertex + 1].xyz[2] = end.z;
+		Verts[Vertex + 1].position[0] = end.x;
+		Verts[Vertex + 1].position[1] = end.y;
+		Verts[Vertex + 1].position[2] = end.z;
 
 		Vertex += 2;
 	}

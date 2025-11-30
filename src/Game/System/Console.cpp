@@ -1,8 +1,5 @@
 #include "Console.hpp"
 
-#include "Core/Console/Console.hpp"
-#include "Core/System/System.hpp"
-
 namespace IW3SR
 {
 	void GConsole::Initialize()

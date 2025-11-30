@@ -1,4 +1,4 @@
-add_library(Player SHARED main.cpp)
+add_library(Player SHARED)
 
 add_subdirectory(Modules)
 add_subdirectory(Movements)
@@ -6,6 +6,8 @@ add_subdirectory(Movements)
 # Build
 target_link_libraries(Player PRIVATE IW3SR.API)
 target_include_directories(Player PRIVATE .)
+target_sources(Player PRIVATE main.cpp Base.hpp)
+target_precompile_headers(Player PRIVATE Base.hpp)
 
 # Tree
 set_target_properties(Player PROPERTIES FOLDER Plugins)

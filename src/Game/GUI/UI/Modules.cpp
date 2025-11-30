@@ -1,4 +1,5 @@
 #include "Modules.hpp"
+
 #include "Game/Renderer/Modules/Modules.hpp"
 
 #include <set>
@@ -8,7 +9,7 @@ namespace IW3SR::UC
 	Modules::Modules() : Frame("Modules")
 	{
 		SetRect(-170, 20, 150, 185);
-		SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_TOP);
+		SetRectAlignment(Horizontal::Right, Vertical::Top);
 	}
 
 	void Modules::OnRender()

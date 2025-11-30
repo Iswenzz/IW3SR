@@ -32,8 +32,8 @@ namespace IW3SR::Addons
 			ImGui::SliderFloat("Brightness", &TweakBrightness, -1, 1);
 			ImGui::SliderFloat("Contrast", &TweakContrast, 0, 4);
 			ImGui::SliderFloat("Desaturation", &TweakDesaturation, 0, 1);
-			ImGui::ColorEdit3("Light Tint", TweakLightTint, ImGuiColorEditFlags_Float);
-			ImGui::ColorEdit3("Dark Tint", TweakDarkTint, ImGuiColorEditFlags_Float);
+			ImGui::ColorEdit3("Light Tint", &TweakLightTint.x, ImGuiColorEditFlags_Float);
+			ImGui::ColorEdit3("Dark Tint", &TweakDarkTint.x, ImGuiColorEditFlags_Float);
 		}
 		if (ImGui::CollapsingHeader("Glow"))
 		{
@@ -47,8 +47,8 @@ namespace IW3SR::Addons
 		{
 			ImGui::Checkbox("Enabled", &DrawSun);
 			ImGui::SliderFloat("Intensity", &SunIntensity, 0, 4);
-			ImGui::ColorEdit4("Color", SunColor, ImGuiColorEditFlags_Float);
-			ImGui::SliderFloat3("Direction", SunDirection, -360, 360);
+			ImGui::ColorEdit4("Color", &SunColor.x, ImGuiColorEditFlags_Float);
+			ImGui::SliderFloat3("Direction", &SunDirection.x, -360, 360);
 		}
 	}
 

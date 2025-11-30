@@ -9,33 +9,33 @@ namespace IW3SR::Addons
 	KMOV::KMOV() : Module("sr.player.kmov", "Player", "KMOV")
 	{
 		NodeLT.Element = Text("0", FONT_SPACERANGER, 20, -100, 2, { 1, 1, 1, 1 });
-		NodeLT.Element.SetRectAlignment(HORIZONTAL_LEFT, VERTICAL_BOTTOM);
-		NodeLT.Element.SetAlignment(ALIGN_LEFT, ALIGN_BOTTOM);
+		NodeLT.Element.SetRectAlignment(Horizontal::Left, Vertical::Bottom);
+		NodeLT.Element.SetAlignment(Alignment::Left, Alignment::Bottom);
 		NodeLT.Element.Skew.y = -0.1f;
 		NodeLT.Type = NodeEnum::Player;
 
 		NodeLB.Element = Text("0", FONT_SPACERANGER, 20, -75, 2, { 1, 1, 1, 1 });
-		NodeLB.Element.SetRectAlignment(HORIZONTAL_LEFT, VERTICAL_BOTTOM);
-		NodeLB.Element.SetAlignment(ALIGN_LEFT, ALIGN_BOTTOM);
+		NodeLB.Element.SetRectAlignment(Horizontal::Left, Vertical::Bottom);
+		NodeLB.Element.SetAlignment(Alignment::Left, Alignment::Bottom);
 		NodeLB.Element.Skew.y = -0.1f;
 		NodeLB.Type = NodeEnum::Timer;
 
 		NodeRT.Element = Text("0", FONT_SPACERANGER, -20, -185, 2, { 0, 1, 1, 1 });
-		NodeRT.Element.SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_BOTTOM);
-		NodeRT.Element.SetAlignment(ALIGN_RIGHT, ALIGN_BOTTOM);
+		NodeRT.Element.SetRectAlignment(Horizontal::Right, Vertical::Bottom);
+		NodeRT.Element.SetAlignment(Alignment::Right, Alignment::Bottom);
 		NodeRT.Element.Skew.y = 0.1f;
 		NodeRT.Type = NodeEnum::FPS;
 
 		NodeRB.Element = Text("0", FONT_SPACERANGER, -20, -160, 2, { 1, 1, 1, 1 });
-		NodeRB.Element.SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_BOTTOM);
-		NodeRB.Element.SetAlignment(ALIGN_RIGHT, ALIGN_BOTTOM);
+		NodeRB.Element.SetRectAlignment(Horizontal::Right, Vertical::Bottom);
+		NodeRB.Element.SetAlignment(Alignment::Right, Alignment::Bottom);
 		NodeRB.Element.Skew.y = 0.1f;
 		NodeRB.Type = NodeEnum::Velocity;
 	}
 
 	void KMOV::Initialize()
 	{
-		if (!CurrentOffset)
+		if (!glm::length2(CurrentOffset))
 		{
 			NodeLT.OriginalPosition = NodeLT.Element.Position;
 			NodeLB.OriginalPosition = NodeLB.Element.Position;
@@ -232,7 +232,7 @@ namespace IW3SR::Addons
 			node.Element.Value = std::format("{} FPS", Dvar::Get<int>("com_maxfps"));
 			break;
 		case NodeEnum::Velocity:
-			node.Element.Value = std::format("{} UPS", static_cast<int>(VectorLength2(pmove->ps->velocity)));
+			node.Element.Value = std::format("{} UPS", static_cast<int>(glm::length(vec2(pmove->ps->velocity))));
 			break;
 		case NodeEnum::Map:
 			node.Element.Value = std::string(Dvar::Get<const char*>("mapname"));

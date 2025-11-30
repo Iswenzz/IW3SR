@@ -1,7 +1,5 @@
 #include "System.hpp"
 
-#include "Core/System/Window.hpp"
-
 namespace IW3SR
 {
 	HWND GSystem::CreateMainWindow(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X,

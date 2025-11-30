@@ -1,12 +1,12 @@
 #pragma once
-// https://github.com/Jelvan1/cgame_proxymod/blob/master/src/cg_cgaz.c
-// https://github.com/xoxor4d/iw3xo-dev/blob/master/src/components/modules/cgaz.cpp
-#include "Game/Plugin.hpp"
+#include "Base.hpp"
 
 namespace IW3SR::Addons
 {
 	/// <summary>
 	/// CGAZ HUD.
+	/// https://github.com/Jelvan1/cgame_proxymod/blob/master/src/cg_cgaz.c
+	/// https://github.com/xoxor4d/iw3xo-dev/blob/master/src/components/modules/cgaz.cpp
 	/// </summary>
 	class CGAZ : public Module
 	{

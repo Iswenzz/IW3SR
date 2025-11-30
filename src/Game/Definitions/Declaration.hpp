@@ -1,6 +1,8 @@
 #pragma once
 #include "Structs.hpp"
 
+#include "Core/Memory/Signature.hpp"
+
 namespace IW3SR
 {
 	// Binaries

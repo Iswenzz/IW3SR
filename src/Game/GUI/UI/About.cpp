@@ -1,13 +1,11 @@
 #include "About.hpp"
 
-#include "ImGUI/UI/Themes.hpp"
-
 namespace IW3SR::UC
 {
 	About::About() : Frame("About")
 	{
 		SetRect(-200, -95, 400, 200);
-		SetRectAlignment(HORIZONTAL_CENTER, VERTICAL_CENTER);
+		SetRectAlignment(Horizontal::Center, Vertical::Center);
 	}
 
 	void About::OnRender()

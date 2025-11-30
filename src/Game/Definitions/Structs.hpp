@@ -6,12 +6,6 @@
 
 namespace IW3SR
 {
-	typedef float vec_t;
-	typedef vec_t vec2_t[2];
-	typedef vec_t vec3_t[3];
-	typedef vec_t vec4_t[4];
-	typedef void (*xfunction_t)();
-
 	struct XAnimTree_s;
 	struct FxEffectDef;
 	struct gentity_s;
@@ -23,6 +17,8 @@ namespace IW3SR
 	struct pathnode_tree_t;
 	struct scr_vehicle_s;
 	struct snd_alias_list_t;
+
+	typedef void (*xfunction_t)();
 
 	struct scr_function_s
 	{
@@ -84,14 +80,14 @@ namespace IW3SR
 
 	struct ScreenPlacement
 	{
-		float scaleVirtualToReal[2];
-		float scaleVirtualToFull[2];
-		float scaleRealToVirtual[2];
-		float virtualViewableMin[2];
-		float virtualViewableMax[2];
-		float realViewportSize[2];
-		float realViewableMin[2];
-		float realViewableMax[2];
+		vec2 scaleVirtualToReal;
+		vec2 scaleVirtualToFull;
+		vec2 scaleRealToVirtual;
+		vec2 virtualViewableMin;
+		vec2 virtualViewableMax;
+		vec2 realViewportSize;
+		vec2 realViewableMin;
+		vec2 realViewableMax;
 		float subScreenLeft;
 	};
 
@@ -495,7 +491,7 @@ namespace IW3SR
 
 	struct map_brushPlane_t
 	{
-		vec3_t point;
+		vec3 point;
 	};
 
 	struct map_brushSide_t
@@ -507,18 +503,13 @@ namespace IW3SR
 	struct map_patchQuads_t
 	{
 		int quadIndex;
-		vec3_t coords[4];
+		vec3 coords[4];
 	};
 
 	struct map_patchTris_t
 	{
 		int triIndex;
 		GfxWorldVertex coords[3];
-	};
-
-	struct map_vec3_t
-	{
-		float v[3];
 	};
 
 	enum OffhandSecondaryClass
@@ -586,7 +577,7 @@ namespace IW3SR
 	struct objective_t
 	{
 		objectiveState_t state;
-		float origin[3];
+		vec3 origin;
 		int entNum;
 		int teamNum;
 		int icon;
@@ -697,9 +688,9 @@ namespace IW3SR
 		int weapFlags;
 		int otherFlags;
 		int pm_time;
-		float origin[3];
-		float velocity[3];
-		float oldVelocity[2];
+		vec3 origin;
+		vec3 velocity;
+		vec2 oldVelocity;
 		int weaponTime;
 		int weaponDelay;
 		int grenadeTimeLeft;
@@ -710,9 +701,9 @@ namespace IW3SR
 		int gravity;
 		float leanf;
 		int speed;
-		float delta_angles[3];
+		vec3 delta_angles;
 		int groundEntityNum;
-		float vLadderVec[3];
+		vec3 vLadderVec;
 		int jumpTime;
 		float jumpOriginZ;
 		int legsTimer;
@@ -741,14 +732,14 @@ namespace IW3SR
 		int spreadOverride;
 		int spreadOverrideState;
 		int viewmodelIndex;
-		float viewangles[3];
+		vec3 viewangles;
 		int viewHeightTarget;
 		float viewHeightCurrent;
 		int viewHeightLerpTime;
 		int viewHeightLerpTarget;
 		int viewHeightLerpDown;
-		float viewAngleClampBase[2];
-		float viewAngleClampRange[2];
+		vec2 viewAngleClampBase;
+		vec2 viewAngleClampRange;
 		int damageEvent;
 		int damageYaw;
 		int damagePitch;
@@ -819,7 +810,7 @@ namespace IW3SR
 	{
 		int serverTime;
 		int buttons;
-		int angles[3];
+		vec3 angles;
 		char weapon;
 		char offHandIndex;
 		char forwardmove;
@@ -840,7 +831,7 @@ namespace IW3SR
 	struct alignas(4) trace_t
 	{
 		float fraction;
-		float normal[3];
+		vec3 normal;
 		int surfaceFlags;
 		int contents;
 		const char* material;
@@ -856,9 +847,9 @@ namespace IW3SR
 
 	struct pml_t
 	{
-		float forward[3];
-		float right[3];
-		float up[3];
+		vec3 forward;
+		vec3 right;
+		vec3 up;
 		float frametime;
 		int msec;
 		int walking;
@@ -866,8 +857,8 @@ namespace IW3SR
 		int almostGroundPlane;
 		trace_t groundTrace;
 		float impactSpeed;
-		float previous_origin[3];
-		float previous_velocity[3];
+		vec3 previous_origin;
+		vec3 previous_velocity;
 	};
 
 	struct pmove_t
@@ -878,13 +869,13 @@ namespace IW3SR
 		int tracemask;
 		int numtouch;
 		int touchents[32];
-		float mins[3];
-		float maxs[3];
+		vec3 mins;
+		vec3 maxs;
 		float xyspeed;
 		int proneChange;
 		float maxSprintTimeMultiplier;
 		bool mantleStarted;
-		float mantleEndPos[3];
+		vec3 mantleEndPos;
 		int mantleDuration;
 		int viewChangeTime;
 		float viewChange;
@@ -1037,7 +1028,7 @@ namespace IW3SR
 	{
 		int nameHash;
 		char name[12];
-		vec4_t literal;
+		vec4 literal;
 	};
 
 	struct GfxStateBits
@@ -1383,7 +1374,7 @@ namespace IW3SR
 
 	struct cplane_s
 	{
-		float normal[3];
+		vec3 normal;
 		float dist;
 		char type;
 		char signbits;
@@ -1415,7 +1406,7 @@ namespace IW3SR
 
 	struct GfxPointVertex
 	{
-		float xyz[3];
+		vec3 position;
 		char color[4];
 	};
 
@@ -1426,7 +1417,7 @@ namespace IW3SR
 
 	struct alignas(4) ShowCollisionBrushPt
 	{
-		float xyz[3];
+		vec3 position;
 		short sideIndex[3];
 	};
 
@@ -1438,7 +1429,7 @@ namespace IW3SR
 
 	struct GfxPackedVertex
 	{
-		float xyz[3];
+		vec3 position;
 		float binormalSign;
 		GfxColor color;
 		PackedTexCoords texCoord;
@@ -1502,9 +1493,9 @@ namespace IW3SR
 
 	struct BrushWrapper
 	{
-		float mins[3];
+		vec3 mins;
 		int contents;
-		float maxs[3];
+		vec3 maxs;
 		uint32_t numsides;
 		cbrushside_t* sides;
 		short axialMaterialNum[2][3];
@@ -2029,8 +2020,8 @@ namespace IW3SR
 		trType_t trType;
 		int trTime;
 		int trDuration;
-		float trBase[3];
-		float trDelta[3];
+		vec3 trBase;
+		vec3 trDelta;
 	};
 
 	struct LerpEntityStateEarthquake
@@ -2346,16 +2337,16 @@ namespace IW3SR
 
 	struct GfxCullGroup
 	{
-		float mins[3];
-		float maxs[3];
+		vec3 mins;
+		vec3 maxs;
 		int surfaceCount;
 		int startSurfIndex;
 	};
 
 	struct GfxPackedPlacement
 	{
-		float origin[3];
-		vec3_t axis[3];
+		vec3 origin;
+		vec3 axis[3];
 		float scale;
 	};
 
@@ -2641,8 +2632,8 @@ namespace IW3SR
 
 	struct Bounds
 	{
-		vec3_t midPoint;
-		vec3_t halfSize;
+		vec3 midPoint;
+		vec3 halfSize;
 	};
 
 	struct TriggerModel
@@ -3138,13 +3129,13 @@ namespace IW3SR
 		int clientMask[2];
 		char inuse;
 		int broadcastTime;
-		float mins[3];
-		float maxs[3];
+		vec3 mins;
+		vec3 maxs;
 		int contents;
-		float absmin[3];
-		float absmax[3];
-		float currentOrigin[3];
-		float currentAngles[3];
+		vec3 absmin;
+		vec3 absmax;
+		vec3 currentOrigin;
+		vec3 currentAngles;
 		EntHandle ownerNum;
 		int eventTime;
 	};
@@ -3369,11 +3360,11 @@ namespace IW3SR
 		int oldbuttons;
 		int latched_buttons;
 		int buttonsSinceLastFrame;
-		float oldOrigin[3];
+		vec3 oldOrigin;
 		float fGunPitch;
 		float fGunYaw;
 		int damage_blood;
-		float damage_from[3];
+		vec3 damage_from;
 		int damage_fromWorld;
 		int accurateCount;
 		int accuracy_shots;
@@ -3397,13 +3388,13 @@ namespace IW3SR
 		int damageTime;
 		float v_dmg_roll;
 		float v_dmg_pitch;
-		float swayViewAngles[3];
-		float swayOffset[3];
-		float swayAngles[3];
-		float vLastMoveAng[3];
+		vec3 swayViewAngles;
+		vec3 swayOffset;
+		vec3 swayAngles;
+		vec3 vLastMoveAng;
 		float fLastIdleFactor;
-		float vGunOffset[3];
-		float vGunSpeed[3];
+		vec3 vGunOffset;
+		vec3 vGunSpeed;
 		int weapIdleTime;
 		int lastServerTime;
 		int lastSpawnTime;
@@ -5571,9 +5562,9 @@ namespace IW3SR
 		uint32_t height;
 		float tanHalfFovX;
 		float tanHalfFovY;
-		float vieworg[3];
-		float viewaxis[3][3];
-		float viewOffset[3];
+		vec3 vieworg;
+		mat3 viewaxis;
+		vec3 viewOffset;
 		int time;
 		float zNear;
 		float blurRadius;
@@ -5615,8 +5606,8 @@ namespace IW3SR
 		int ragdollHandle;
 		int killcamRagdollHandle;
 		int physObjId;
-		float origin[3];
-		float angles[3];
+		vec3 origin;
+		vec3 angles;
 		GfxSkinCacheEntry skinCacheEntry;
 		char pad[0x24];
 	};
@@ -5631,7 +5622,7 @@ namespace IW3SR
 		bool bTrailMade;
 		int previousEventSequence;
 		int miscTime;
-		float lightingOrigin[3];
+		vec3 lightingOrigin;
 		XAnimTree_s* tree;
 	};
 
@@ -5891,16 +5882,16 @@ namespace IW3SR
 		centity_s predictedPlayerEntity;
 		playerEntity_t playerEntity;
 		int predictedErrorTime;
-		float predictedError[3];
+		vec3 predictedError;
 		float landChange;
 		int landTime;
 		float heightToCeiling;
 		refdef_s refdef;
-		float refdefViewAngles[3];
-		float lastVieworg[3];
-		float swayViewAngles[3];
-		float swayAngles[3];
-		float swayOffset[3];
+		vec3 refdefViewAngles;
+		vec3 lastVieworg;
+		vec3 swayViewAngles;
+		vec3 swayAngles;
+		vec3 swayOffset;
 		int iEntityLastType[1024];
 		XModel* pEntityLastXModel[1024];
 		float zoomSensitivity;
@@ -5967,16 +5958,16 @@ namespace IW3SR
 		float v_dmg_roll;
 		float fBobCycle;
 		float xyspeed;
-		float kickAVel[3];
-		float kickAngles[3];
-		float offsetAngles[3];
+		vec3 kickAVel;
+		vec3 kickAngles;
+		vec3 offsetAngles;
 		float gunPitch;
 		float gunYaw;
 		float gunXOfs;
 		float gunYOfs;
 		float gunZOfs;
-		float vGunOffset[3];
-		float vGunSpeed[3];
+		vec3 vGunOffset;
+		vec3 vGunSpeed;
 		float viewModelAxis[4][3];
 		float rumbleScale;
 		float compassNorthYaw;
@@ -6000,14 +5991,6 @@ namespace IW3SR
 		float radarProgress;
 		float selectedLocation[2];
 		SprintState sprintStates;
-		// int packetAnalysisFrameCount;
-		// char bitsSent[100][13];
-		// int entBitsUsed[10][18];
-		// int numEntsSent[10][18];
-		// int numEntFields[10][18];
-		// int numSnapshots;
-		// int adsViewErrorDone;
-		// int inKillCam;
 		int _unk01;
 		int _unk02;
 		bgs_t bgs;
@@ -6524,8 +6507,8 @@ namespace IW3SR
 		char mapname[64];
 		int parseEntitiesNum;
 		int parseClientsNum;
-		int mouseDx[2];
-		int mouseDy[2];
+		vec2 mouseDx;
+		vec2 mouseDy;
 		int mouseIndex;
 		bool stanceHeld;
 		StanceState stance;
@@ -6536,15 +6519,15 @@ namespace IW3SR
 		float cgameFOVSensitivityScale;
 		float cgameMaxPitchSpeed;
 		float cgameMaxYawSpeed;
-		float cgameKickAngles[3];
-		float cgameOrigin[3];
-		float cgameVelocity[3];
-		float cgameViewangles[3];
+		vec3 cgameKickAngles;
+		vec3 cgameOrigin;
+		vec3 cgameVelocity;
+		vec3 cgameViewangles;
 		int cgameBobCycle;
 		int cgameMovementDir;
 		int cgameExtraButtons;
 		int cgamePredictedDataServerTime;
-		float viewangles[3];
+		vec3 viewangles;
 		int serverId;
 		int skelTimeStamp;
 		volatile int skelMemPos;

@@ -7,8 +7,8 @@ namespace IW3SR::Addons
 		Graph = Plots();
 
 		FrameText = Text("0", FONT_SPACERANGER, -30, 0, 1.4, { 1, 1, 1, 1 });
-		FrameText.SetRectAlignment(HORIZONTAL_RIGHT, VERTICAL_TOP);
-		FrameText.SetAlignment(ALIGN_CENTER, ALIGN_BOTTOM);
+		FrameText.SetRectAlignment(Horizontal::Right, Vertical::Top);
+		FrameText.SetAlignment(Alignment::Center, Alignment::Bottom);
 
 		Value = 0;
 		ShowGraph = false;
@@ -16,9 +16,9 @@ namespace IW3SR::Addons
 
 	void FPS::Menu()
 	{
-		ImGui::Checkbox("Display Graph", &ShowGraph);
+		ImGui::Checkbox("Graph", &ShowGraph);
 		FrameText.Menu("Text", true);
-		Graph.Menu("Graph");
+		Graph.Menu("Graph Options");
 	}
 
 	void FPS::OnRender()
@@ -39,7 +39,7 @@ namespace IW3SR::Addons
 				ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 1000, ImGuiCond_Always);
 
 				ImPlot::SetNextFillStyle(IMPLOT_AUTO_COL, 0.5f);
-				ImPlot::PushStyleColor(ImPlotCol_Line, FrameText.Color.RGBA());
+				ImPlot::PushStyleColor(ImPlotCol_Line, Math::RGBA(FrameText.Color));
 				ImPlot::PlotShaded("FPS", Values.Get(), Values.Max(), -INFINITY, 1, 0, 0, Values.Offset);
 				ImPlot::PlotLine("FPS", Values.Get(), Values.Max(), 1, 0, 0, Values.Offset);
 				ImPlot::PopStyleColor();

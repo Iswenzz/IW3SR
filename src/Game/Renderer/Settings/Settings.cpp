@@ -1,7 +1,5 @@
 #include "Settings.hpp"
 
-#include "Core/System/Environment.hpp"
-
 namespace IW3SR
 {
 	void Settings::Remove(const std::string& id)
