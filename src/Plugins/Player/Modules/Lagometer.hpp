@@ -3,9 +3,6 @@
 
 namespace IW3SR::Addons
 {
-	/// <summary>
-	/// Draw lagometer.
-	/// </summary>
 	class Lagometer : public Module
 	{
 	public:
@@ -26,25 +23,12 @@ namespace IW3SR::Addons
 		bool ShowSnapFlag;
 		bool ShowPing;
 
-		/// <summary>
-		/// Create the module.
-		/// </summary>
 		Lagometer();
 		virtual ~Lagometer() = default;
 
-		/// <summary>
-		/// Initialize lagometer.
-		/// </summary>
 		void Initialize() override;
-
-		/// <summary>
-		/// Menu drawing.
-		/// </summary>
 		void Menu() override;
 
-		/// <summary>
-		/// Render frame.
-		/// </summary>
 		void OnRender() override;
 
 		SERIALIZE_POLY(Lagometer, Module, ColorSnap, ColorSnapDelay, ColorSnapFlag, ColorSnapFlagDrop, ColorPing,

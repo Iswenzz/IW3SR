@@ -3,9 +3,6 @@
 
 namespace IW3SR::Addons
 {
-	/// <summary>
-	/// Movement mode.
-	/// </summary>
 	enum class MovementMode
 	{
 		COD4,
@@ -13,9 +10,6 @@ namespace IW3SR::Addons
 		CS
 	};
 
-	/// <summary>
-	/// Movements features.
-	/// </summary>
 	class Movements : public Module
 	{
 	public:
@@ -26,73 +20,21 @@ namespace IW3SR::Addons
 		bool UseBhopToggle;
 		bool UseInterpolateMovers;
 
-		/// <summary>
-		/// Create the module.
-		/// </summary>
 		Movements();
 		virtual ~Movements() = default;
 
-		/// <summary>
-		/// Menu drawing.
-		/// </summary>
 		void Menu() override;
-
-		/// <summary>
-		/// Client predict.
-		/// </summary>
-		/// <param name="event">The event.</param>
 		void OnPredict(EventClientPredict& event) override;
-
-		/// <summary>
-		/// Walk moving.
-		/// </summary>
-		/// <param name="event">The event.</param>
 		void OnWalkMove(EventPMoveWalk& event) override;
-
-		/// <summary>
-		/// Air moving.
-		/// </summary>
-		/// <param name="event">The event.</param>
 		void OnAirMove(EventPMoveAir& event) override;
-
-		/// <summary>
-		/// Ground trace.
-		/// </summary>
-		/// <param name="event">The event.</param>
 		void OnGroundTrace(EventPMoveGroundTrace& event) override;
-
-		/// <summary>
-		/// Finish moving.
-		/// </summary>
-		/// <param name="event">The event.</param>
 		void OnFinishMove(EventPMoveFinish& event) override;
-
-		/// <summary>
-		/// Load position.
-		/// </summary>
 		void OnLoadPosition() override;
-
-		/// <summary>
-		/// Render frame.
-		/// </summary>
 		void OnRender() override;
 
 	private:
-		/// <summary>
-		/// Bunny hop.
-		/// </summary>
-		/// <param name="cmd">The user command.</param>
 		void Bhop(usercmd_s* cmd);
-
-		/// <summary>
-		/// Set crash land penalty state.
-		/// </summary>
-		/// <param name="state">Skip crash land slow down.</param>
 		void SetCrashLand(bool state);
-
-		/// <summary>
-		/// Interpolate view angles for mover.
-		/// </summary>
 		void InterpolateViewForMover();
 
 		SERIALIZE_POLY(Movements, Module, KeyBhop, BhopText, UseBhop, UseInterpolateMovers)

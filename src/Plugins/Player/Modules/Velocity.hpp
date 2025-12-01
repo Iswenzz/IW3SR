@@ -3,9 +3,6 @@
 
 namespace IW3SR::Addons
 {
-	/// <summary>
-	/// Draw current velocity.
-	/// </summary>
 	class Velocity : public Module
 	{
 	public:
@@ -38,37 +35,15 @@ namespace IW3SR::Addons
 		bool ShowGroundTime;
 		bool ShowGraph;
 
-		/// <summary>
-		/// Create the module.
-		/// </summary>
 		Velocity();
 		virtual ~Velocity() = default;
 
-		/// <summary>
-		/// Menu drawing.
-		/// </summary>
 		void Menu() override;
-
-		/// <summary>
-		/// Client spawn.
-		/// </summary>
-		/// <param name="event">The event.</param>
 		void OnSpawn(EventClientSpawn& event) override;
-
-		/// <summary>
-		/// Render frame.
-		/// </summary>
 		void OnRender() override;
 
 	private:
-		/// <summary>
-		/// Compute values.
-		/// </summary>
 		void Compute();
-
-		/// <summary>
-		/// Reset values.
-		/// </summary>
 		void Reset();
 
 		SERIALIZE_POLY(Velocity, Module, VelocityText, AverageText, MaxText, GroundText, Graph, KeyReset, ShowVelocity,

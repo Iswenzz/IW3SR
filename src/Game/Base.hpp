@@ -12,6 +12,7 @@
 
 #include "Core/Console/Console.hpp"
 #include "Core/Memory/Memory.hpp"
+#include "Core/System/Crash.hpp"
 #include "Core/System/Environment.hpp"
 #include "Core/System/Plugins.hpp"
 #include "Core/System/System.hpp"

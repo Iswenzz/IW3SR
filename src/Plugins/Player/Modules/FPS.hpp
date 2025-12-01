@@ -3,9 +3,6 @@
 
 namespace IW3SR::Addons
 {
-	/// <summary>
-	/// Draw current FPS.
-	/// </summary>
 	class FPS : public Module
 	{
 	public:
@@ -16,20 +13,10 @@ namespace IW3SR::Addons
 		Plots Graph;
 		bool ShowGraph;
 
-		/// <summary>
-		/// Create the module.
-		/// </summary>
 		FPS();
 		virtual ~FPS() = default;
 
-		/// <summary>
-		/// Menu drawing.
-		/// </summary>
 		void Menu() override;
-
-		/// <summary>
-		/// Render frame.
-		/// </summary>
 		void OnRender() override;
 
 		SERIALIZE_POLY(FPS, Module, FrameText, Graph, ShowGraph)

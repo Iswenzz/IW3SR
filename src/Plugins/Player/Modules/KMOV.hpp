@@ -3,9 +3,6 @@
 
 namespace IW3SR::Addons
 {
-	/// <summary>
-	/// Node types.
-	/// </summary>
 	enum class NodeEnum
 	{
 		Player,
@@ -17,9 +14,6 @@ namespace IW3SR::Addons
 		Hook
 	};
 
-	/// <summary>
-	/// Node element.
-	/// </summary>
 	struct Node
 	{
 		Text Element;
@@ -32,9 +26,6 @@ namespace IW3SR::Addons
 		SERIALIZE(Node, Element, Type, Hook, HookString, HookFloat)
 	};
 
-	/// <summary>
-	/// Kinetic movement HUD.
-	/// </summary>
 	class KMOV : public Module
 	{
 	public:
@@ -47,37 +38,14 @@ namespace IW3SR::Addons
 		Node NodeRT;
 		Node NodeRB;
 
-		/// <summary>
-		/// Create the module.
-		/// </summary>
 		KMOV();
 		virtual ~KMOV() = default;
 
-		/// <summary>
-		/// Initialize module.
-		/// </summary>
 		void Initialize() override;
-
-		/// <summary>
-		/// Menu drawing.
-		/// </summary>
 		void Menu() override;
-
-		/// <summary>
-		/// Menu node drawing.
-		/// </summary>
-		/// <param name="node">The node.</param>
 		void MenuNode(Node& node);
 
-		/// <summary>
-		/// Client spawn.
-		/// </summary>
-		/// <param name="event">The event.</param>
 		void OnSpawn(EventClientSpawn& event) override;
-
-		/// <summary>
-		/// Render frame.
-		/// </summary>
 		void OnRender() override;
 
 	private:
@@ -92,33 +60,11 @@ namespace IW3SR::Addons
 		bool IsShaking = false;
 		bool IsBouncing = false;
 
-		/// <summary>
-		/// Compute values.
-		/// </summary>
 		void Compute();
-
-		/// <summary>
-		/// Angles animation.
-		/// </summary>
-		/// <returns></returns>
 		vec2 Angles();
-
-		/// <summary>
-		/// Jump animation.
-		/// </summary>
-		/// <returns></returns>
 		float Jump();
-
-		/// <summary>
-		/// Fire shaking animation.
-		/// </summary>
-		/// <returns></returns>
 		vec2 Fire();
 
-		/// <summary>
-		/// Compute the node value.
-		/// </summary>
-		/// <param name="node">The node.</param>
 		void RenderNode(Node& node);
 
 		SERIALIZE_POLY(KMOV, Module, JumpPower, AnglesPower, FirePower, NodeLT, NodeLB, NodeRT, NodeRB)

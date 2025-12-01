@@ -1,6 +1,4 @@
-#include "Core/System/Crash.hpp"
-#include "Core/System/Environment.hpp"
-#include "Core/System/System.hpp"
+#include "Base.hpp"
 
 #include "Client/Client.hpp"
 #include "Renderer/Modules/Modules.hpp"
