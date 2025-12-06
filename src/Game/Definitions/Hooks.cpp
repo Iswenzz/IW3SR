@@ -1,10 +1,10 @@
 #include "Hooks.hpp"
 
 #include "Game/Renderer/Modules/Modules.hpp"
+#include "Game/Renderer/Modules/Settings.hpp"
 #include "Game/Renderer/Renderer.hpp"
-#include "Game/Renderer/Settings/Settings.hpp"
 
-#include "Game/Client/Client.hpp"
+#include "Game/System/Client.hpp"
 #include "Game/System/Console.hpp"
 #include "Game/System/System.hpp"
 

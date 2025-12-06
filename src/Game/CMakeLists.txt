@@ -1,9 +1,7 @@
 add_library(IW3SR SHARED)
 add_library(IW3SR.API INTERFACE)
 
-add_subdirectory(Client)
 add_subdirectory(Definitions)
-add_subdirectory(GUI)
 add_subdirectory(Math)
 add_subdirectory(Player)
 add_subdirectory(Renderer)
@@ -21,7 +19,7 @@ target_sources(IW3SR PRIVATE
 
 # Build
 target_include_directories(IW3SR PUBLIC ..)
-target_link_libraries(IW3SR PUBLIC IzEngine)
+target_link_libraries(IW3SR PUBLIC IzEngine CEF::CEF)
 set_target_properties(IW3SR PROPERTIES OUTPUT_NAME IW3SR SUFFIX ".asi")
 
 # API
@@ -41,8 +39,3 @@ endif()
 
 # Install
 install(TARGETS IW3SR RUNTIME DESTINATION ${COD4}/miles)
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${COD4}/iw3sr)
-
-install(DIRECTORY
-	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>bin/
-	DESTINATION ${COD4} FILES_MATCHING PATTERN "*.dll")

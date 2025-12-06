@@ -1,9 +1,9 @@
 #include "Base.hpp"
 
-#include "Client/Client.hpp"
 #include "Renderer/Modules/Modules.hpp"
-#include "Renderer/Settings/Settings.hpp"
+#include "Renderer/Modules/Settings.hpp"
 
+#include "System/Client.hpp"
 #include "System/Console.hpp"
 #include "System/Dvar.hpp"
 #include "System/Patch.hpp"

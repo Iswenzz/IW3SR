@@ -3,9 +3,8 @@
 #include "Drawing/Draw2D.hpp"
 #include "Drawing/Draw3D.hpp"
 #include "Modules/Modules.hpp"
-#include "Settings/Settings.hpp"
-
-#include "Game/GUI/GUI.hpp"
+#include "Modules/Settings.hpp"
+#include "UI/UI.hpp"
 
 namespace IW3SR
 {

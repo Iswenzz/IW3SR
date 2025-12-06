@@ -21,6 +21,7 @@
 		}
 	},
 	"dependencies": [
+		"cef",
 		{ "name": "imgui", "features": ["club", "markdown"] },
 		"implot",
 		"polyhook2",
@@ -28,6 +29,7 @@
 		"glm"
 	],
 	"overrides": [
+		{ "name": "cef", "version": "142.0.17" },
 		{ "name": "imgui", "version": "1.92.3#1" },
         { "name": "implot", "version": "0.16#1" },
 		{ "name": "directxsdk", "version-string": "jun10#8" },
