@@ -7,9 +7,10 @@ namespace IW3SR
 	{
 	public:
 		static void Initialize();
+		static void Shutdown();
+
 		static void Connect();
 		static void Disconnect(int localClientNum);
-
 		static void Respawn(int localClientNum);
 		static void Predict(int localClientNum);
 	};

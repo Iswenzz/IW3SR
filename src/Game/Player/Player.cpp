@@ -8,6 +8,13 @@ namespace IW3SR
 		info = &cgs->bgs.clientinfo[index];
 	}
 
+	void Player::Initialize()
+	{
+		auto& players = GetAll();
+		for (int i = 0; i < players.size(); i++)
+			players[i] = CreateRef<Player>(i);
+	}
+
 	bool Player::IsSelf()
 	{
 		return ent->nextState.clientNum == cgs->clientNum;

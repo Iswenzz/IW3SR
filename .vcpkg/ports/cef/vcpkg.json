@@ -1,0 +1,8 @@
+{
+	"name": "cef",
+	"version": "142.0.17",
+	"dependencies": [
+		{ "name": "vcpkg-cmake", "host": true },
+		{ "name": "vcpkg-cmake-config", "host": true }
+	]
+}

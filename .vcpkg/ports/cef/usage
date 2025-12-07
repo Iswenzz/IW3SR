@@ -1,0 +1,4 @@
+cef provides CMake targets:
+
+    find_package(CEF REQUIRED)
+    target_link_libraries(main PRIVATE CEF::CEF)

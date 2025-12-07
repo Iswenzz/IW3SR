@@ -39,10 +39,10 @@ add_subdirectory(src)
 
 # Install
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${COD4}/iw3sr)
+install(FILES ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/locales/en-US.pak
+    DESTINATION ${COD4}/iw3sr/resources/cef/locales)
 install(DIRECTORY ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/
     DESTINATION ${COD4} PATTERN "locales" EXCLUDE)
-install(FILES ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/locales/en-US.pak
-    DESTINATION ${COD4}/locales)
 install(DIRECTORY
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>bin/
 	DESTINATION ${COD4} FILES_MATCHING PATTERN "*.dll")

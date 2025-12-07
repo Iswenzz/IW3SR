@@ -11,5 +11,6 @@
 			"packages": ["imgui", "implot"],
 			"baseline": "c12eb749ee43da80e9951717c334059a50bbdf5b"
 		}
-	]
+	],
+	"overlay-ports": [".vcpkg/ports"]
 }

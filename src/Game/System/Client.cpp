@@ -1,15 +1,16 @@
 #include "Client.hpp"
 
 #include "Game/Player/Player.hpp"
+#include "Game/Renderer/Resources/Browser.hpp"
 
 namespace IW3SR
 {
 	void Client::Initialize()
 	{
-		auto& players = Player::GetAll();
-		for (int i = 0; i < players.size(); i++)
-			players[i] = CreateRef<Player>(i);
+		Player::Initialize();
 	}
+
+	void Client::Shutdown() { }
 
 	void Client::Connect()
 	{

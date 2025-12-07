@@ -23,6 +23,7 @@ namespace IW3SR
 		operator bool() const;
 
 	public:
+		static void Initialize();
 		static std::array<Ref<Player>, 64>& GetAll();
 		static Ref<Player>& Get(int index);
 		static Ref<Player>& Self();

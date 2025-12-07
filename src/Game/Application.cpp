@@ -12,17 +12,20 @@ void Application::Start()
 {
 	Crash::Setup();
 	Environment::Binary();
-	GConsole::Initialize();
-	Plugins::Load();
 
+	GConsole::Initialize();
 	Dvar::Initialize();
 	Patch::Initialize();
 	Client::Initialize();
+
+	Plugins::Load();
 }
 
 void Application::Shutdown()
 {
 	Plugins::Free();
+
+	Client::Shutdown();
 	GConsole::Shutdown();
 }
 
