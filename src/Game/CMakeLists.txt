@@ -20,7 +20,10 @@ target_sources(IW3SR PRIVATE
 # Build
 target_include_directories(IW3SR PUBLIC ..)
 target_link_libraries(IW3SR PUBLIC IzEngine CEF::CEF)
-set_target_properties(IW3SR PROPERTIES OUTPUT_NAME IW3SR SUFFIX ".asi")
+
+set_target_properties(IW3SR PROPERTIES
+	OUTPUT_NAME ddraw
+	LINK_FLAGS "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/proxy.def")
 
 # API
 target_link_libraries(IW3SR.API INTERFACE IW3SR)
@@ -38,4 +41,4 @@ if(MSVC)
 endif()
 
 # Install
-install(TARGETS IW3SR RUNTIME DESTINATION ${COD4}/miles)
+install(TARGETS IW3SR RUNTIME DESTINATION ${COD4})

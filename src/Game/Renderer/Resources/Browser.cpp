@@ -7,6 +7,8 @@ namespace IW3SR
 		if (Active)
 			return;
 
+		Log::WriteLine(Channel::Verbose, "Browser initialized");
+
 		CefMainArgs args(GetModuleHandle(nullptr));
 		int code = CefExecuteProcess(args, nullptr, nullptr);
 		if (code >= 0)
@@ -48,7 +50,7 @@ namespace IW3SR
 
 	void Browser::Shutdown()
 	{
-		if (!Active)
+		//if (!Active)
 			return;
 
 		if (Instance)
@@ -58,6 +60,7 @@ namespace IW3SR
 		}
 		Client = nullptr;
 		Active = false;
+		Log::WriteLine(Channel::Verbose, "Browser shutdown");
 		CefShutdown();
 	}
 
@@ -119,4 +122,3 @@ namespace IW3SR
 		Browser::Instance = browser;
 	}
 }
-////////////
