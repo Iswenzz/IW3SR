@@ -10,7 +10,10 @@ namespace IW3SR
 
 		const std::string_view windowName = lpWindowName;
 		if (windowName == "Call of Duty 4" || windowName == "Call of Duty 4 X")
+		{
 			Window::Swap(hwnd);
+			SetWindowText(hwnd, "IW3SR");
+		}
 		return hwnd;
 	}
 
