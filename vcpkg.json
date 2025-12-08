@@ -6,7 +6,9 @@
 	"features": {
 		"windows": {
 			"description": "Build Windows",
-			"dependencies": [{ "name": "imgui", "features": ["win32-binding"] }]
+			"dependencies": [
+				{ "name": "imgui", "features": ["win32-binding"] }
+			]
 		},
 		"dx9": {
 			"description": "Build DX9",
@@ -15,13 +17,16 @@
 				"directxsdk"
 			]
 		},
+		"cef": {
+			"description": "Build CEF",
+			"dependencies": ["cef"]
+		},
 		"tests": {
 			"description": "Build tests",
 			"dependencies": ["gtest"]
 		}
 	},
 	"dependencies": [
-		"cef",
 		{ "name": "imgui", "features": ["club", "markdown"] },
 		"implot",
 		"polyhook2",

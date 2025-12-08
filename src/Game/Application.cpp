@@ -3,10 +3,9 @@
 #include "Renderer/Modules/Modules.hpp"
 #include "Renderer/Modules/Settings.hpp"
 
-#include "System/Client.hpp"
 #include "System/Console.hpp"
-#include "System/Dvar.hpp"
 #include "System/Patch.hpp"
+#include "System/System.hpp"
 
 void Application::Start()
 {
@@ -14,18 +13,14 @@ void Application::Start()
 	Environment::Binary();
 
 	GConsole::Initialize();
-	Dvar::Initialize();
 	Patch::Initialize();
-	Client::Initialize();
-
 	Plugins::Load();
 }
 
 void Application::Shutdown()
 {
 	Plugins::Free();
-
-	Client::Shutdown();
+	GSystem::Shutdown();
 	GConsole::Shutdown();
 }
 

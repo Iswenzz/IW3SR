@@ -1,50 +1,16 @@
 #include "Patch.hpp"
 
-#define COD4X if (COD4X_BASE)
+#include "Game/System/System.hpp"
 
 namespace IW3SR
 {
 	void Patch::Initialize()
 	{
-		CoD4X();
-		Definitions();
-		Renderer();
-		Database();
-		Player();
-		System();
-		Hook();
+		LoadLibraryA_h.Install();
+		LoadLibraryW_h.Install();
 	}
 
-	void Patch::Definitions()
-	{
-		COD4X bg_weaponNames = Signature(0x402D8C).DeRef();
-		COD4X MainWndProc_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 84 00 00 00 C7 04 24 02");
-		COD4X RB_ExecuteRendererCommandsLoop_h < Signature(COD4X_BIN, "55 89 E5 83 EC 38 89 45 E4 8B 45 E4 89 45 F4");
-	}
-
-	void Patch::Renderer()
-	{
-		// Disable <developer 1> check for debug rendering
-		Memory::NOP(0x6496D8, 3);
-
-		// Increase fps cap for menus and loadscreen
-		Memory::NOP(0x5001A8, 2);
-		COD4X Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
-	}
-
-	void Patch::Database()
-	{
-		COD4X db_xassetPool = Signature(0x488F05).DeRef();
-		COD4X g_poolSize = Signature(0x488F0F).DeRef();
-	}
-
-	void Patch::Player()
-	{
-		COD4X CL_Connect_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 24 04 00 00 E8");
-		COD4X CG_Respawn_h < Signature(COD4X_BIN, "55 89 E5 83 EC 18 B8 ?? ?? ?? ?? 8B 50 20");
-	}
-
-	void Patch::System()
+	void Patch::Base()
 	{
 		// Increase hunkTotal
 		Memory::Set(0x563A29, 0xF0);
@@ -52,29 +18,16 @@ namespace IW3SR
 		// Increase gmem
 		Memory::Set(0x4FF23F, 0x20);
 		Memory::Set(0x4FF274, 0x20);
-	}
 
-	void Patch::CoD4X()
-	{
-		auto processes = System::MapProcesses();
-		auto modules = System::MapModules(processes[IW3MP_BIN]);
+		// Disable <developer 1> condition for debug rendering
+		Memory::NOP(0x6496D8, 3);
 
-		auto cod4x = std::ranges::find_if(modules,
-			[](const auto& pair) { return pair.first.find("cod4x_") != std::string::npos; });
+		// Increase fps cap for menus and loadscreen
+		Memory::NOP(0x5001A8, 2);
 
-		if (cod4x == modules.end())
-			return;
-
-		COD4X_BIN = cod4x->first;
-		COD4X_BASE = cod4x->second;
-	}
-
-	void Patch::Hook()
-	{
 		CreateWindowExA_h.Install();
-		MainWndProc_h.Install();
-
 		Cmd_ExecuteSingleCommand_h.Install();
+		Com_PlayIntroMovies_h.Install();
 		Com_PrintMessage_h.Install();
 		CG_DrawCrosshair_h.Install();
 		CG_PredictPlayerState_Internal_h.Install();
@@ -82,6 +35,7 @@ namespace IW3SR
 		CL_Connect_h.Install();
 		CL_Disconnect_h.Install();
 		CL_FinishMove_h.Install();
+		MainWndProc_h.Install();
 		PM_WalkMove_h.Install();
 		PM_AirMove_h.Install();
 		PM_GroundTrace_h.Install();
@@ -90,5 +44,26 @@ namespace IW3SR
 		RB_ExecuteRendererCommandsLoop_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();
+	}
+
+	void Patch::CoD4X(HMODULE mod)
+	{
+		char path[MAX_PATH];
+		GetModuleFileName(mod, path, MAX_PATH);
+
+		COD4X_BIN = std::filesystem::path(path).filename().string();
+		COD4X_BASE = reinterpret_cast<uintptr_t>(mod);
+
+		// Increase fps cap for menus and loadscreen
+		Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
+
+		bg_weaponNames = Signature(0x402D8C).DeRef();
+		db_xassetPool = Signature(0x488F05).DeRef();
+		g_poolSize = Signature(0x488F0F).DeRef();
+
+		MainWndProc_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 84 00 00 00 C7 04 24 02");
+		RB_ExecuteRendererCommandsLoop_h < Signature(COD4X_BIN, "55 89 E5 83 EC 38 89 45 E4 8B 45 E4 89 45 F4");
+		CL_Connect_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 24 04 00 00 E8");
+		CG_Respawn_h < Signature(COD4X_BIN, "55 89 E5 83 EC 18 B8 ?? ?? ?? ?? 8B 50 20");
 	}
 }

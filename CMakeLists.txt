@@ -4,17 +4,11 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# CMake
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
 # Compilers
 if(MSVC)
 	set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD true)
 	# add_compile_options(/fsanitize=address)
 endif()
-
-# Dependencies
-find_package(CEF REQUIRED)
 
 # Tests
 if(BUILD_TESTING)
@@ -38,6 +32,7 @@ add_subdirectory(engine)
 add_subdirectory(src)
 
 # Install
+install(TARGETS CEF RUNTIME DESTINATION ${COD4})
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources DESTINATION ${COD4}/iw3sr)
 install(FILES ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/locales/en-US.pak
     DESTINATION ${COD4}/iw3sr/resources/cef/locales)

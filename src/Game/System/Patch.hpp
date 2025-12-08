@@ -7,14 +7,7 @@ namespace IW3SR
 	{
 	public:
 		static void Initialize();
-
-	private:
-		static void Definitions();
-		static void Renderer();
-		static void Database();
-		static void Player();
-		static void System();
-		static void CoD4X();
-		static void Hook();
+		static void Base();
+		static void CoD4X(HMODULE mod);
 	};
 }

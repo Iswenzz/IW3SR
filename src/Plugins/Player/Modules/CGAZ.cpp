@@ -196,13 +196,16 @@ namespace IW3SR::Addons
 			scale *= CmdScaleForStance();
 
 		const auto weapon = bg_weaponNames[pm.ps->weapon];
-		if (!pm.ps->weapon || weapon->moveSpeedScale <= 0.0f || pm.ps->pm_flags & PMF_LEAN || isProne)
+		if (weapon)
 		{
-			if (pm.ps->weapon && weapon->adsMoveSpeedScale > 0.0f)
-				scale = scale * weapon->adsMoveSpeedScale;
+			if (!pm.ps->weapon || weapon->moveSpeedScale <= 0.0f || pm.ps->pm_flags & PMF_LEAN || isProne)
+			{
+				if (pm.ps->weapon && weapon->adsMoveSpeedScale > 0.0f)
+					scale = scale * weapon->adsMoveSpeedScale;
+			}
+			else
+				scale = scale * weapon->moveSpeedScale;
 		}
-		else
-			scale = scale * weapon->moveSpeedScale;
 		return scale * pm.ps->moveSpeedScaleMultiplier;
 	}
 

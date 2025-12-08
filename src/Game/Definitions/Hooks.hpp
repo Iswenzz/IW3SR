@@ -12,17 +12,11 @@ namespace IW3SR
 		HINSTANCE hInstance, LPVOID lpParam)>
 		CreateWindowExA_h;
 
-	extern Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
-		IDirect3DDevice9_Reset_h;
-
-	extern Hook<void STDCALL(IDirect3DDevice9* device)>
-		IDirect3DDevice9_EndScene_h;
-
-	extern Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
-		MainWndProc_h;
-
 	extern Hook<void(int localClientNum, int controllerIndex, char* command)>
 		Cmd_ExecuteSingleCommand_h;
+
+	extern Hook<void()>
+		Com_PlayIntroMovies_h;
 
 	extern Hook<void(ConChannel channel, const char* msg, int type)>
 		Com_PrintMessage_h;
@@ -44,6 +38,21 @@ namespace IW3SR
 
 	extern Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h;
+
+	extern Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
+		IDirect3DDevice9_Reset_h;
+
+	extern Hook<void STDCALL(IDirect3DDevice9* device)>
+		IDirect3DDevice9_EndScene_h;
+
+	extern Hook<HMODULE STDCALL(LPCSTR lpLibFileName)>
+		LoadLibraryA_h;
+
+	extern Hook<HMODULE STDCALL(LPCWSTR lpLibFileName)>
+		LoadLibraryW_h;
+
+	extern Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
+		MainWndProc_h;
 
 	extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_WalkMove_h;

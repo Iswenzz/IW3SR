@@ -1,12 +1,32 @@
 #include "System.hpp"
+#include "Patch.hpp"
 
 namespace IW3SR
 {
+	void GSystem::Initialize()
+	{
+		Com_PlayIntroMovies_h();
+
+		Dvar::Initialize();
+
+		for (int i = 0; i <= dvarCount - 1; i++)
+			Console::AddCommand(dvars[i]->name);
+
+		auto& players = Player::GetAll();
+		for (int i = 0; i < players.size(); i++)
+			players[i] = CreateRef<Player>(i);
+	}
+
+	void GSystem::Shutdown() { }
+
 	HWND GSystem::CreateMainWindow(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X,
 		int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 	{
 		HWND hwnd = CreateWindowExA_h(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent,
 			hMenu, hInstance, lpParam);
+
+		if (!lpWindowName)
+			return hwnd;
 
 		const std::string_view windowName = lpWindowName;
 		if (windowName == "Call of Duty 4" || windowName == "Call of Duty 4 X")
@@ -63,5 +83,25 @@ namespace IW3SR
 
 		EventScriptMenuResponse event(item->parent->window.name, response);
 		Application::Dispatch(event);
+	}
+
+	HMODULE GSystem::LoadDLL(LPCSTR lpLibFileName)
+	{
+		const HMODULE mod = LoadLibraryA_h(lpLibFileName);
+		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
+
+		if (name == "gdi32.dll")
+			Patch::Base();
+		return mod;
+	}
+
+	HMODULE STDCALL GSystem::LoadDLLW(LPCWSTR lpLibFileName)
+	{
+		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
+		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
+
+		if (name.starts_with("cod4x"))
+			Patch::CoD4X(mod);
+		return mod;
 	}
 }

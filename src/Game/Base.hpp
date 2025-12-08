@@ -18,6 +18,8 @@
 #include "Core/System/System.hpp"
 #include "Core/System/Window.hpp"
 
+#include "Renderer/Resources/Browser.hpp"
+
 // clang-format off
 namespace IW3SR { };
 using namespace IW3SR;

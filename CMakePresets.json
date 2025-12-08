@@ -14,6 +14,7 @@
 				"CMAKE_TOOLCHAIN_FILE": "engine/.vcpkg/x86-windows.cmake",
 				"PLATFORM_WINDOWS": true,
 				"GRAPHICS_API_DX9": true,
+				"BUILD_CEF": true,
 				"ENABLE_API": true
 			}
 		}

@@ -1,17 +1,7 @@
 #include "Client.hpp"
 
-#include "Game/Player/Player.hpp"
-#include "Game/Renderer/Resources/Browser.hpp"
-
 namespace IW3SR
 {
-	void Client::Initialize()
-	{
-		Player::Initialize();
-	}
-
-	void Client::Shutdown() { }
-
 	void Client::Connect()
 	{
 		CL_Connect_h();

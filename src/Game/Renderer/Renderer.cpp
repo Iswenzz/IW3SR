@@ -4,7 +4,6 @@
 #include "Drawing/Draw3D.hpp"
 #include "Modules/Modules.hpp"
 #include "Modules/Settings.hpp"
-#include "Resources/Browser.hpp"
 #include "UI/UI.hpp"
 
 namespace IW3SR
@@ -21,13 +20,11 @@ namespace IW3SR
 
 		Device::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize();
-		Browser::Initialize();
 		GUI::Initialize();
 	}
 
 	void GRenderer::Shutdown(int window)
 	{
-		Browser::Shutdown();
 		Renderer::Shutdown();
 
 		Modules::Serialize();

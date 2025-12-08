@@ -16,17 +16,11 @@ namespace IW3SR
 		HINSTANCE hInstance, LPVOID lpParam)>
 		CreateWindowExA_h(CreateWindowExA, GSystem::CreateMainWindow);
 
-	Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
-		IDirect3DDevice9_Reset_h(GRenderer::Reset);
-
-	Hook<void STDCALL(IDirect3DDevice9* device)>
-		IDirect3DDevice9_EndScene_h(GRenderer::Frame);
-
-	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
-		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
-
 	Hook<void(int localClientNum, int controllerIndex, char* command)>
 		Cmd_ExecuteSingleCommand_h(0x4F9AB0, GSystem::ExecuteSingleCommand);
+
+	Hook<void()>
+		Com_PlayIntroMovies_h(0x4FEA00, GSystem::Initialize);
 
 	Hook<void(ConChannel channel, const char* msg, int type)>
 		Com_PrintMessage_h(0x4FCA50, GConsole::Write);
@@ -48,6 +42,21 @@ namespace IW3SR
 
 	Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h(0x463A60, PMove::FinishMove);
+
+	Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
+		IDirect3DDevice9_Reset_h(GRenderer::Reset);
+
+	Hook<void STDCALL(IDirect3DDevice9* device)>
+		IDirect3DDevice9_EndScene_h(GRenderer::Frame);
+
+	Hook<HMODULE STDCALL(LPCSTR lpLibFileName)>
+		LoadLibraryA_h(LoadLibraryA, GSystem::LoadDLL);
+
+	Hook<HMODULE STDCALL(LPCWSTR lpLibFileName)>
+		LoadLibraryW_h(LoadLibraryW, GSystem::LoadDLLW);
+
+	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
+		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
 
 	Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_WalkMove_h(0x40F7A0, PMove::WalkMove);
