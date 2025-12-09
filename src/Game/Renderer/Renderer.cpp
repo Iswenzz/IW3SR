@@ -60,7 +60,7 @@ namespace IW3SR
 	void GRenderer::Frame(IDirect3DDevice9* device)
 	{
 		Renderer::Frame();
-		Browser::Frame();
+		RenderBrowser();
 		IDirect3DDevice9_EndScene_h(device);
 	}
 
@@ -76,5 +76,33 @@ namespace IW3SR
 		ImGui_ImplAPI_CreateDeviceObjects();
 		Renderer::InitializeAssets();
 		return hr;
+	}
+
+	void GRenderer::RenderBrowser()
+	{
+		if (!Browser::Texture)
+			return;
+
+		std::scoped_lock lock(Browser::TextureMutex);
+		Material* mtl = Material_RegisterHandle("black", 3);
+		if (!mtl)
+			return;
+
+		/*if (mtl && mtl->textureTable && mtl->textureTable->u.image)
+		{
+			auto browserTexture = reinterpret_cast<IDirect3DTexture9*>(Browser::Texture->Data);
+			auto texture = mtl->textureTable->u.image->texture.map;
+			IDirect3DSurface9* srcSurface = nullptr;
+			IDirect3DSurface9* destSurface = nullptr;
+
+			browserTexture->GetSurfaceLevel(0, &srcSurface);
+			texture->GetSurfaceLevel(0, &destSurface);
+
+			Device::D3Device->StretchRect(srcSurface, nullptr, destSurface, nullptr, D3DTEXF_LINEAR);
+
+			srcSurface->Release();
+			destSurface->Release();
+		}*/
+		//Draw2D::Rect(Browser::Texture, { 0, 0 }, Window::Size);
 	}
 }

@@ -7,6 +7,7 @@ namespace IW3SR
 	{
 		Com_PlayIntroMovies_h();
 
+		Browser::Initialize();
 		Dvar::Initialize();
 
 		for (int i = 0; i <= dvarCount - 1; i++)
@@ -17,7 +18,10 @@ namespace IW3SR
 			players[i] = CreateRef<Player>(i);
 	}
 
-	void GSystem::Shutdown() { }
+	void GSystem::Shutdown()
+	{
+		Browser::Shutdown();
+	}
 
 	HWND GSystem::CreateMainWindow(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X,
 		int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
