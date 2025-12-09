@@ -1,6 +1,3 @@
 [submodule "engine"]
 	path = engine
 	url = git@github.com:Iswenzz/IzEngine
-[submodule "src/Private"]
-	path = src/Private
-	url = git@github.com:Iswenzz/IW3SR.Private
