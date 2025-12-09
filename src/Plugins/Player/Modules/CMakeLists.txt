@@ -1,4 +1,6 @@
 target_sources(Player PRIVATE
+	CEF.hpp
+	CEF.cpp
 	CGAZ.hpp
 	CGAZ.cpp
 	FPS.hpp
