@@ -5,7 +5,6 @@
 
 #include "System/Console.hpp"
 #include "System/Patch.hpp"
-#include "System/System.hpp"
 
 void Application::Start()
 {
@@ -20,7 +19,6 @@ void Application::Start()
 void Application::Shutdown()
 {
 	Plugins::Free();
-	GSystem::Shutdown();
 	GConsole::Shutdown();
 }
 

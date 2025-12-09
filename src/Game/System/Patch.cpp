@@ -1,7 +1,5 @@
 #include "Patch.hpp"
 
-#include "Game/System/System.hpp"
-
 namespace IW3SR
 {
 	void Patch::Initialize()
