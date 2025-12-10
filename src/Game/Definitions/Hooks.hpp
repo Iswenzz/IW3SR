@@ -70,7 +70,7 @@ namespace IW3SR
 		R_Shutdown_h;
 
 	extern Hook<void(void* cmds)>
-		RB_ExecuteRendererCommandsLoop_h;
+		RB_ExecuteRenderCommandsLoop_h;
 
 	extern Hook<void(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)>
 		RB_EndSceneRendering_h;
@@ -82,5 +82,5 @@ namespace IW3SR
 namespace IW3SR
 {
 	ASM_FUNCTION(CG_Respawn_h);
-	ASM_FUNCTION(RB_ExecuteRendererCommandsLoop_h);
+	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h);
 }

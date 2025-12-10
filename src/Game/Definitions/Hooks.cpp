@@ -74,7 +74,7 @@ namespace IW3SR
 		R_Shutdown_h(0x5F4F90, GRenderer::Shutdown);
 
 	Hook<void(void* cmds)>
-		RB_ExecuteRendererCommandsLoop_h(0x6156EC, ASM_LOAD(RB_ExecuteRendererCommandsLoop_h));
+		RB_ExecuteRenderCommandsLoop_h(0x6156EC, ASM_LOAD(RB_ExecuteRenderCommandsLoop_h));
 
 	Hook<void(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)>
 		RB_EndSceneRendering_h(0x6496EC, GRenderer::Draw3D);
@@ -93,28 +93,29 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x08)); // localClientNum
+		a.call(ASM_TRAMPOLINE(CG_Respawn_h));
+
+		a.push(x86::dword_ptr(x86::ebp, -0x1C)); // localClientNum
 		a.call(Client::Respawn);
-		a.mov(x86::dword_ptr(x86::esp, 0x1C), x86::eax);
+		a.add(x86::esp, 4);
 
 		a.popad();
 		a.pop(x86::ebp);
 		a.ret();
 	}
 
-	ASM_FUNCTION(RB_ExecuteRendererCommandsLoop_h)
+	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h)
 	{
 		a.push(x86::ebp);
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.push(x86::eax); // cmds
+		a.push(x86::dword_ptr(x86::ebp, -4)); // cmds
 		a.call(GRenderer::Commands);
 		a.add(x86::esp, 4);
 
 		a.popad();
 		a.pop(x86::ebp);
-		a.call(ASM_TRAMPOLINE(RB_ExecuteRendererCommandsLoop_h));
-		a.ret();
+		a.jmp(ASM_TRAMPOLINE(RB_ExecuteRenderCommandsLoop_h));
 	}
 }

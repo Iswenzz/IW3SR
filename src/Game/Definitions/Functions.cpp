@@ -151,7 +151,7 @@ namespace IW3SR
 
 		a.mov(x86::edi, x86::dword_ptr(x86::ebp, 8)); // name
 		a.call(0x56B5D0);
-		a.mov(x86::dword_ptr(x86::esp, 0x1C), x86::eax);
+		a.mov(x86::dword_ptr(x86::ebp, -4), x86::eax);
 
 		a.popad();
 		a.pop(x86::ebp);
@@ -175,7 +175,7 @@ namespace IW3SR
 		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // type
 		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // dvarName
 		a.call(0x56C350);
-		a.mov(x86::dword_ptr(x86::esp, 0x40), x86::eax);
+		a.mov(x86::dword_ptr(x86::ebp, -4), x86::eax);
 		a.add(x86::esp, 0x24);
 
 		a.popad();
@@ -211,7 +211,7 @@ namespace IW3SR
 		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // pml
 		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // pm
 		a.call(0x407D90);
-		a.mov(x86::dword_ptr(x86::esp, 0x20), x86::eax);
+		a.mov(x86::dword_ptr(x86::ebp, -4), x86::eax);
 		a.add(x86::esp, 4);
 
 		a.popad();
@@ -228,7 +228,7 @@ namespace IW3SR
 		a.mov(x86::edx, x86::dword_ptr(x86::ebp, 0x0C)); // size
 		a.mov(x86::ecx, x86::dword_ptr(x86::ebp, 0x08)); // material
 		a.call(0x5F2AA0);
-		a.mov(x86::dword_ptr(x86::esp, 0x1C), x86::eax);
+		a.mov(x86::dword_ptr(x86::ebp, -4), x86::eax);
 
 		a.popad();
 		a.pop(x86::ebp);
@@ -260,7 +260,7 @@ namespace IW3SR
 		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // pml
 		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // pm
 		a.call(0x410370);
-		a.mov(x86::dword_ptr(x86::esp, 0x24), x86::eax);
+		a.mov(x86::dword_ptr(x86::ebp, -4), x86::eax);
 		a.add(x86::esp, 8);
 
 		a.popad();
@@ -429,7 +429,7 @@ namespace IW3SR
 		a.push(x86::dword_ptr(x86::ebp, 0x0C));		  // maxChars
 		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 8)); // text
 		a.call(0x5F1EE0);
-		a.mov(x86::dword_ptr(x86::esp, 0x24), x86::eax);
+		a.mov(x86::dword_ptr(x86::ebp, -4), x86::eax);
 		a.add(x86::esp, 8);
 
 		a.popad();

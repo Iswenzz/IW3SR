@@ -39,7 +39,7 @@ namespace IW3SR
 		PM_GroundTrace_h.Install();
 		R_Init_h.Install();
 		R_Shutdown_h.Install();
-		RB_ExecuteRendererCommandsLoop_h.Install();
+		RB_ExecuteRenderCommandsLoop_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();
 	}
@@ -60,7 +60,7 @@ namespace IW3SR
 		g_poolSize = Signature(0x488F0F).DeRef();
 
 		MainWndProc_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 84 00 00 00 C7 04 24 02");
-		RB_ExecuteRendererCommandsLoop_h < Signature(COD4X_BIN, "55 89 E5 83 EC 38 89 45 E4 8B 45 E4 89 45 F4");
+		RB_ExecuteRenderCommandsLoop_h < Signature(COD4X_BIN, "55 89 E5 83 EC 38 89 45 E4 8B 45 E4 89 45 F4");
 		CL_Connect_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 24 04 00 00 E8");
 		CG_Respawn_h < Signature(COD4X_BIN, "55 89 E5 83 EC 18 B8 ?? ?? ?? ?? 8B 50 20");
 	}

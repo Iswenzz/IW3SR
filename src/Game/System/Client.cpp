@@ -20,8 +20,6 @@ namespace IW3SR
 
 	void Client::Respawn(int localClientNum)
 	{
-		CG_Respawn_h(localClientNum);
-
 		EventClientSpawn event;
 		Application::Dispatch(event);
 	}
