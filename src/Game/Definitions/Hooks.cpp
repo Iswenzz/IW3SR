@@ -73,6 +73,9 @@ namespace IW3SR
 	Hook<void(int window)>
 		R_Shutdown_h(0x5F4F90, GRenderer::Shutdown);
 
+	Hook<void(GfxImage *image, int samplerIndex, GfxCmdBufSourceState *source, GfxCmdBufState *state, char samplerState)>
+		R_SetSampler_h(0x6324B4, ASM_LOAD(R_SetSampler_h));
+
 	Hook<void(void* cmds)>
 		RB_ExecuteRenderCommandsLoop_h(0x6156EC, ASM_LOAD(RB_ExecuteRenderCommandsLoop_h));
 
@@ -102,6 +105,26 @@ namespace IW3SR
 		a.popad();
 		a.pop(x86::ebp);
 		a.ret();
+	}
+
+	ASM_FUNCTION(R_SetSampler_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.movzx(x86::eax, x86::byte_ptr(x86::ebp, 0x10)); // samplerState
+		a.push(x86::eax);
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));	 // state
+		a.push(x86::dword_ptr(x86::ebp, 0x08));	 // source
+		a.push(x86::dword_ptr(x86::ebp, -0x1C)); // samplerIndex
+		a.push(x86::dword_ptr(x86::ebp, -4));	 // image
+		a.call(GRenderer::SetSampler);
+		a.add(x86::esp, 20);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.jmp(ASM_TRAMPOLINE(R_SetSampler_h));
 	}
 
 	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h)

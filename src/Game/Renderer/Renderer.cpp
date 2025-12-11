@@ -57,6 +57,22 @@ namespace IW3SR
 			R_SetGameTime(gfx_cmdBufSourceState, UI::Time());
 	}
 
+	void GRenderer::SetSampler(GfxImage* image, int samplerIndex, GfxCmdBufSourceState* source, GfxCmdBufState* state,
+		char samplerState)
+	{
+		const std::string_view name = image->name;
+
+		if (name == "screen" && Browser::Texture)
+		{
+			const auto texture = reinterpret_cast<IDirect3DTexture9*>(Browser::Texture->Data);
+			const auto size = Browser::Texture->GetSize();
+
+			image->texture.map = texture;
+			image->width = size.x;
+			image->height = size.y;
+		}
+	}
+
 	void GRenderer::Frame(IDirect3DDevice9* device)
 	{
 		Renderer::Frame();

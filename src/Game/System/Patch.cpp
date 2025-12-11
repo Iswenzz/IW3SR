@@ -39,6 +39,7 @@ namespace IW3SR
 		PM_GroundTrace_h.Install();
 		R_Init_h.Install();
 		R_Shutdown_h.Install();
+		R_SetSampler_h.Install();
 		RB_ExecuteRenderCommandsLoop_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();

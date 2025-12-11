@@ -12,6 +12,8 @@ namespace IW3SR
 		static void Draw2D(int localClientNum);
 		static void Draw3D(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf);
 		static void Commands(void* cmds);
+		static void SetSampler(GfxImage* image, int samplerIndex, GfxCmdBufSourceState* source, GfxCmdBufState* state,
+			char samplerState);
 		static void STDCALL Frame(IDirect3DDevice9* device);
 		static HRESULT STDCALL Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters);
 	};
