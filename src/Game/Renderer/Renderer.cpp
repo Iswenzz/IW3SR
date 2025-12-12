@@ -61,15 +61,13 @@ namespace IW3SR
 		char samplerState)
 	{
 		const std::string_view name = image->name;
+		const auto texture = image->texture.map;
 
-		if (name == "screen" && Browser::Texture)
+		if (name == "screen" && Browser::Open && Browser::Texture && Browser::Texture->Data)
 		{
-			const auto texture = reinterpret_cast<IDirect3DTexture9*>(Browser::Texture->Data);
-			const auto size = Browser::Texture->GetSize();
-
-			image->texture.map = texture;
-			image->width = size.x;
-			image->height = size.y;
+			std::scoped_lock lock(Browser::TextureMutex);
+			const auto browserTexture = reinterpret_cast<IDirect3DTexture9*>(Browser::Texture->Data);
+			image->texture.map = browserTexture;
 		}
 	}
 

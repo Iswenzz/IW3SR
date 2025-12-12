@@ -45,7 +45,7 @@ namespace IW3SR::Addons
 			if (Input::IsUp(Button_Right))
 				Browser::Instance->GetHost()->SendMouseClickEvent(mouseEvent, MBT_RIGHT, true, 1);
 			if (Mouse::ScrollDelta)
-				Browser::Instance->GetHost()->SendMouseWheelEvent(mouseEvent, 0, Mouse::ScrollDelta * 10);
+				Browser::Instance->GetHost()->SendMouseWheelEvent(mouseEvent, 0, Mouse::ScrollDelta * 120);
 			Mouse::ScrollDelta = 0;
 		}
 		Draw2D::Rect(Browser::Texture, MenuFrame.RenderPosition, MenuFrame.RenderSize);
