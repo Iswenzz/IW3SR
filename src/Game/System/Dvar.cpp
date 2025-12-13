@@ -6,7 +6,7 @@ namespace IW3SR
 	{
 		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
 		RegisterInt("pm_mode", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Movement mode.", 0, 0, 2);
-		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "about:blank");
+		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "https://sr.iswenzz.com/media");
 	}
 
 	dvar_s* Dvar::RegisterInt(const char* name, DvarFlags flags, const char* description, int value, int min, int max)
