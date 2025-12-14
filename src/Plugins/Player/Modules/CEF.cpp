@@ -48,6 +48,7 @@ namespace IW3SR::Addons
 				Browser::Instance->GetHost()->SendMouseWheelEvent(mouseEvent, 0, Mouse::ScrollDelta * 120);
 			Mouse::ScrollDelta = 0;
 		}
+		std::scoped_lock lock(Browser::TextureMutex);
 		Draw2D::Rect(Browser::Texture, MenuFrame.RenderPosition, MenuFrame.RenderSize);
 	}
 
