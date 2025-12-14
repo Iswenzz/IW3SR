@@ -91,11 +91,9 @@ namespace IW3SR
 
 	HMODULE GSystem::LoadDLL(LPCSTR lpLibFileName)
 	{
-		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
-		if (name == "pbcl.dll")
-			return nullptr;
-
 		const HMODULE mod = LoadLibraryA_h(lpLibFileName);
+		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
+
 		if (name == "gdi32.dll")
 			Patch::Base();
 		return mod;
