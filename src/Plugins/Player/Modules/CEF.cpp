@@ -14,6 +14,7 @@ namespace IW3SR::Addons
 		MenuFrame.Size = { 500, 300 };
 
 		Browser::Start();
+
 		if (Browser::Open)
 			Browser::SetURL(Dvar::Get<char*>("cef_url"));
 	}
@@ -25,6 +26,9 @@ namespace IW3SR::Addons
 
 	void CEF::Menu()
 	{
+		if (!Browser::Open)
+			return;
+
 		vec2 relative = { Mouse::Position.x - MenuFrame.RenderPosition.x,
 			Mouse::Position.y - MenuFrame.RenderPosition.y };
 
@@ -54,6 +58,9 @@ namespace IW3SR::Addons
 
 	void CEF::OnExecuteCommand(EventClientCommand& event)
 	{
+		if (!Browser::Open)
+			return;
+
 		if (event.command.starts_with("cef_url"))
 			Browser::SetURL(Dvar::Get<char*>("cef_url"));
 	}
