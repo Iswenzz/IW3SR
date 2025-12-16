@@ -14,11 +14,13 @@ namespace IW3SR::Addons
 	{
 	public:
 		Bind KeyBhop;
+		Bind KeyBhopToggle;
 		Text BhopText;
 
 		bool UseBhop;
 		bool UseBhopToggle;
 		bool UseInterpolateMovers;
+		bool BhopToggled;
 
 		Movements();
 		virtual ~Movements() = default;
@@ -33,10 +35,10 @@ namespace IW3SR::Addons
 		void OnRender() override;
 
 	private:
-		void Bhop(usercmd_s* cmd);
+		void Bhop(playerState_s* ps, usercmd_s* cmd);
 		void SetCrashLand(bool state);
 		void InterpolateViewForMover();
 
-		SERIALIZE_POLY(Movements, Module, KeyBhop, BhopText, UseBhop, UseInterpolateMovers)
+		SERIALIZE_POLY(Movements, Module, KeyBhop, KeyBhopToggle, BhopText, UseBhop, UseBhopToggle, UseInterpolateMovers)
 	};
 }

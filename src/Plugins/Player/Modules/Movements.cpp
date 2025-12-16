@@ -9,11 +9,14 @@ namespace IW3SR::Addons
 		BhopText = Text("BHOP", FONT_SPACERANGER, -35, 8, 0.8, { 1, 1, 1, 1 });
 		BhopText.SetRectAlignment(Horizontal::Center, Vertical::Center);
 		BhopText.SetAlignment(Alignment::Center, Alignment::Bottom);
-		KeyBhop = Bind(Input_None);
+
+		KeyBhop = Bind(Key_Space);
+		KeyBhopToggle = Bind(Input_None);
 
 		UseBhop = false;
 		UseBhopToggle = false;
 		UseInterpolateMovers = true;
+		BhopToggled = false;
 	}
 
 	void Movements::Menu()
@@ -68,10 +71,16 @@ namespace IW3SR::Addons
 		}
 		ImGui::EndDisabled();
 		ImGui::Checkbox("Interpolate Movers", &UseInterpolateMovers);
-		ImGui::Checkbox("Bhop", &UseBhop);
+		ImGui::Tooltip("Smooth camera interpolation on moving and rotating platforms.");
 
+		ImGui::Checkbox("Bhop", &UseBhop);
 		ImGui::SameLine();
-		ImGui::Keybind("Bhop Landing", &KeyBhop.Input);
+		ImGui::Keybind("##BhopKey", &KeyBhop.Input);
+
+		ImGui::Checkbox("Bhop Toggle", &UseBhopToggle);
+		ImGui::SameLine();
+		ImGui::Keybind("##BhopToggleKey", &KeyBhopToggle.Input);
+
 		BhopText.Menu("Bhop Options");
 	}
 
@@ -119,27 +128,47 @@ namespace IW3SR::Addons
 
 	void Movements::OnFinishMove(EventPMoveFinish& event)
 	{
-		Bhop(event.cmd);
+		Bhop(event.ps, event.cmd);
 	}
 
-	void Movements::Bhop(usercmd_s* cmd)
+	void Movements::Bhop(playerState_s* ps, usercmd_s* cmd)
 	{
-		if (KeyBhop.IsPressed())
-			UseBhopToggle = !UseBhopToggle;
+		static bool jumpNextFrame = false;
 
-		if (UseBhop && (cmd->buttons & BUTTON_JUMP))
+		if (!UseBhop && !UseBhopToggle)
+			return;
+
+		if (UseBhopToggle && KeyBhopToggle.IsPressed())
+			BhopToggled = !BhopToggled;
+
+		if (!KeyBhop.IsDown() && !BhopToggled)
 		{
-			usercmd_s* oldcmd = &clients->cmds[clients->cmdNumber - 1 & 0x7F];
-			if (cmd->buttons & BUTTON_JUMP && oldcmd->buttons & BUTTON_JUMP)
-			{
-				cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD);
-				cmd->buttons -= BUTTON_JUMP;
-			}
+			jumpNextFrame = false;
+			return;
 		}
-		if (UseBhopToggle && PMove::OnGround())
+		if (jumpNextFrame)
 		{
-			cmd->buttons |= BUTTON_JUMP;
-			UseBhopToggle = false;
+			if (cmd->buttons & BUTTON_JUMP)
+				cmd->buttons &= ~BUTTON_JUMP;
+			else
+				cmd->buttons |= BUTTON_JUMP;
+
+			BhopToggled = false;
+			jumpNextFrame = false;
+		}
+		if (PMove::InAir())
+		{
+			playerState_s localPs = *ps;
+			usercmd_s localCmd = *cmd;
+			pmove_t next = PMove::CreatePmove(&localPs, &localCmd);
+			PMove::PredictPmoveSingle(&next);
+
+			if (next.ps->groundEntityNum != ENTITYNUM_NONE)
+			{
+				clients->stance = CL_STANCE_STAND;
+				cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD | BUTTON_PRONE | BUTTON_PRONE_HOLD);
+				jumpNextFrame = true;
+			}
 		}
 	}
 
@@ -182,12 +211,12 @@ namespace IW3SR::Addons
 
 	void Movements::OnLoadPosition()
 	{
-		UseBhopToggle = false;
+		BhopToggled = false;
 	}
 
 	void Movements::OnRender()
 	{
-		if (UseBhopToggle)
+		if (BhopToggled)
 			BhopText.Render();
 	}
 }
