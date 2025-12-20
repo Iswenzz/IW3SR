@@ -141,9 +141,4 @@ namespace IW3SR
 	{
 		return cgs->predictedPlayerState.groundEntityNum != ENTITYNUM_NONE;
 	}
-
-	bool PMove::InAir()
-	{
-		return cgs->predictedPlayerState.groundEntityNum == ENTITYNUM_NONE;
-	}
 }

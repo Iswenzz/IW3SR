@@ -23,6 +23,5 @@ namespace IW3SR
 
 		static void DisableSprint(playerState_s* ps);
 		static bool OnGround();
-		static bool InAir();
 	};
 }

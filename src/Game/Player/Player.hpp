@@ -18,7 +18,6 @@ namespace IW3SR
 		bool IsSelf();
 		bool IsAlive();
 		bool OnGround();
-		bool InAir();
 
 		operator bool() const;
 

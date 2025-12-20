@@ -26,7 +26,7 @@ namespace IW3SR::Addons
 
 	void CEF::Menu()
 	{
-		if (!Browser::Open)
+		if (!Browser::Open || !Browser::Texture || !Browser::Texture->Data)
 			return;
 
 		vec2 relative = { Mouse::Position.x - MenuFrame.RenderPosition.x,

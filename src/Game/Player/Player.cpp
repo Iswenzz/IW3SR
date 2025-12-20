@@ -30,11 +30,6 @@ namespace IW3SR
 		return ent->nextState.groundEntityNum != ENTITYNUM_NONE;
 	}
 
-	bool Player::InAir()
-	{
-		return ent->nextState.groundEntityNum == ENTITYNUM_NONE;
-	}
-
 	Player::operator bool() const
 	{
 		return ent;
