@@ -9,8 +9,6 @@ namespace IW3SR::Addons
 {
 	CGAZ::CGAZ() : Module("sr.player.cgaz", "Player", "CGAZ")
 	{
-		White = Material_RegisterHandle("white", 3);
-
 		ColorBackground = { 0.25, 0.25, 0.25, 0.7 };
 		ColorPartialAccel = { 0, 1, 0, 0.7 };
 		ColorFullAccel = { 0, 0.25, 0.25, 0.7 };
@@ -318,11 +316,13 @@ namespace IW3SR::Addons
 
 		if (!range.z)
 		{
-			GDraw2D::Rect(White, vec2{ range.x, Y } * scale, vec2{ range.y - range.x, Height } * scale, color);
+			GDraw2D::Rect(rgp->whiteMaterial, vec2{ range.x, Y } * scale, vec2{ range.y - range.x, Height } * scale,
+				color);
 			return;
 		}
-		GDraw2D::Rect(White, vec2{ 0, Y } * scale, vec2{ range.x, Height } * scale, color);
-		GDraw2D::Rect(White, vec2{ range.y, Y } * scale, vec2{ SCREEN_WIDTH - range.y, Height } * scale, color);
+		GDraw2D::Rect(rgp->whiteMaterial, vec2{ 0, Y } * scale, vec2{ range.x, Height } * scale, color);
+		GDraw2D::Rect(rgp->whiteMaterial, vec2{ range.y, Y } * scale, vec2{ SCREEN_WIDTH - range.y, Height } * scale,
+			color);
 	}
 
 	void CGAZ::OnDraw2D(EventRenderer2D& event)

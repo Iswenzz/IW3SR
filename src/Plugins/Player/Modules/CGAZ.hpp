@@ -11,7 +11,6 @@ namespace IW3SR::Addons
 		float Y;
 		float Height;
 
-		Material* White;
 		vec4 ColorBackground;
 		vec4 ColorPartialAccel;
 		vec4 ColorFullAccel;

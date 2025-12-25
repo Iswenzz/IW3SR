@@ -55,7 +55,7 @@ namespace IW3SR
 	extern clipMap_t* cm;
 	extern ComWorld* com;
 	extern materialCommands_t* tess;
-	extern r_global_permanent_t* rgp;
+	API extern r_global_permanent_t* rgp;
 
 	// UI
 	extern uintptr_t* ui_white_material;
