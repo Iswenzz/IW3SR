@@ -6,15 +6,10 @@ namespace IW3SR
 	void GSystem::Initialize()
 	{
 		Com_PlayIntroMovies_h();
-
 		Browser::Initialize();
-
-		auto& players = Player::GetAll();
-		for (int i = 0; i < players.size(); i++)
-			players[i] = CreateRef<Player>(i);
 	}
 
-	void GSystem::Shutdown()
+	void GSystem::Shutdown(int localClientNum)
 	{
 		Browser::Shutdown();
 	}

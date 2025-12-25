@@ -27,10 +27,6 @@ namespace IW3SR
 
 		const auto r_lodBiasSkinned = Find("r_lodBiasSkinned");
 		r_lodBiasSkinned->domain.value.min = -1000000;
-
-		Console::Commands.clear();
-		for (int i = 0; i <= dvarCount - 1; i++)
-			Console::AddCommand(dvars[i]->name);
 	}
 
 	dvar_s* Dvar::RegisterInt(const char* name, DvarFlags flags, const char* description, int value, int min, int max)

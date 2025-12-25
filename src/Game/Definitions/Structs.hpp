@@ -1753,15 +1753,12 @@ namespace IW3SR
 		uint16_t firstChild;
 		uint16_t childCount;
 		float mins[3];
-		float maxs[3];
+		float maxs[3]; 
 	};
 
 	struct GfxWorldStreamInfo
 	{
 		int aabbTreeCount;
-		GfxStreamingAabbTree* aabbTrees;
-		int leafRefCount;
-		int* leafRefs;
 	};
 
 	struct GfxWorldVertexData

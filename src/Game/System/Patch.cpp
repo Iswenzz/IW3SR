@@ -30,6 +30,8 @@ namespace IW3SR
 		CG_DrawCrosshair_h.Install();
 		CG_PredictPlayerState_Internal_h.Install();
 		CG_Respawn_h.Install();
+		CL_InitCGame_h.Install();
+		CL_Shutdown_h.Install();
 		CL_Connect_h.Install();
 		CL_Disconnect_h.Install();
 		CL_FinishMove_h.Install();
@@ -39,7 +41,6 @@ namespace IW3SR
 		PM_GroundTrace_h.Install();
 		R_Init_h.Install();
 		R_Shutdown_h.Install();
-		R_SetSampler_h.Install();
 		RB_ExecuteRenderCommandsLoop_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();

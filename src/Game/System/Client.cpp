@@ -1,7 +1,23 @@
 #include "Client.hpp"
 
+#include "Game/Renderer/Renderer.hpp"
+
 namespace IW3SR
 {
+	void Client::Initialize(int localClientNum)
+	{
+		CL_InitCGame_h(localClientNum);
+		GRenderer::UpdateMaterials();
+
+		auto& players = Player::GetAll();
+		for (int i = 0; i < players.size(); i++)
+			players[i] = CreateRef<Player>(i);
+
+		Console::Commands.clear();
+		for (int i = 0; i <= dvarCount - 1; i++)
+			Console::AddCommand(dvars[i]->name);
+	}
+
 	void Client::Connect()
 	{
 		CL_Connect_h();

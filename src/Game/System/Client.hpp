@@ -6,6 +6,7 @@ namespace IW3SR
 	class Client
 	{
 	public:
+		static void Initialize(int localClientNum);
 		static void Connect();
 		static void Disconnect(int localClientNum);
 		static void Respawn(int localClientNum);

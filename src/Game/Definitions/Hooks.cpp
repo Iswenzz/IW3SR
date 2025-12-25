@@ -34,6 +34,12 @@ namespace IW3SR
 	Hook<void(int localClientNum)>
 		CG_Respawn_h(0x445FA0, ASM_LOAD(CG_Respawn_h));
 
+	Hook<void(int localClientNum)>
+		CL_InitCGame_h(0x45BEF0, Client::Initialize);
+
+	Hook<void(int localClientNum)>
+		CL_Shutdown_h(0x46FDF0, ASM_LOAD(CL_Shutdown_h));
+
 	Hook<void()>
 		CL_Connect_h(0x471050, Client::Connect);
 
@@ -73,9 +79,6 @@ namespace IW3SR
 	Hook<void(int window)>
 		R_Shutdown_h(0x5F4F90, GRenderer::Shutdown);
 
-	Hook<void(GfxImage *image, int samplerIndex, GfxCmdBufSourceState *source, GfxCmdBufState *state, char samplerState)>
-		R_SetSampler_h(0x6324B4, ASM_LOAD(R_SetSampler_h));
-
 	Hook<void(void* cmds)>
 		RB_ExecuteRenderCommandsLoop_h(0x6156EC, ASM_LOAD(RB_ExecuteRenderCommandsLoop_h));
 
@@ -89,6 +92,21 @@ namespace IW3SR
 namespace IW3SR
 {
 	using namespace asmjit;
+
+	ASM_FUNCTION(CL_Shutdown_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, -4)); // localClientNum
+		a.call(GSystem::Shutdown);
+		a.add(x86::esp, 4);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.jmp(ASM_TRAMPOLINE(CL_Shutdown_h));
+	}
 
 	ASM_FUNCTION(CG_Respawn_h)
 	{
@@ -105,26 +123,6 @@ namespace IW3SR
 		a.popad();
 		a.pop(x86::ebp);
 		a.ret();
-	}
-
-	ASM_FUNCTION(R_SetSampler_h)
-	{
-		a.push(x86::ebp);
-		a.mov(x86::ebp, x86::esp);
-		a.pushad();
-
-		a.movzx(x86::eax, x86::byte_ptr(x86::ebp, 0x10)); // samplerState
-		a.push(x86::eax);
-		a.push(x86::dword_ptr(x86::ebp, 0x0C));	 // state
-		a.push(x86::dword_ptr(x86::ebp, 0x08));	 // source
-		a.push(x86::dword_ptr(x86::ebp, -0x1C)); // samplerIndex
-		a.push(x86::dword_ptr(x86::ebp, -4));	 // image
-		a.call(GRenderer::SetSampler);
-		a.add(x86::esp, 20);
-
-		a.popad();
-		a.pop(x86::ebp);
-		a.jmp(ASM_TRAMPOLINE(R_SetSampler_h));
 	}
 
 	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h)

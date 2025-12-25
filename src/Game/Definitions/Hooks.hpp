@@ -30,6 +30,12 @@ namespace IW3SR
 	extern Hook<void(int localClientNum)>
 		CG_Respawn_h;
 
+	extern Hook<void(int localClientNum)>
+		CL_InitCGame_h;
+
+	extern Hook<void(int localClientNum)>
+		CL_Shutdown_h;
+
 	extern Hook<void()>
 		CL_Connect_h;
 
@@ -69,9 +75,6 @@ namespace IW3SR
 	extern Hook<void(int window)>
 		R_Shutdown_h;
 
-	extern Hook<void(GfxImage *image, int samplerIndex, GfxCmdBufSourceState *source, GfxCmdBufState *state, char samplerState)>
-		R_SetSampler_h;
-
 	extern Hook<void(void* cmds)>
 		RB_ExecuteRenderCommandsLoop_h;
 
@@ -84,6 +87,7 @@ namespace IW3SR
 // clang-format on
 namespace IW3SR
 {
+	ASM_FUNCTION(CL_Shutdown_h);
 	ASM_FUNCTION(CG_Respawn_h);
 	ASM_FUNCTION(R_SetSampler_h);
 	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h);

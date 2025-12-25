@@ -23,10 +23,6 @@ namespace IW3SR
 	{
 		Log::Write(Q3(msg));
 		Com_PrintMessage_h(channel, msg, type);
-		const std::string_view m = msg;
-
-		if (m.contains("CL_Shutdown"))
-			GSystem::Shutdown();
 	}
 
 	std::string GConsole::Q3(const std::string& msg)
