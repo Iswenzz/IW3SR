@@ -27,4 +27,5 @@ void Application::Dispatch(Event& event)
 	UI::Dispatch(event);
 	Modules::Dispatch(event);
 	Settings::Dispatch(event);
+	GConsole::Dispatch(event);
 }

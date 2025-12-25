@@ -13,8 +13,9 @@ namespace IW3SR
 		static void Shutdown();
 
 		static void Write(ConChannel channel, const char* msg, int type);
-
-	private:
 		static std::string Q3(const std::string& msg);
+
+		static void OnExecute(EventConsoleCommand& event);
+		static void Dispatch(Event& event);
 	};
 }

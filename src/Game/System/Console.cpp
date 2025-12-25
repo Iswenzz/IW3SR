@@ -47,4 +47,16 @@ namespace IW3SR
 		}
 		return result;
 	}
+
+	void GConsole::OnExecute(EventConsoleCommand& event)
+	{
+		Cmd_ExecuteSingleCommand(0, 0, event.command.c_str());
+	}
+
+	void GConsole::Dispatch(Event& event)
+	{
+		EventDispatcher dispatcher(event);
+
+		dispatcher.Dispatch<EventConsoleCommand>(OnExecute);
+	}
 }
