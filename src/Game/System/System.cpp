@@ -8,10 +8,6 @@ namespace IW3SR
 		Com_PlayIntroMovies_h();
 
 		Browser::Initialize();
-		Dvar::Initialize();
-
-		for (int i = 0; i <= dvarCount - 1; i++)
-			Console::AddCommand(dvars[i]->name);
 
 		auto& players = Player::GetAll();
 		for (int i = 0; i < players.size(); i++)

@@ -15,6 +15,7 @@ namespace IW3SR
 		IDirect3DDevice9_Reset_h.Update(VTABLE(dx->device, 16));
 		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
 
+		Dvar::Initialize();
 		Settings::Deserialize();
 		Modules::Deserialize();
 
@@ -74,6 +75,7 @@ namespace IW3SR
 	void GRenderer::Frame(IDirect3DDevice9* device)
 	{
 		Renderer::Frame();
+		Console::Frame();
 		IDirect3DDevice9_EndScene_h(device);
 	}
 
