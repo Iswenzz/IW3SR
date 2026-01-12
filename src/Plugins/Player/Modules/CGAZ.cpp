@@ -327,6 +327,9 @@ namespace IW3SR::Addons
 
 	void CGAZ::OnDraw2D(EventRenderer2D& event)
 	{
+		if (!pmove || !pmove->ps)
+			return;
+
 		pm = *pmove;
 
 		if (!(pm.ps->otherFlags & PMF_DUCKED) && glm::length(vec2(pm.ps->velocity)))
