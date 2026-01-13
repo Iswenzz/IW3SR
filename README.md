@@ -4,6 +4,10 @@
 
 IW3SR is a client modification for Call of Duty 4 powered by [IzEngine](https://github.com/Iswenzz/IzEngine). Enhance gameplay experience and performance through a range of improvements, features such as an in game GUI, a plugin system to reload modules at runtime, interpolation of rotating platforms, Q3 (CPM) and CS movements, CGAZ hud, shaders playing offline, a velocity meter and more.
 
+## Instructions
+In order to use this client, download the archived file down below, and extract it to your cod4 directory.
+To remove the client you can delete ddraw.dll and optionally every other files extracted from the archive.
+
 ## Building
 
 _Pre-Requisites:_
