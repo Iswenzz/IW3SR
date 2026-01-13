@@ -11,11 +11,11 @@ namespace IW3SR
 	void Patch::Base()
 	{
 		// Increase hunkTotal
-		Memory::Set(0x563A29, 0xF0);
+		Memory::Set<uint8_t>(0x563A29, 0xF0);
 
 		// Increase gmem
-		Memory::Set(0x4FF23F, 0x20);
-		Memory::Set(0x4FF274, 0x20);
+		Memory::Set<uint8_t>(0x4FF23F, 0x20);
+		Memory::Set<uint8_t>(0x4FF274, 0x20);
 
 		// Disable <developer 1> condition for debug rendering
 		Memory::NOP(0x6496D8, 3);
