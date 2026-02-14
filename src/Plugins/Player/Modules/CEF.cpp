@@ -2,7 +2,7 @@
 
 namespace IW3SR::Addons
 {
-	CEF::CEF() : Module("sr.player.cef", "Player", "CEF")
+	CEF::CEF() : Module("sr.player.cef", "Player", "Browser")
 	{
 		MenuFrame.SetFlags(ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize
 			| ImGuiWindowFlags_NoTitleBar);
@@ -53,7 +53,7 @@ namespace IW3SR::Addons
 			Mouse::ScrollDelta = 0;
 		}
 		std::scoped_lock lock(Browser::TextureMutex);
-		Draw2D::Rect(Browser::Texture, MenuFrame.RenderPosition, MenuFrame.RenderSize);
+		Draw2D::Rect(Browser::Texture, MenuFrame.RenderPosition, MenuFrame.RenderSize, vec4(1));
 	}
 
 	void CEF::OnExecuteCommand(EventClientCommand& event)
