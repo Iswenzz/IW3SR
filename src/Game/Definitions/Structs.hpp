@@ -475,7 +475,7 @@ namespace IW3SR
 	union GfxColor
 	{
 		uint32_t packed;
-		char array[4];
+		uint8_t array[4];
 	};
 
 	struct GfxWorldVertex
@@ -1753,7 +1753,7 @@ namespace IW3SR
 		uint16_t firstChild;
 		uint16_t childCount;
 		float mins[3];
-		float maxs[3]; 
+		float maxs[3];
 	};
 
 	struct GfxWorldStreamInfo
@@ -4427,6 +4427,11 @@ namespace IW3SR
 		float density;
 	};
 
+	struct GfxRenderCommandExecState
+	{
+		void* cmd;
+	};
+
 	struct GfxCmdHeader
 	{
 		uint16_t id;
@@ -4686,7 +4691,8 @@ namespace IW3SR
 		int renderFlags;
 		int cursorPos;
 		char cursorLetter;
-		float glowForceColor;
+		uint8_t pad[3];
+		GfxColor glowForceColor;
 		int fxBirthTime;
 		int fxLetterTime;
 		int fxDecayStartTime;
@@ -4694,7 +4700,7 @@ namespace IW3SR
 		Material* fxMaterial;
 		Material* fxMaterialGlow;
 		int padding;
-		const char* text;
+		char text[4]; // dynamic size
 	};
 
 	struct trDebugString_t
