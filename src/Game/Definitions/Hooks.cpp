@@ -99,9 +99,9 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.push(x86::dword_ptr(x86::ebp, -4)); // localClientNum
+		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (edi) localClientNum
 		a.call(GSystem::Shutdown);
-		a.add(x86::esp, 4);
+		a.add(x86::esp, 0x04);
 
 		a.popad();
 		a.pop(x86::ebp);
@@ -116,9 +116,9 @@ namespace IW3SR
 
 		a.call(ASM_TRAMPOLINE(CG_Respawn_h));
 
-		a.push(x86::dword_ptr(x86::ebp, -0x1C)); // localClientNum
+		a.push(x86::dword_ptr(x86::ebp, -0x1C)); // (eax) localClientNum
 		a.call(Client::Respawn);
-		a.add(x86::esp, 4);
+		a.add(x86::esp, 0x04);
 
 		a.popad();
 		a.pop(x86::ebp);
@@ -131,9 +131,9 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.push(x86::dword_ptr(x86::ebp, -4)); // cmds
-		a.call(GRenderer::Commands);
-		a.add(x86::esp, 4);
+		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (edi) cmds
+		a.call(GRenderer::ExecuteRenderCommandsLoop);
+		a.add(x86::esp, 0x04);
 
 		a.popad();
 		a.pop(x86::ebp);
