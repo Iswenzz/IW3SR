@@ -33,6 +33,7 @@ namespace IW3SR
 		virtual void OnMenuResponse(EventScriptMenuResponse& event);
 		virtual void OnDraw3D(EventRenderer3D& event);
 		virtual void OnDraw2D(EventRenderer2D& event);
+		virtual void OnDrawText(EventRendererText& event);
 		virtual void OnRender();
 		virtual void OnEvent(Event& event) override;
 

@@ -15,6 +15,20 @@ namespace IW3SR
 		EventRenderer2D() = default;
 	};
 
+	class EventRendererText : public Event
+	{
+		EVENT_CLASS("renderer.text")
+		EventRendererText(std::string& text, Font_s* font, vec2 position, vec2 size, vec4 color)
+			: text(text), font(font), position(position), size(size), color(color)
+		{
+		}
+		std::string& text;
+		Font_s* font;
+		vec2 position;
+		vec2 size;
+		vec4 color;
+	};
+
 	class EventClientConnect : public Event
 	{
 		EVENT_CLASS("client.connect")

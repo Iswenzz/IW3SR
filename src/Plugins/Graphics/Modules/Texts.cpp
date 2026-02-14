@@ -1,10 +1,12 @@
-#include "Emojis.hpp"
+#include "Texts.hpp"
 
-namespace IW3SR
+namespace IW3SR::Addons
 {
-	void Emojis::Initialize()
+	Texts::Texts() : Module("sr.graphics.texts", "Graphics", "Texts")
 	{
-		EmojisMap = {
+		UseEmojis = false;
+
+		EmojiMap = {
 			{ "afr", Texture::Create(Environment::Path(Directory::Images) / "emojis" / "afr.png") },
 			{ "ang", Texture::Create(Environment::Path(Directory::Images) / "emojis" / "ang.png") },
 			{ "cash", Texture::Create(Environment::Path(Directory::Images) / "emojis" / "cash.png") },
@@ -49,7 +51,12 @@ namespace IW3SR
 		};
 	}
 
-	void Emojis::ProcessText(std::string& text, Font_s* font, vec2 position, float scale, const vec4& color)
+	void Texts::Menu()
+	{
+		ImGui::Checkbox("Emojis", &UseEmojis);
+	}
+
+	void Texts::ProcessText(std::string& text, Font_s* font, vec2 position, vec2 scale, const vec4& color)
 	{
 		size_t i = 0;
 		while (i < text.size())
@@ -75,8 +82,8 @@ namespace IW3SR
 				continue;
 			}
 			std::string emojiName(text.data() + i + 1, length);
-			auto it = EmojisMap.find(emojiName);
-			if (it != EmojisMap.end())
+			auto it = EmojiMap.find(emojiName);
+			if (it != EmojiMap.end())
 			{
 				std::string textBefore(text.data(), i);
 				vec2 textSize = GDraw2D::TextSize(textBefore, font) * scale;
@@ -87,7 +94,7 @@ namespace IW3SR
 				cmd.Size = vec2(textSize.y * 1.1);
 				cmd.Position = { position.x + textSize.x, position.y - cmd.Size.y };
 				cmd.Color = vec4(1, 1, 1, color.w);
-				Commands.push_back(cmd);
+				EmojiCommands.push_back(cmd);
 
 				i += 8;
 			}
@@ -98,10 +105,19 @@ namespace IW3SR
 		}
 	}
 
-	void Emojis::Frame()
+	void Texts::OnDrawText(EventRendererText& event)
 	{
-		for (const auto& command : Commands)
-			Draw2D::Rect(command.Emoji, command.Position, command.Size, command.Color);
-		Commands.clear();
+		if (UseEmojis)
+			ProcessText(event.text, event.font, event.position, event.size, event.color);
+	}
+
+	void Texts::OnRender()
+	{
+		if (UseEmojis)
+		{
+			for (const auto& command : EmojiCommands)
+				Draw2D::Rect(command.Emoji, command.Position, command.Size, command.Color);
+			EmojiCommands.clear();
+		}
 	}
 }

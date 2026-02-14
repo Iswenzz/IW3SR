@@ -35,6 +35,7 @@ namespace IW3SR
 
 	void Module::OnDraw3D(EventRenderer3D& event) { }
 	void Module::OnDraw2D(EventRenderer2D& event) { }
+	void Module::OnDrawText(EventRendererText& event) {  }
 	void Module::OnRender() { }
 
 	void Module::OnEvent(Event& event)
@@ -60,6 +61,7 @@ namespace IW3SR
 
 		dispatcher.Dispatch<EventRenderer3D>(EVENT_BIND(OnDraw3D));
 		dispatcher.Dispatch<EventRenderer2D>(EVENT_BIND(OnDraw2D));
+		dispatcher.Dispatch<EventRendererText>(EVENT_BIND(OnDrawText));
 		dispatcher.Dispatch<EventRendererRender>(EVENT_BIND_VOID(OnRender));
 	}
 }

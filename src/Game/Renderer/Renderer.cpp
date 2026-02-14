@@ -2,7 +2,6 @@
 
 #include "Drawing/Draw2D.hpp"
 #include "Drawing/Draw3D.hpp"
-#include "Drawing/Emojis.hpp"
 #include "Modules/Modules.hpp"
 #include "Modules/Settings.hpp"
 #include "UI/UI.hpp"
@@ -23,7 +22,6 @@ namespace IW3SR
 		Device::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize();
 		GUI::Initialize();
-		Emojis::Initialize();
 	}
 
 	void GRenderer::Shutdown(int window)
@@ -64,7 +62,6 @@ namespace IW3SR
 	{
 		Renderer::Frame();
 		Console::Frame();
-		Emojis::Frame();
 
 		IDirect3DDevice9_EndScene_h(device);
 	}
@@ -136,7 +133,9 @@ namespace IW3SR
 		static std::string buffer;
 		buffer = *text;
 		*text = buffer.data();
-		Emojis::ProcessText(buffer, font, { x, y }, xScale, color);
+
+		EventRendererText event(buffer, font, { x, y }, { xScale, yScale }, color);
+		Application::Dispatch(event);
 	}
 
 	void GRenderer::AddCmdDrawTextWithEffects(const char* text, int maxChars, Font_s* font, float x, float y,
@@ -147,7 +146,10 @@ namespace IW3SR
 		static std::string buffer;
 		buffer = text;
 		text = buffer.data();
-		Emojis::ProcessText(buffer, font, { x, y }, xScale, color);
+
+		EventRendererText event(buffer, font, { x, y }, { xScale, yScale }, color);
+		Application::Dispatch(event);
+
 		R_AddCmdDrawTextWithEffects_h(buffer.data(), maxChars, font, x, y, xScale, yScale, rotation, color, style,
 			glowColor, fxMaterial, fxMaterialGlow, fxBirthTime, fxLetterTime, fxDecayStartTime, fxDecayDuration);
 	}
