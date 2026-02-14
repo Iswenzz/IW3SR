@@ -69,11 +69,23 @@ namespace IW3SR
 	extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_GroundTrace_h;
 
+	extern Hook<void(const char** text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation,
+		int style, const vec4& color)>
+		R_AddCmdDrawText_h;
+
+	extern Hook<void(const char* text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation,
+		const vec4& color, int style, const vec4& glowColor, Material* fxMaterial, Material* fxMaterialGlow,
+		int fxBirthTime, int fxLetterTime, int fxDecayStartTime, int fxDecayDuration)>
+		R_AddCmdDrawTextWithEffects_h;
+
 	extern Hook<void()>
 		R_Init_h;
 
 	extern Hook<void(int window)>
 		R_Shutdown_h;
+
+	extern Hook<void(GfxRenderCommandExecState* execState)>
+		RB_DrawText2DCmd_h;
 
 	extern Hook<void(void* cmds)>
 		RB_ExecuteRenderCommandsLoop_h;
@@ -89,6 +101,6 @@ namespace IW3SR
 {
 	ASM_FUNCTION(CL_Shutdown_h);
 	ASM_FUNCTION(CG_Respawn_h);
-	ASM_FUNCTION(R_SetSampler_h);
+	ASM_FUNCTION(R_AddCmdDrawText_h);
 	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h);
 }

@@ -2,6 +2,7 @@
 
 #include "Drawing/Draw2D.hpp"
 #include "Drawing/Draw3D.hpp"
+#include "Drawing/Emojis.hpp"
 #include "Modules/Modules.hpp"
 #include "Modules/Settings.hpp"
 #include "UI/UI.hpp"
@@ -22,6 +23,7 @@ namespace IW3SR
 		Device::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize();
 		GUI::Initialize();
+		Emojis::Initialize();
 	}
 
 	void GRenderer::Shutdown(int window)
@@ -51,7 +53,7 @@ namespace IW3SR
 		Application::Dispatch(event);
 	}
 
-	void GRenderer::Commands(void* cmds)
+	void GRenderer::ExecuteRenderCommandsLoop(void* cmds)
 	{
 		// HLSL offline gameTime constants
 		if (client_ui->connectionState != CA_ACTIVE)
@@ -62,6 +64,7 @@ namespace IW3SR
 	{
 		Renderer::Frame();
 		Console::Frame();
+		Emojis::Frame();
 
 		IDirect3DDevice9_EndScene_h(device);
 	}
@@ -125,5 +128,27 @@ namespace IW3SR
 		surface->Release();
 
 		return r == 0xFF;
+	}
+
+	void GRenderer::AddCmdDrawText(const char** text, int maxChars, Font_s* font, float x, float y, float xScale,
+		float yScale, float rotation, int style, const vec4& color)
+	{
+		static std::string buffer;
+		buffer = *text;
+		*text = buffer.data();
+		Emojis::ProcessText(buffer, font, { x, y }, xScale, color);
+	}
+
+	void GRenderer::AddCmdDrawTextWithEffects(const char* text, int maxChars, Font_s* font, float x, float y,
+		float xScale, float yScale, float rotation, const vec4& color, int style, const vec4& glowColor,
+		Material* fxMaterial, Material* fxMaterialGlow, int fxBirthTime, int fxLetterTime, int fxDecayStartTime,
+		int fxDecayDuration)
+	{
+		static std::string buffer;
+		buffer = text;
+		text = buffer.data();
+		Emojis::ProcessText(buffer, font, { x, y }, xScale, color);
+		R_AddCmdDrawTextWithEffects_h(buffer.data(), maxChars, font, x, y, xScale, yScale, rotation, color, style,
+			glowColor, fxMaterial, fxMaterialGlow, fxBirthTime, fxLetterTime, fxDecayStartTime, fxDecayDuration);
 	}
 }

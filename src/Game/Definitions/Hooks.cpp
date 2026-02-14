@@ -73,6 +73,15 @@ namespace IW3SR
 	Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_GroundTrace_h(0x410660, PMove::GroundTrace);
 
+	Hook<void(const char** text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation,
+		int style, const vec4& color)>
+		R_AddCmdDrawText_h(0x5F6B00, ASM_LOAD(R_AddCmdDrawText_h));
+
+	Hook<void(const char* text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation,
+		const vec4& color, int style, const vec4& glowColor, Material* fxMaterial, Material* fxMaterialGlow,
+		int fxBirthTime, int fxLetterTime, int fxDecayStartTime, int fxDecayDuration)>
+		R_AddCmdDrawTextWithEffects_h(0x5F6D30, GRenderer::AddCmdDrawTextWithEffects);
+
 	Hook<void()>
 		R_Init_h(0x5F4EE0, GRenderer::Initialize);
 
@@ -123,6 +132,31 @@ namespace IW3SR
 		a.popad();
 		a.pop(x86::ebp);
 		a.ret();
+	}
+
+	ASM_FUNCTION(R_AddCmdDrawText_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, -0x08)); // (esi) color
+		a.push(x86::dword_ptr(x86::ebp, 0x28));	 // style
+		a.push(x86::dword_ptr(x86::ebp, 0x24));	 // rotation
+		a.push(x86::dword_ptr(x86::ebp, 0x20));	 // yScale
+		a.push(x86::dword_ptr(x86::ebp, 0x1C));	 // xScale
+		a.push(x86::dword_ptr(x86::ebp, 0x18));	 // y
+		a.push(x86::dword_ptr(x86::ebp, 0x14));	 // x
+		a.push(x86::dword_ptr(x86::ebp, 0x10));	 // font
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));	 // maxChars
+		a.lea(x86::eax, x86::dword_ptr(x86::ebp, 0x08));
+		a.push(x86::eax); // text
+		a.call(GRenderer::AddCmdDrawText);
+		a.add(x86::esp, 0x28);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.jmp(ASM_TRAMPOLINE(R_AddCmdDrawText_h));
 	}
 
 	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h)
