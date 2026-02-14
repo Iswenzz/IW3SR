@@ -84,9 +84,6 @@ namespace IW3SR
 	extern Hook<void(int window)>
 		R_Shutdown_h;
 
-	extern Hook<void(GfxRenderCommandExecState* execState)>
-		RB_DrawText2DCmd_h;
-
 	extern Hook<void(void* cmds)>
 		RB_ExecuteRenderCommandsLoop_h;
 
