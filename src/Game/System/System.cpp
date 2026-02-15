@@ -99,4 +99,28 @@ namespace IW3SR
 			Patch::CoD4X(mod);
 		return mod;
 	}
+
+	int GSystem::Vsnprintf(char* dest, size_t size, const char* fmt, va_list va)
+	{
+		if (!fmt || !dest)
+			return -1;
+
+		const std::string_view format = fmt;
+
+		// Singleplayer maps
+		if (format.contains("maps/mp/"))
+		{
+			va_list args;
+			va_copy(args, va);
+
+			if (format == "maps/mp/%s.d3dbsp")
+			{
+				std::string_view map = va_arg(args, char*);
+				if (!map.starts_with("mp_"))
+					fmt = "maps/%s.d3dbsp";
+			}
+			va_end(args);
+		}
+		return _vsnprintf(dest, size, fmt, va);
+	}
 }

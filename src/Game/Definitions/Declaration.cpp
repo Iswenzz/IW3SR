@@ -34,7 +34,7 @@ namespace IW3SR
 	WeaponDef** bg_weaponNames = Signature(0x736DB8);
 	dvar_s** dvars = Signature(0xCBA7408);
 	int& dvarCount = Signature(0xCBA73F8);
-	int* server_fps = reinterpret_cast<int*>(0xCBAB908);
+	int* server_fps = Signature(0xCBAB908);
 
 	// Render
 	DxGlobals* dx = Signature(0xCC9A400);
@@ -100,8 +100,9 @@ namespace IW3SR
 	XAssetHeader* db_xassetPool = Signature(0x7265E0);
 	XZone* g_zones = Signature(0xFFEFD0);
 	XAssetEntry* g_assetEntryPool = Signature(0xF0D640);
-	DB_XAssetSizeHandler_t* db_xassetSizeHandlers = Signature(0x726A10);
+	DB_GetXAssetSizeHandler_t* DB_GetXAssetSizeHandlers = Signature(0x726A10);
 	uint32_t* g_poolSize = Signature(0x7263A0);
+	int* XAssetStdCount = nullptr;
 	const char** zone_code_post_gfx_mp = Signature(0xCC9D128);
 	const char** zone_localized_code_post_gfx_mp = Signature(0xCC9D134);
 	const char** zone_ui_mp = Signature(0xCC9D12C);

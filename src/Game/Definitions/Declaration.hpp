@@ -101,8 +101,9 @@ namespace IW3SR
 	extern XAssetHeader* db_xassetPool;
 	extern XZone* g_zones;
 	extern XAssetEntry* g_assetEntryPool;
-	extern DB_XAssetSizeHandler_t* db_xassetSizeHandlers;
+	extern DB_GetXAssetSizeHandler_t* DB_GetXAssetSizeHandlers;
 	extern uint32_t* g_poolSize;
+	extern int* XAssetStdCount;
 	extern const char** zone_code_post_gfx_mp;
 	extern const char** zone_localized_code_post_gfx_mp;
 	extern const char** zone_ui_mp;

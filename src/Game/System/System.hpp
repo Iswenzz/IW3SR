@@ -16,5 +16,6 @@ namespace IW3SR
 		static void ScriptMenuResponse(int localClientNum, itemDef_s *item, const char **args);
 		static HMODULE STDCALL LoadDLL(LPCSTR lpLibFileName);
 		static HMODULE STDCALL LoadDLLW(LPCWSTR lpLibFileName);
+		static int Vsnprintf(char *dest, size_t size, const char *fmt, va_list va);
 	};
 }

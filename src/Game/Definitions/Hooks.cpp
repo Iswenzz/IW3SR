@@ -6,6 +6,7 @@
 
 #include "Game/System/Client.hpp"
 #include "Game/System/Console.hpp"
+#include "Game/System/Patch.hpp"
 #include "Game/System/System.hpp"
 
 // clang-format off
@@ -96,6 +97,12 @@ namespace IW3SR
 
 	Hook<void(int localClientNum, itemDef_s *item, const char **args)>
 		Script_ScriptMenuResponse_h(0x54DD90, GSystem::ScriptMenuResponse);
+
+	Hook<int(char *dest, size_t size, const char *fmt, va_list va)>
+		Vsnprintf_h(0x6706F5, GSystem::Vsnprintf);
+
+	Hook<void()>
+		XAssetsInitStdCount_h(Patch::ReallocXAssetPoolsX);
 }
 // clang-format on
 namespace IW3SR

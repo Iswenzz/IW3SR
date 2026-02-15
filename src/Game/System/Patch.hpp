@@ -12,5 +12,8 @@ namespace IW3SR
 		static void Initialize();
 		static void Base();
 		static void CoD4X(HMODULE mod);
+
+		static void ReallocXAssetPools();
+		static void ReallocXAssetPoolsX();
 	};
 }

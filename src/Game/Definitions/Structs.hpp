@@ -19,6 +19,7 @@ namespace IW3SR
 	struct snd_alias_list_t;
 
 	typedef void (*xfunction_t)();
+	typedef int(__cdecl* DB_GetXAssetSizeHandler_t)();
 
 	struct scr_function_s
 	{
@@ -418,8 +419,6 @@ namespace IW3SR
 		bool(__cdecl* domainFunc)(dvar_s*, DvarValue);
 		dvar_s* hashNext;
 	};
-
-	using DB_XAssetSizeHandler_t = int (*)();
 
 	enum DB_FILE_EXISTS_PATH
 	{
