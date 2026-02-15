@@ -3,7 +3,6 @@
 #include "Drawing/Draw2D.hpp"
 #include "Drawing/Draw3D.hpp"
 #include "Modules/Modules.hpp"
-#include "Modules/Settings.hpp"
 #include "UI/UI.hpp"
 
 namespace IW3SR
@@ -16,7 +15,6 @@ namespace IW3SR
 		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
 
 		Dvar::Initialize();
-		Settings::Deserialize();
 		Modules::Deserialize();
 
 		Device::Swap(dx->d3d9, dx->device);
@@ -27,9 +25,7 @@ namespace IW3SR
 	void GRenderer::Shutdown(int window)
 	{
 		Renderer::Shutdown();
-
 		Modules::Serialize();
-		Settings::Serialize();
 
 		R_Shutdown_h(window);
 	}

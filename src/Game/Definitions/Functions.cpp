@@ -19,6 +19,9 @@ namespace IW3SR
 	Function<char*(const char** pData, bool allowLineBreaks)>
 		Com_ParseExt = 0x570FB0;
 
+	Function<void(const char *localName, const char *remoteName)>
+		DL_BeginDownload = 0x500AE0;
+
 	Function<dvar_s*(const char* name)>
 		Dvar_FindVar = ASM_LOAD(Dvar_FindVar);
 

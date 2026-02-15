@@ -1,7 +1,6 @@
 #include "Toolbar.hpp"
 
 #include "Game/Renderer/Modules/Modules.hpp"
-#include "Game/Renderer/Modules/Settings.hpp"
 
 namespace IW3SR::UC
 {
@@ -47,9 +46,6 @@ namespace IW3SR::UC
 		ImGui::Button(ICON_FA_PAINTBRUSH, "Themes", &UI::Frames["Themes"]->Open, buttonSize);
 		ImGui::Tooltip("Themes");
 		ImGui::SameLine();
-		ImGui::Button(ICON_FA_KEYBOARD, "Binds", &UI::Frames["Binds"]->Open, buttonSize);
-		ImGui::Tooltip("Binds");
-		ImGui::SameLine();
 
 		if (System::IsDebug())
 		{
@@ -86,7 +82,6 @@ namespace IW3SR::UC
 		Plugins::Shutdown();
 		Plugins::Free();
 		IW3SR::Modules::Serialize();
-		IW3SR::Settings::Serialize();
 
 		std::thread([this] { Compile(); }).detach();
 	}
@@ -101,7 +96,6 @@ namespace IW3SR::UC
 		Actions::Add(
 			[this]()
 			{
-				IW3SR::Settings::Deserialize();
 				IW3SR::Modules::Deserialize();
 				Plugins::Load();
 				Plugins::Initialize();

@@ -1,7 +1,6 @@
 #include "Hooks.hpp"
 
 #include "Game/Renderer/Modules/Modules.hpp"
-#include "Game/Renderer/Modules/Settings.hpp"
 #include "Game/Renderer/Renderer.hpp"
 
 #include "Game/System/Client.hpp"

@@ -96,7 +96,10 @@ namespace IW3SR
 		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
 
 		if (name.starts_with("cod4x"))
-			Patch::CoD4X(mod);
+		{
+			FreeLibrary(mod);
+			//Patch::CoD4X(mod);
+		}
 		return mod;
 	}
 

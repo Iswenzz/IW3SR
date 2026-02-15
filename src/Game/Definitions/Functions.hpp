@@ -23,6 +23,9 @@ namespace IW3SR
 	extern Function<char*(const char** pData, bool allowLineBreaks)>
 		Com_ParseExt;
 
+	extern Function<void(const char *localName, const char *remoteName)>
+		DL_BeginDownload;
+
 	extern Function<dvar_s*(const char* name)>
 		Dvar_FindVar;
 
