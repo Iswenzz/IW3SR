@@ -90,16 +90,18 @@ namespace IW3SR
 		return mod;
 	}
 
-	HMODULE STDCALL GSystem::LoadDLLW(LPCWSTR lpLibFileName)
+	HMODULE GSystem::LoadDLLW(LPCWSTR lpLibFileName)
 	{
 		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
 		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
+		static bool disableCoD4x = false;
 
-		if (name.starts_with("cod4x"))
-		{
+		if (name == "launcher.dll" && disableCoD4x)
 			FreeLibrary(mod);
-			//Patch::CoD4X(mod);
-		}
+		if (name.starts_with("cod4x") && disableCoD4x)
+			FreeLibrary(mod);
+		if (name.starts_with("cod4x") && !disableCoD4x)
+			Patch::CoD4X(mod);
 		return mod;
 	}
 

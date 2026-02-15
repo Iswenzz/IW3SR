@@ -27,11 +27,6 @@ Iswenzz Dualite xoxor4d)";
 
 		ImGui::Markdown(markdown);
 		ImGui::Text("Version " APPLICATION_VERSION);
-
-		if (ImGui::Button("Update"))
-		{
-			DL_BeginDownload("test.dm_1", "http://iswenzz.com/static/fastdl/wrs/10022512/mp_dr_bhop/6924394930.dm_1");
-		}
 		End();
 	}
 }

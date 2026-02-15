@@ -14,6 +14,8 @@ namespace IW3SR
 			return;
 		UseBase = true;
 
+		ReallocXAssetPools();
+
 		// Increase hunkTotal
 		Memory::Set<uint8_t>(0x563A29, 0xF0);
 
@@ -26,8 +28,6 @@ namespace IW3SR
 
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
-
-		ReallocXAssetPools();
 
 		CreateWindowExA_h.Install();
 		Cmd_ExecuteSingleCommand_h.Install();
