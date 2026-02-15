@@ -13,4 +13,4 @@ get_target_property(SOURCES Graphics SOURCES)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
 # Install
-install(TARGETS Graphics RUNTIME DESTINATION ${COD4}/iw3sr/plugins)
+install(TARGETS Graphics RUNTIME DESTINATION ${COD4}/iw3sr/Plugins)

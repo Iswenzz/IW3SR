@@ -15,4 +15,4 @@ get_target_property(SOURCES Player SOURCES)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
 # Install
-install(TARGETS Player RUNTIME DESTINATION ${COD4}/iw3sr/plugins)
+install(TARGETS Player RUNTIME DESTINATION ${COD4}/iw3sr/Plugins)

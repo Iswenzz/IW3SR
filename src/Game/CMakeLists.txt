@@ -21,10 +21,6 @@ target_sources(IW3SR PRIVATE
 target_include_directories(IW3SR PUBLIC ..)
 target_link_libraries(IW3SR PUBLIC IzEngine)
 
-set_target_properties(IW3SR PROPERTIES
-	OUTPUT_NAME ddraw
-	LINK_FLAGS "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/proxy.def")
-
 # API
 target_link_libraries(IW3SR.API INTERFACE IW3SR)
 target_compile_definitions(IW3SR.API INTERFACE API=IMPORT)
@@ -41,4 +37,4 @@ if(MSVC)
 endif()
 
 # Install
-install(TARGETS IW3SR RUNTIME DESTINATION ${COD4})
+install(TARGETS IW3SR RUNTIME DESTINATION ${COD4}/iw3sr)
