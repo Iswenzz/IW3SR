@@ -98,6 +98,9 @@ namespace IW3SR
 	Hook<void(int localClientNum, itemDef_s *item, const char **args)>
 		Script_ScriptMenuResponse_h(0x54DD90, GSystem::ScriptMenuResponse);
 
+	Hook<void()>
+		UI_VersionNumber_h(0x543410, GRenderer::DrawVersion);
+
 	Hook<int(char *dest, size_t size, const char *fmt, va_list va)>
 		Vsnprintf_h(0x6706F5, GSystem::Vsnprintf);
 

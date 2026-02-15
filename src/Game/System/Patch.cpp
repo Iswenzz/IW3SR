@@ -52,6 +52,7 @@ namespace IW3SR
 		RB_ExecuteRenderCommandsLoop_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();
+		UI_VersionNumber_h.Install();
 		Vsnprintf_h.Install();
 	}
 

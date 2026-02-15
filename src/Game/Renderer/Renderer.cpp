@@ -51,6 +51,26 @@ namespace IW3SR
 		Application::Dispatch(event);
 	}
 
+	void GRenderer::DrawVersion()
+	{
+		static GText text{ "", FONT_NORMAL, 600, 450, 1.4, vec4(1) };
+		if (text.Value.empty())
+		{
+			const auto shortversion = Dvar::Get<const char*>("shortversion");
+			text.Value = std::format("CoD4 {}\nIW3SR {}", shortversion, APPLICATION_VERSION);
+			if (COD4X_BASE)
+			{
+				const auto version = Dvar::Get<const char*>("version");
+				const auto cod4xversion = std::string_view(version).substr(8, 4);
+				text.Value =
+					std::format("CoD4 {}\nCoD4x {}\nIW3SR {}", shortversion, cod4xversion, APPLICATION_VERSION);
+			}
+			text.SetRectAlignment(Horizontal::Fullscreen, Vertical::Fullscreen);
+		}
+		text.SetResponsiveFont();
+		text.Render();
+	}
+
 	void GRenderer::ExecuteRenderCommandsLoop(void* cmds)
 	{
 		// HLSL offline gameTime constants

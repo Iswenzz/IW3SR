@@ -30,6 +30,7 @@ namespace IW3SR
 		void SetRectAlignment(Horizontal horizontal, Vertical vertical);
 		void SetAlignment(Alignment horizontal, Alignment vertical);
 		void SetFont(const std::string& font);
+		void SetResponsiveFont();
 
 		void Menu(const std::string& label, bool open = false);
 		void Render();

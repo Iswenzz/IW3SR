@@ -8,6 +8,7 @@ namespace IW3SR
 		Value = text;
 		Position = { x, y };
 		Color = color;
+		FontSize = size;
 		FontName = font;
 	}
 
@@ -28,6 +29,18 @@ namespace IW3SR
 		Font = R_RegisterFont(font.c_str(), font.size());
 		FontName = font;
 		FontIndex = std::distance(GDraw2D::FontNames.begin(), std::ranges::find(GDraw2D::FontNames, FontName));
+	}
+
+	void GText::SetResponsiveFont()
+	{
+		if (UI::Size >= 4)
+			SetFont(FONT_EXTRA_BIG);
+		else if (UI::Size >= 3)
+			SetFont(FONT_BIG);
+		else if (UI::Size >= 2)
+			SetFont(FONT_NORMAL);
+		else
+			SetFont(FONT_SMALL);
 	}
 
 	void GText::ComputeAlignment(vec2& position)

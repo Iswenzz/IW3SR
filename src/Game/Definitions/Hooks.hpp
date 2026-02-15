@@ -93,6 +93,9 @@ namespace IW3SR
 	extern Hook<void(int localClientNum, itemDef_s *item, const char **args)>
 		Script_ScriptMenuResponse_h;
 
+	extern Hook<void()>
+		UI_VersionNumber_h;
+
 	extern Hook<int(char *dest, size_t size, const char *fmt, va_list va)>
 		Vsnprintf_h;
 
