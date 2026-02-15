@@ -10,6 +10,10 @@ namespace IW3SR
 
 	void Patch::Base()
 	{
+		if (UseBase)
+			return;
+		UseBase = true;
+
 		// Increase hunkTotal
 		Memory::Set<uint8_t>(0x563A29, 0xF0);
 
@@ -50,6 +54,10 @@ namespace IW3SR
 
 	void Patch::CoD4X(HMODULE mod)
 	{
+		if (UseCoD4X)
+			return;
+		UseCoD4X = true;
+
 		char path[MAX_PATH];
 		GetModuleFileName(mod, path, MAX_PATH);
 
