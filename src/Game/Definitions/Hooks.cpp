@@ -23,13 +23,16 @@ namespace IW3SR
 		IDirect3DDevice9_EndScene_h(GRenderer::Frame);
 
 	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
-		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
+		MainWndProc_h(COD4X_BASE ? COD4X_BASE + 0x801D6 : 0x57BB20, GSystem::MainWndProc);
 
 	Hook<void(int localClientNum, int controllerIndex, char* command)>
 		Cmd_ExecuteSingleCommand_h(0x4F9AB0, GSystem::ExecuteSingleCommand);
 
 	Hook<void(ConChannel channel, const char* msg, int type)>
 		Com_PrintMessage_h(0x4FCA50, GConsole::Write);
+
+	Hook<void()>
+		CG_DrawActive_h(Signature::Signature("cod4x_021.dll", "55 89 E5 83 EC 18 B8 38 E3 74 00 D9 80 9C F3 04 00 D9 5D F4").Address, GRenderer::DrawActive);
 
 	Hook<void(int localClientNum)>
 		CG_DrawCrosshair_h(0x4311A0, GRenderer::Draw2D);
@@ -44,10 +47,16 @@ namespace IW3SR
 		CL_Connect_h(0x471050, Client::Connect);
 
 	Hook<void(int localClientNum)>
+		CL_CreateNewCommands_h(0x463E00, PMove::CreateNewCommands);
+
+	Hook<void(int localClientNum)>
 		CL_Disconnect_h(0x4696B0, Client::Disconnect);
 
 	Hook<void(usercmd_s* cmd)>
-		CL_FinishMove_h(0x463A60, PMove::FinishMove);
+	 	CL_FinishMove_h(0x463A60, PMove::FinishMove);
+
+	Hook<void()>
+		CL_WritePacket_h(0x463A60, PMove::WritePacket);
 
 	Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_WalkMove_h(0x40F7A0, PMove::WalkMove);

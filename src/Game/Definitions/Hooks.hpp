@@ -27,6 +27,9 @@ namespace IW3SR
 	extern Hook<void(ConChannel channel, const char* msg, int type)>
 		Com_PrintMessage_h;
 
+	extern Hook<void()>
+		CG_DrawActive_h;
+
 	extern Hook<void(int localClientNum)>
 		CG_DrawCrosshair_h;
 
@@ -39,11 +42,17 @@ namespace IW3SR
 	extern Hook<void()>
 		CL_Connect_h;
 
+	extern Hook<void(int clientNum)>
+		CL_CreateNewCommands_h;
+
 	extern Hook<void(int localClientNum)>
 		CL_Disconnect_h;
 
 	extern Hook<void(usercmd_s* cmd)>
-		CL_FinishMove_h;
+	 	CL_FinishMove_h;
+
+	extern Hook<void()>
+		CL_WritePacket_h;
 
 	extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_WalkMove_h;

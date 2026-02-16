@@ -93,6 +93,18 @@ namespace IW3SR
 		virtual void OnFinishMove(EventPMoveFinish& event);
 
 		/// <summary>
+		/// New command.
+		/// </summary>
+		/// <param name="event"></param>
+		virtual void OnNewCommand(EventPMoveNewCommands& event);
+
+		/// <summary>
+		/// Packet writing.
+		/// </summary>
+		/// <param name="event">The event.</param>
+		virtual void OnWritePacket(EventPMovePacket& event);
+
+		/// <summary>
 		/// Load position.
 		/// </summary>
 		virtual void OnLoadPosition();
@@ -125,6 +137,11 @@ namespace IW3SR
 		/// Render frame.
 		/// </summary>
 		virtual void OnRender();
+
+		/// <summary>
+		/// Last game render frame, used when modifying game offsets.
+		/// </summary>
+		virtual void OnDrawActive();
 
 		/// <summary>
 		/// Event dispatch.

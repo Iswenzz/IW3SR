@@ -24,20 +24,22 @@ namespace IW3SR
 		case WM_KEYUP:
 		case WM_SYSKEYDOWN:
 		case WM_SYSKEYUP:
-			Keyboard::Process(msg, wParam);
+				Keyboard::Process(msg, wParam);
 			break;
 		}
-		if (UI::Active)
+		if (UI::Active && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 		{
-			if (UI::Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-				return true;
-
 			ImGuiIO& io = ImGui::GetIO();
 			io.MouseDrawCursor = UI::Open;
+
+			if (UI::Open || io.WantCaptureMouse)
+				return true;
 		}
 		s_wmv->mouseInitialized = !UI::Open;
 
-		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
+		return UI::Open || ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureMouse ?
+			DefWindowProc(hWnd, msg, wParam, lParam):
+			MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
 	void GSystem::ExecuteSingleCommand(int localClientNum, int controllerIndex, char* cmd)

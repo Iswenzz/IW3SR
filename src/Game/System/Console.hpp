@@ -40,7 +40,7 @@ namespace IW3SR
 		/// <param name="channel">The channel.</param>
 		/// <param name="msg">The message.</param>
 		/// <param name="type">The messsage type.</param>
-		static void Write(ConChannel channel, const char* msg, int type);
+		API static void Write(ConChannel channel, const char* msg, int type);
 
 	private:
 		/// <summary>

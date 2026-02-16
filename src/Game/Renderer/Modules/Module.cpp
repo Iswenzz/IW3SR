@@ -28,6 +28,8 @@ namespace IW3SR
 	void Module::OnAirMove(EventPMoveAir& event) { }
 	void Module::OnGroundTrace(EventPMoveGroundTrace& event) { }
 	void Module::OnFinishMove(EventPMoveFinish& event) { }
+	void Module::OnNewCommand(EventPMoveNewCommands& event) { }
+	void Module::OnWritePacket(EventPMovePacket& event) { }
 	void Module::OnLoadPosition() { }
 
 	void Module::OnExecuteCommand(EventClientCommand& event) { }
@@ -36,6 +38,7 @@ namespace IW3SR
 	void Module::OnDraw3D(EventRenderer3D& event) { }
 	void Module::OnDraw2D(EventRenderer2D& event) { }
 	void Module::OnRender() { }
+	void Module::OnDrawActive() { }
 
 	void Module::OnEvent(Event& event)
 	{
@@ -54,6 +57,8 @@ namespace IW3SR
 		dispatcher.Dispatch<EventPMoveAir>(EVENT_BIND(OnAirMove));
 		dispatcher.Dispatch<EventPMoveGroundTrace>(EVENT_BIND(OnGroundTrace));
 		dispatcher.Dispatch<EventPMoveFinish>(EVENT_BIND(OnFinishMove));
+		dispatcher.Dispatch<EventPMoveNewCommands>(EVENT_BIND(OnNewCommand));
+		dispatcher.Dispatch<EventPMovePacket>(EVENT_BIND(OnWritePacket));
 
 		dispatcher.Dispatch<EventClientCommand>(EVENT_BIND(OnExecuteCommand));
 		dispatcher.Dispatch<EventScriptMenuResponse>(EVENT_BIND(OnMenuResponse));
@@ -61,5 +66,6 @@ namespace IW3SR
 		dispatcher.Dispatch<EventRenderer3D>(EVENT_BIND(OnDraw3D));
 		dispatcher.Dispatch<EventRenderer2D>(EVENT_BIND(OnDraw2D));
 		dispatcher.Dispatch<EventRendererRender>(EVENT_BIND_VOID(OnRender));
+		dispatcher.Dispatch<EventRendererDrawActive>(EVENT_BIND_VOID(OnDrawActive));
 	}
 }

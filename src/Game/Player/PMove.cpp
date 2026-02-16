@@ -2,6 +2,50 @@
 
 namespace IW3SR
 {
+	pmove_t PMove::CreatePmove(playerState_s* ps, usercmd_s* cmd)
+	{
+		usercmd_s* oldcmd = PMove::GetUserCommand(clients->cmdNumber - 1);
+		pmove_t pm = { 0 };
+
+		pm.ps = ps;
+		pm.cmd = *cmd;
+		pm.oldcmd = *oldcmd;
+
+		pm.mins[0] = -15;
+		pm.mins[1] = -15;
+		pm.mins[2] = 0;
+		pm.maxs[0] = 15;
+		pm.maxs[1] = 15;
+		if (ps->viewHeightCurrent == 60)
+			pm.maxs[2] = 70;
+		if (ps->viewHeightCurrent == 40)
+			pm.maxs[2] = 50;
+		if (ps->viewHeightCurrent == 11)
+			pm.maxs[2] = 30;
+		pm.tracemask = MASK_PLAYERSOLID;
+		pm.handler = 1;
+
+		return pm;
+	}
+
+	void PMove::PredictPmoveSingle(pmove_t* pm, int amount)
+	{
+		Memory::Write(0x537D10, "\xC3");
+		for (int i = 0; i < amount; i++)
+			PmoveSingle(pm);
+		Memory::Write(0x537D10, "\x81");
+	}
+
+	bool PMove::PredictedPmoveOnGround(pmove_t* pm)
+	{
+		return pm->ps->groundEntityNum != ENTITYNUM_NONE;
+	}
+
+	bool PMove::PredictedPmoveInAir(pmove_t* pm)
+	{
+		return pm->ps->groundEntityNum == ENTITYNUM_NONE;
+	}
+
 	usercmd_s* PMove::GetUserCommand(int cmdNumber)
 	{
 		return &clients->cmds[cmdNumber & 0x7F];
@@ -23,6 +67,34 @@ namespace IW3SR
 
 		EventPMoveFinish event(cmd, &cgs->predictedPlayerState);
 		Application::Dispatch(event);
+	}
+
+	void PMove::CreateNewCommands(int localClientNum)
+	{
+		CL_CreateNewCommands_h(localClientNum);
+
+		auto ps = &cgs->predictedPlayerState;
+		auto cmd = GetUserCommand(clients->cmdNumber);
+		auto oldcmd = GetUserCommand(clients->cmdNumber - 1);
+
+		EventPMoveNewCommands event(ps, cmd, oldcmd);
+		Application::Dispatch(event);
+	}
+
+	void PMove::WritePacket()
+	{
+		bool sendPacket = true;
+		bool forceSend = false;
+
+		EventPMovePacket event(sendPacket, forceSend);
+		Application::Dispatch(event);
+
+		if (!event.sendPacket)
+			return;
+		if (event.forceSend)
+			clc.lastPacketSentTime = 0;
+
+		CL_WritePacket_h();
 	}
 
 	void PMove::WalkMove(pmove_t* pm, pml_t* pml)

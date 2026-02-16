@@ -16,6 +16,12 @@ namespace IW3SR
 		EventRenderer2D() = default;
 	};
 
+	class EventRendererDrawActive : public Event
+	{
+		EVENT_CLASS("cg.draw.active")
+		EventRendererDrawActive() = default;
+	};
+
 	class EventClientConnect : public Event
 	{
 		EVENT_CLASS("client.connect")
@@ -95,6 +101,25 @@ namespace IW3SR
 		EventPMoveFinish(usercmd_s* cmd, playerState_s* ps) : cmd(cmd), ps(ps) { }
 		usercmd_s* cmd;
 		playerState_s* ps;
+	};
+
+	class EventPMoveNewCommands : public Event
+	{
+		EVENT_CLASS("pmove.create.new.commands")
+		EventPMoveNewCommands(playerState_s* ps, usercmd_s* cmd, usercmd_s* oldcmd)
+		: ps(ps), cmd(cmd), oldcmd(oldcmd) { }
+		playerState_s* ps;
+		usercmd_s* cmd;
+		usercmd_s* oldcmd;
+	};
+
+	class EventPMovePacket : public Event
+	{
+		EVENT_CLASS("pmove.packet")
+		EventPMovePacket(bool sendPacket, bool forceSend)
+			: sendPacket(sendPacket), forceSend(forceSend) { }
+		bool sendPacket;
+		bool forceSend;
 	};
 
 	class EventScriptMenuResponse : public Event

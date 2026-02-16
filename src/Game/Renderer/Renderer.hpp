@@ -21,6 +21,11 @@ namespace IW3SR
 		static void Shutdown(int window);
 
 		/// <summary>
+		/// Draw Active (Last frame from game renderer, meant for modifying offsets)
+		/// </summary>
+		static void DrawActive();
+
+		/// <summary>
 		/// Draw 2D.
 		/// </summary>
 		/// <param name="localClientNum">Local client num.</param>

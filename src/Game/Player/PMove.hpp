@@ -10,6 +10,36 @@ namespace IW3SR
 	class API PMove
 	{
 	public:
+
+		/// <summary>
+		/// Create player movement.
+		/// </summary>
+		/// <param name="ps">The player state.</param>
+		/// <param name="cmd">The user command.</param>
+		/// <returns></returns>
+		static pmove_t CreatePmove(playerState_s* ps, usercmd_s* cmd);
+
+		/// <summary>
+		/// Predict player movement.
+		/// </summary>
+		/// <param name="pm">The player movement.</param>
+		/// <param name="amount">The number of frames to simulate ahead.</param>
+		static void PredictPmoveSingle(pmove_t* pm, int amount = 1);
+
+		/// <summary>
+		/// Is predicted pmove on the ground.
+		/// </summary>
+		/// <param name="pm">The player movement.</param>
+		/// <returns></returns>
+		static bool PredictedPmoveOnGround(pmove_t* pm);
+
+		/// <summary>
+		/// Is predicted pmove in the air.
+		/// </summary>
+		/// <param name="pm">The player movement.</param>
+		/// <returns></returns>
+		static bool PredictedPmoveInAir(pmove_t* pm);
+
 		/// <summary>
 		/// Get the user command.
 		/// </summary>
@@ -28,6 +58,17 @@ namespace IW3SR
 		/// </summary>
 		/// <param name="cmd">The user command.</param>
 		static void FinishMove(usercmd_s* cmd);
+
+		/// <summary>
+		/// Create new commands.
+		/// </summary>
+		/// <param name="localClientNum"></param>
+		static void CreateNewCommands(int localClientNum);
+
+		/// <summary>
+		/// Write packet.
+		/// </summary>
+		static void WritePacket();
 
 		/// <summary>
 		/// Walk moving.

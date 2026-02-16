@@ -15,6 +15,7 @@ namespace IW3SR
 
 		IDirect3DDevice9_Reset_h.Update(VTABLE(dx->device, 15));
 		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
+		IDirect3DDevice9_SetPixelShader_h.Update(VTABLE(dx->device, 50));
 
 		Settings::Deserialize();
 		Modules::Deserialize();
@@ -32,6 +33,14 @@ namespace IW3SR
 		Settings::Serialize();
 
 		R_Shutdown_h(window);
+	}
+
+	void GRenderer::DrawActive()
+	{
+		EventRendererDrawActive event;
+		Application::Dispatch(event);
+
+		CG_DrawActive_h();
 	}
 
 	void GRenderer::Draw2D(int localClientNum)

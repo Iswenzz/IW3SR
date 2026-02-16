@@ -36,7 +36,7 @@ namespace IW3SR
 
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
-		COD4X Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
+		// COD4X Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
 	}
 
 	void Patch::Database()
@@ -49,6 +49,7 @@ namespace IW3SR
 	{
 		COD4X CL_Connect_h < Signature(COD4X_BIN, "55 89 E5 53 81 EC 24 04 00 00 E8");
 		COD4X CG_Respawn_h < Signature(COD4X_BIN, "55 89 E5 83 EC 18 B8 ?? ?? ?? ?? 8B 50 20");
+		COD4X CL_WritePacket_h < COD4X_BASE + 0x14B9A;
 	}
 
 	void Patch::System()
@@ -80,12 +81,14 @@ namespace IW3SR
 
 		Cmd_ExecuteSingleCommand_h.Install();
 		Com_PrintMessage_h.Install();
+		CG_DrawActive_h.Install();
 		CG_DrawCrosshair_h.Install();
 		CG_PredictPlayerState_Internal_h.Install();
 		CG_Respawn_h.Install();
 		CL_Connect_h.Install();
 		CL_Disconnect_h.Install();
 		CL_FinishMove_h.Install();
+		CL_WritePacket_h.Install();
 		PM_WalkMove_h.Install();
 		PM_AirMove_h.Install();
 		PM_GroundTrace_h.Install();

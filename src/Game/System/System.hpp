@@ -44,7 +44,7 @@ namespace IW3SR
 		/// <param name="localClientNum">The local client number.</param>
 		/// <param name="controllerIndex">The controller index.</param>
 		/// <param name="command">The command.</param>
-		static void ExecuteSingleCommand(int localClientNum, int controllerIndex, char *command);
+		API static void ExecuteSingleCommand(int localClientNum, int controllerIndex, char *command);
 
 		/// <summary>
 		/// Script menu response.
