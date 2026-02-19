@@ -34,16 +34,19 @@ add_subdirectory(src)
 # Install
 install(TARGETS CEF RUNTIME DESTINATION ${COD4}/iw3sr)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources/ DESTINATION ${COD4}/iw3sr/Resources)
-install(FILES ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/locales/en-US.pak
-    DESTINATION ${COD4}/iw3sr/Resources/CEF/Locales)
+install(FILES ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/locales/en-US.pak DESTINATION ${COD4}/iw3sr)
+
 install(DIRECTORY ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/
     DESTINATION ${COD4}/iw3sr PATTERN "locales" EXCLUDE)
+
 install(DIRECTORY
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>bin/
 	DESTINATION ${COD4}/iw3sr FILES_MATCHING PATTERN "*.dll")
+
 install(DIRECTORY
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>bin/
 	DESTINATION ${COD4}/iw3sr FILES_MATCHING PATTERN "*.bin")
+
 install(DIRECTORY
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>bin/
 	DESTINATION ${COD4}/iw3sr FILES_MATCHING PATTERN "*.json")

@@ -11,6 +11,7 @@
 #include "Definitions/Structs.hpp"
 
 #include "Core/Console/Console.hpp"
+#include "Core/IO/VFS.hpp"
 #include "Core/Memory/Memory.hpp"
 #include "Core/System/Crash.hpp"
 #include "Core/System/Environment.hpp"
