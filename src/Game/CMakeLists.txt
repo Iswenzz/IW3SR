@@ -37,4 +37,4 @@ if(MSVC)
 endif()
 
 # Install
-install(TARGETS IW3SR RUNTIME DESTINATION ${COD4}/iw3sr)
+install(TARGETS IW3SR RUNTIME DESTINATION ${COD4}/iw3sr/Bin)
