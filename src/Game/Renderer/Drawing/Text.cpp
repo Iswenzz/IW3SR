@@ -84,6 +84,9 @@ namespace IW3SR
 		if (!Font)
 			SetFont(FontName);
 
+		if (FontResponsive)
+			SetResponsiveFont();
+
 		RenderSize = GDraw2D::TextSize(Value, Font) * FontSize;
 		Size = UI::Screen.RealToVirtual * RenderSize;
 

@@ -22,6 +22,7 @@ namespace IW3SR
 		float FontRescale = 0.4f;
 		float FontSize = 1.4;
 		int FontIndex = 0;
+		bool FontResponsive = true;
 
 		GText() = default;
 		GText(const std::string& text, const std::string& font, float x, float y, float size, const vec4& color);
