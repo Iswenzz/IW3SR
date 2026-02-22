@@ -13,7 +13,7 @@ namespace IW3SR::UC
 {
 	About::About() : Frame("About")
 	{
-		SetRect(-200, -150, 400, 300);
+		SetRect(-200, -150, 400, 150);
 		SetRectAlignment(Horizontal::Center, Vertical::Center);
 		Logo = Texture::Create(VFS::GetFile("Textures/Logo/sr.jpg"));
 
@@ -113,6 +113,20 @@ namespace IW3SR::UC
 		constexpr int logoSize = 250;
 		constexpr int padding = 20;
 
+		bool showButton = (!Downloading && !Extracting) && (UpdateAvailable || !Checking);
+		bool showProgress = Downloading || Extracting;
+		bool showStatus = !StatusMessage.empty();
+
+		float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
+
+		float bottomHeight = 16.0f;
+		if (showStatus)
+			bottomHeight += ImGui::GetFrameHeight() + itemSpacing;
+		if (showProgress)
+			bottomHeight += ImGui::GetFrameHeight() + itemSpacing;
+		if (showButton)
+			bottomHeight += ImGui::GetFrameHeight() + itemSpacing;
+
 		Begin();
 		ImGui::Spacing();
 		if (Logo && Logo->Data)
@@ -138,36 +152,35 @@ namespace IW3SR::UC
 
 		ImGui::EndGroup();
 
-		float bottomHeight = ImGui::GetFrameHeight()
-			+ (Downloading || Extracting ? ImGui::GetFrameHeight() + 8.0f : 0.0f)
-			+ (!StatusMessage.empty() ? ImGui::GetFrameHeight() + 8.0f : 0.0f) + 16.0f;
+		float contentHeight = ImGui::GetContentRegionAvail().y;
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + contentHeight - bottomHeight);
 
-		ImGui::SetCursorPosY(ImGui::GetWindowSize().y - bottomHeight - ImGui::GetStyle().WindowPadding.y);
-
-		if (!StatusMessage.empty())
+		if (showStatus)
 		{
 			ImGui::Spacing();
 			ImGui::TextDisabled("%s", StatusMessage.c_str());
 		}
-		if (Downloading || Extracting)
+		if (showProgress)
 		{
 			ImGui::Spacing();
 			ImGui::ProgressBar(Progress, ImVec2(-1, 0));
 		}
-		ImGui::Spacing();
-
-		if (UpdateAvailable && !Downloading && !Extracting)
+		if (showButton)
 		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0.4, 1, 1));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0.4, 1, 0.7));
-			if (ImGui::Button("Update Now", ImVec2(-1, 0)))
-				StartUpdate();
-			ImGui::PopStyleColor(2);
-		}
-		else if (!Checking && !Downloading && !Extracting)
-		{
-			if (ImGui::Button("Check for Updates", ImVec2(-1, 0)))
-				CheckUpdate();
+			ImGui::Spacing();
+			if (UpdateAvailable)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0.4, 1, 1));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0.4, 1, 0.7));
+				if (ImGui::Button("Update Now", ImVec2(-1, 0)))
+					StartUpdate();
+				ImGui::PopStyleColor(2);
+			}
+			else
+			{
+				if (ImGui::Button("Check for Updates", ImVec2(-1, 0)))
+					CheckUpdate();
+			}
 		}
 		End();
 	}
