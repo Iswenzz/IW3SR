@@ -13,8 +13,8 @@ namespace IW3SR::UC
 {
 	About::About() : Frame("About")
 	{
-		SetRect(-200, -150, 400, 150);
 		SetRectAlignment(Horizontal::Center, Vertical::Center);
+		SetFlags(ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 		Logo = Texture::Create(VFS::GetFile("Textures/Logo/sr.jpg"));
 
 		CheckUpdate();
@@ -117,15 +117,7 @@ namespace IW3SR::UC
 		bool showProgress = Downloading || Extracting;
 		bool showStatus = !StatusMessage.empty();
 
-		float itemSpacing = ImGui::GetStyle().ItemSpacing.y;
-
-		float bottomHeight = 16.0f;
-		if (showStatus)
-			bottomHeight += ImGui::GetFrameHeight() + itemSpacing;
-		if (showProgress)
-			bottomHeight += ImGui::GetFrameHeight() + itemSpacing;
-		if (showButton)
-			bottomHeight += ImGui::GetFrameHeight() + itemSpacing;
+		SetRect(-200, -150, 400, 0);
 
 		Begin();
 		ImGui::Spacing();
@@ -151,9 +143,6 @@ namespace IW3SR::UC
 		ImGui::Text("Version " APPLICATION_VERSION);
 
 		ImGui::EndGroup();
-
-		float contentHeight = ImGui::GetContentRegionAvail().y;
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + contentHeight - bottomHeight);
 
 		if (showStatus)
 		{
