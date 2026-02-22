@@ -56,16 +56,14 @@ namespace IW3SR::UC
 		if (!UpdateAvailable || Downloading || Extracting)
 			return;
 
-		std::filesystem::path tempDir = std::filesystem::temp_directory_path() / "IW3SR_Update";
+		std::filesystem::path tempDir = std::filesystem::temp_directory_path() / "IW3SR";
 		std::string zipPath = (tempDir / "IW3SR.zip").string();
-		std::string updateDir = (tempDir / "extracted").string();
-		std::string updaterDest = (tempDir / "Updater.exe").string();
+		std::string filesDir = (tempDir / "files").string();
+		std::string scriptPath = (tempDir / "updater.bat").string();
 		std::string gameDir = Environment::Path(Directory::Base).string();
 
 		std::filesystem::create_directories(tempDir);
-		std::filesystem::create_directories(updateDir);
-		std::filesystem::copy_file(Environment::Path(Directory::Bin) / "Updater.exe", updaterDest,
-			std::filesystem::copy_options::overwrite_existing);
+		std::filesystem::create_directories(filesDir);
 
 		Downloading = true;
 		Progress = 0.0f;
@@ -88,13 +86,36 @@ namespace IW3SR::UC
 				Extracting = true;
 				StatusMessage = "Extracting...";
 
-				Zip::Extract(zipPath, updateDir);
+				Zip::Extract(zipPath, filesDir);
 				std::filesystem::remove(zipPath);
 
 				Extracting = false;
 				StatusMessage = "Launching updater...";
-				std::string args = "\"" + gameDir + "\"";
-				ShellExecute(nullptr, "open", updaterDest.c_str(), args.c_str(), nullptr, SW_SHOW);
+
+				std::string script =
+					"@echo off\n"
+					"title IW3SR\n"
+					"echo Waiting for game to close...\n"
+					"timeout /t 2 /nobreak > nul\n"
+					":waitloop\n"
+					"tasklist | find /i \"iw3mp.exe\" > nul\n"
+					"if not errorlevel 1 (\n"
+					"    timeout /t 1 /nobreak > nul\n"
+					"    goto waitloop\n"
+					")\n"
+					"echo Copying files...\n"
+					"xcopy /E /Y /I \"" + filesDir + "\" \"" + gameDir + "\"\n"
+					"timeout /t 1 /nobreak > nul\n"
+					"echo Cleaning up...\n"
+					"rmdir /S /Q \"" + filesDir + "\"\n"
+					"timeout /t 1 /nobreak > nul\n"
+					"echo Launching game...\n"
+					"timeout /t 2 /nobreak > nul\n"
+					"start \"\" \"" + gameDir + "\\iw3mp.exe\"\n"
+					"exit\n";
+
+				std::ofstream(scriptPath) << script;
+				ShellExecute(nullptr, "open", scriptPath.c_str(), nullptr, nullptr, SW_SHOW);
 				GSystem::ExitRequested = true;
 			});
 
