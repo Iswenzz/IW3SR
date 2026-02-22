@@ -10,6 +10,15 @@ if(MSVC)
 	# add_compile_options(/fsanitize=address)
 endif()
 
+# Dependencies
+find_package(CURL REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(implot CONFIG REQUIRED)
+find_package(libzippp CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(PolyHook_2 CONFIG REQUIRED)
+
 # Tests
 if(BUILD_TESTING)
 	add_executable(IW3SR.Tests)

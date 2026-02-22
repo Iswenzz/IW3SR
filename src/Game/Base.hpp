@@ -17,6 +17,7 @@
 #include "Core/System/Environment.hpp"
 #include "Core/System/Plugins.hpp"
 #include "Core/System/System.hpp"
+#include "Core/System/ThreadPool.hpp"
 #include "Core/System/Window.hpp"
 
 #include "Renderer/Resources/Browser.hpp"

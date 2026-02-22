@@ -3,7 +3,10 @@
 #include "Drawing/Draw2D.hpp"
 #include "Drawing/Draw3D.hpp"
 #include "Modules/Modules.hpp"
+#include "UI/About.hpp"
 #include "UI/UI.hpp"
+
+#include "Game/System/System.hpp"
 
 namespace IW3SR
 {
@@ -50,6 +53,7 @@ namespace IW3SR
 	void GRenderer::DrawVersion()
 	{
 		static GText text{ "", FONT_NORMAL, 600, 450, 1.4, vec4(1) };
+		static GText update{ "", FONT_NORMAL, 10, 470, 1.4, vec4(0, 1, 1, 1) };
 		if (text.Value.empty())
 		{
 			const auto shortversion = Dvar::Get<const char*>("shortversion");
@@ -63,8 +67,13 @@ namespace IW3SR
 			}
 			text.SetRectAlignment(Horizontal::Fullscreen, Vertical::Fullscreen);
 		}
-		text.SetResponsiveFont();
+		if (update.Value.empty() && UC::About::UpdateAvailable)
+		{
+			update.Value = "IW3SR update available";
+			update.SetRectAlignment(Horizontal::Fullscreen, Vertical::Fullscreen);
+		}
 		text.Render();
+		update.Render();
 	}
 
 	void GRenderer::ExecuteRenderCommandsLoop(void* cmds)
@@ -152,6 +161,9 @@ namespace IW3SR
 
 		EventRendererText event(buffer, font, { x, y }, { xScale, yScale }, color);
 		Application::Dispatch(event);
+
+		if (GSystem::ExitRequested)
+			Cmd_ExecuteSingleCommand(0, 0, "quit\n");
 	}
 
 	void GRenderer::AddCmdDrawTextWithEffects(const char* text, int maxChars, Font_s* font, float x, float y,

@@ -9,6 +9,7 @@ void Application::Start()
 	Crash::Setup();
 	Environment::Binary();
 
+	ThreadPool::Initialize();
 	GConsole::Initialize();
 	Patch::Initialize();
 	Plugins::Load();
@@ -18,6 +19,7 @@ void Application::Shutdown()
 {
 	Plugins::Free();
 	GConsole::Shutdown();
+	ThreadPool::Shutdown();
 }
 
 void Application::Dispatch(Event& event)

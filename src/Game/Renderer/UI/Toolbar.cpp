@@ -1,5 +1,7 @@
 #include "Toolbar.hpp"
 
+#include "About.hpp"
+
 #include "Game/Renderer/Modules/Modules.hpp"
 
 namespace IW3SR::UC
@@ -62,8 +64,18 @@ namespace IW3SR::UC
 			ImGui::Tooltip("Memory");
 			ImGui::SameLine();
 		}
-		ImGui::Button(ICON_FA_CIRCLE_INFO, "About", &UI::Frames["About"]->Open, buttonSize);
-		ImGui::Tooltip("About");
+		if (About::UpdateAvailable)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 1, 1));
+			ImGui::Button(ICON_FA_CIRCLE_INFO, "About", &UI::Frames["About"]->Open, buttonSize);
+			ImGui::PopStyleColor(1);
+			ImGui::Tooltip("About - Update available");
+		}
+		else
+		{
+			ImGui::Button(ICON_FA_CIRCLE_INFO, "About", &UI::Frames["About"]->Open, buttonSize);
+			ImGui::Tooltip("About");
+		}
 		ImGui::SameLine();
 		ImGui::Button(ICON_FA_GEAR, "Settings", &UI::Frames["Settings"]->Open, buttonSize);
 		ImGui::Tooltip("Settings");

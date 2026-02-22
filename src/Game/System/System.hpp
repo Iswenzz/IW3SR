@@ -6,6 +6,8 @@ namespace IW3SR
 	class GSystem
 	{
 	public:
+		static inline bool ExitRequested = false;
+
 		static void Initialize();
 		static void Shutdown(int localClientNum);
 
