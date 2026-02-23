@@ -29,7 +29,6 @@ namespace IW3SR::UC
 		ImDrawList* draw = ImGui::GetBackgroundDrawList();
 		draw->AddRectFilled(position, position + size, ImColor(ImGui::GetStyleColorVec4(ImGuiCol_FrameBg)));
 
-		ImGui::Rainbow(position + vec2{ 0, size.y }, position + vec2{ size.x, size.y + 2 });
 		ImGui::Button(ICON_FA_GAMEPAD, "Modules", &UI::Frames["Modules"]->Open, buttonSize);
 		ImGui::Tooltip("Modules");
 		ImGui::SameLine();
