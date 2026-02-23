@@ -15,7 +15,6 @@ namespace IW3SR::UC
 	{
 		SetRectAlignment(Horizontal::Center, Vertical::Center);
 		SetFlags(ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
-		Logo = Texture::Create(VFS::GetFile("Textures/Logo/sr.jpg"));
 
 		CheckUpdate();
 	}
@@ -132,15 +131,17 @@ namespace IW3SR::UC
 			"CGAZ HUD, offline shaders, velocity meter and more.";
 
 		constexpr int logoSize = 250;
-		constexpr int padding = 20;
+		constexpr int padding = 30;
 
 		bool showButton = (!Downloading && !Extracting) && (UpdateAvailable || !Checking);
 		bool showProgress = Downloading || Extracting;
 		bool showStatus = !StatusMessage.empty();
 
 		SetRect(-200, -150, 400, 0);
+		Logo = Texture::Create(VFS::GetFile("Textures/Logo/sr.jpg"));
 
 		Begin();
+		ImGui::Spacing();
 		ImGui::Spacing();
 		if (Logo && Logo->Data)
 		{

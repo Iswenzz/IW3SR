@@ -15,9 +15,11 @@ namespace IW3SR::UC
 	void Modules::OnRender()
 	{
 		Begin();
-		const float frameWidth = ImGui::GetWindowContentRegionMax().x - 30;
-		std::set<std::string> groups;
 
+		const float buttonWidth = ImGui::CalcTextSize(ICON_FA_GEAR).x + ImGui::GetStyle().FramePadding.x * 2.0f;
+		const float availWidth = ImGui::GetContentRegionAvail().x;
+
+		std::set<std::string> groups;
 		for (const auto& [_, current] : IW3SR::Modules::Entries)
 		{
 			if (std::ranges::find(groups, current->Group) != groups.end())
@@ -37,7 +39,7 @@ namespace IW3SR::UC
 
 				ImGui::SameLine();
 				ImGui::Text(entry->Name.c_str());
-				ImGui::SameLine(frameWidth);
+				ImGui::SameLine(availWidth - buttonWidth);
 				ImGui::Button(ICON_FA_GEAR, entry->ID + "menu", &entry->MenuFrame.Open);
 
 				if (entry->MenuFrame.Open)
