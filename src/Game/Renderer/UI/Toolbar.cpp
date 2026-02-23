@@ -50,15 +50,6 @@ namespace IW3SR::UC
 
 		if (System::IsDebug())
 		{
-			ImGui::Button(ICON_FA_TERMINAL, "Debug", &IsDebug, buttonSize);
-			ImGui::Tooltip("Debug");
-			ImGui::SameLine();
-
-			if (IsDebug)
-			{
-				ImGui::ShowDebugLogWindow(&IsDebug);
-				ImGui::ShowStackToolWindow(&IsDebug);
-			}
 			ImGui::Button(ICON_FA_MEMORY, "Memory", &UI::Frames["Memory"]->Open, buttonSize);
 			ImGui::Tooltip("Memory");
 			ImGui::SameLine();
