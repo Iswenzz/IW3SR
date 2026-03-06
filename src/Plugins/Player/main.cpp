@@ -6,6 +6,7 @@
 #include "Modules/KMOV.hpp"
 #include "Modules/Lagometer.hpp"
 #include "Modules/Movements.hpp"
+#include "Modules/StrafeBot.hpp"
 #include "Modules/Velocity.hpp"
 
 PLUGIN void Initialize()
@@ -19,6 +20,7 @@ PLUGIN void Initialize()
 	Modules::Load<Lagometer>();
 	Modules::Load<Movements>();
 	Modules::Load<Velocity>();
+	Modules::Load<StrafeBot>();
 }
 
 PLUGIN void Shutdown()
@@ -30,4 +32,5 @@ PLUGIN void Shutdown()
 	Modules::Remove("sr.player.lagometer");
 	Modules::Remove("sr.player.movements");
 	Modules::Remove("sr.player.velocity");
+	Modules::Remove("sr.player.strafebot");
 }
