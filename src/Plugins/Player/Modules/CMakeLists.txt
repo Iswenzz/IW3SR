@@ -12,4 +12,6 @@ target_sources(Player PRIVATE
 	Movements.hpp
 	Movements.cpp
 	Velocity.hpp
-	Velocity.cpp)
+	Velocity.cpp
+	StrafeBot.hpp
+	StrafeBot.cpp)
