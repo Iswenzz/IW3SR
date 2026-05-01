@@ -57,6 +57,9 @@ namespace IW3SR
 	extern Hook<HMODULE STDCALL(LPCWSTR lpLibFileName)>
 		LoadLibraryW_h;
 
+	extern Hook<HMODULE STDCALL(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)>
+		LoadLibraryExW_h;
+
 	extern Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h;
 
