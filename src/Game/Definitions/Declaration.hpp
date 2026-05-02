@@ -15,6 +15,9 @@ namespace IW3SR
 	API extern uintptr_t IW3MP_BASE;
 	API extern uintptr_t IW3XO_BASE;
 
+	// Version
+	API extern int COD4X_VERSION;
+
 	// Game
 	API extern CmdArgs* cmd_args;
 	API extern cmd_function_s** cmds;

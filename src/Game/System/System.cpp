@@ -106,6 +106,16 @@ namespace IW3SR
 		return mod;
 	}
 
+	HMODULE GSystem::LoadDLLExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
+	{
+		const HMODULE mod = LoadLibraryExW_h(lpLibFileName, hFile, dwFlags);
+		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
+
+		if (name.starts_with("cod4x"))
+			Patch::CoD4X(mod);
+		return mod;
+	}
+
 	int GSystem::Vsnprintf(char* dest, size_t size, const char* fmt, va_list va)
 	{
 		if (!fmt || !dest)

@@ -6,7 +6,7 @@ namespace IW3SR
 	{
 		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
 		RegisterInt("pm_mode", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Movement mode.", 0, 0, 2);
-		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "https://sr.iswenzz.com/media");
+		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "https://sr-speedrun.com/media");
 
 		Find("bg_bobmax")->flags = DVAR_SAVED;
 		Find("cg_fovscale")->flags = DVAR_SAVED;

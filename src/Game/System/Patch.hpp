@@ -15,5 +15,11 @@ namespace IW3SR
 
 		static void ReallocXAssetPools();
 		static void ReallocXAssetPoolsX();
+
+	private:
+		static void CoD4X_21_1();
+		static void CoD4X_21_3();
+
+		static int GetCoD4XVersion();
 	};
 }

@@ -6,6 +6,7 @@ namespace IW3SR
 	{
 		LoadLibraryA_h.Install();
 		LoadLibraryW_h.Install();
+		LoadLibraryExW_h.Install();
 	}
 
 	void Patch::Base()
@@ -29,6 +30,15 @@ namespace IW3SR
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
 
+		switch (COD4X_VERSION)
+		{
+		case 211:
+			CoD4X_21_1();
+			break;
+		case 213:
+			CoD4X_21_3();
+			break;
+		}
 		CreateWindowExA_h.Install();
 		Cmd_ExecuteSingleCommand_h.Install();
 		Com_PlayIntroMovies_h.Install();
@@ -67,7 +77,11 @@ namespace IW3SR
 
 		COD4X_BIN = std::filesystem::path(path).filename().string();
 		COD4X_BASE = reinterpret_cast<uintptr_t>(mod);
+		COD4X_VERSION = GetCoD4XVersion();
+	}
 
+	void Patch::CoD4X_21_1()
+	{
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
 
@@ -76,11 +90,59 @@ namespace IW3SR
 		g_poolSize = Signature(0x488F0F).DeRef();
 		XAssetStdCount = Signature(COD4X_BASE + 0x4482BA0);
 
-		MainWndProc_h.Update(Signature(COD4X_BIN, "55 89 E5 53 81 EC 84 00 00 00 C7 04 24 02"));
-		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "55 89 E5 83 EC 38 89 45 E4 8B 45 E4 89 45 F4"));
-		CL_Connect_h.Update(Signature(COD4X_BIN, "55 89 E5 53 81 EC 24 04 00 00 E8"));
-		CG_Respawn_h.Update(Signature(COD4X_BIN, "55 89 E5 83 EC 18 B8 ?? ?? ?? ?? 8B 50 20"));
-		XAssetsInitStdCount_h.Update(Signature(COD4X_BASE + 0x82CAF));
+		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 24 04 00 00 E8"));
+		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 18 B8 ?? ?? ?? ?? 8B 50 20"));
+		MainWndProc_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 84 00 00 00 C7 04 24 02"));
+		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 38 89 45 E4 8B 45 E4 89 45 F4"));
+		XAssetsInitStdCount_h.Update(COD4X_BASE + 0x82CAF);
+
+		XAssetsInitStdCount_h();
+		ReallocXAssetPoolsX();
+	}
+
+	void Patch::CoD4X_21_3()
+	{
+		// Increase fps cap for menus and loadscreen
+		Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
+
+		bg_weaponNames = Signature(0x402D8C).DeRef();
+		db_xassetPool = Signature(0x488F05).DeRef();
+		g_poolSize = Signature(0x488F0F).DeRef();
+		XAssetStdCount = Signature(COD4X_BASE + 0x43161C0);
+
+		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 60 E8 ?? ?? ?? ?? 83 F8 02 74 ?? C7 44 24 04"));
+		CL_FinishMove_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 15 ?? ?? ?? ?? 8B 44 24 10 88 50 14 8B 15"));
+		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? ?? ?? ?? ?? C7 44 24 08 64 2F 00 00 83 C0 0C C7"));
+		MainWndProc_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 7C C7 04 24 02 00 00 00"));
+		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 44 24 1C 0F B7 00 8D 5C 24 1C"));
+		XAssetsInitStdCount_h.Update(COD4X_BASE + 0x3325E);
+
+		ReallocXAssetPoolsX();
+	}
+
+	int Patch::GetCoD4XVersion()
+	{
+		const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(COD4X_BASE);
+		const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(COD4X_BASE + dos->e_lfanew);
+		const char* base = reinterpret_cast<const char*>(COD4X_BASE);
+		const size_t size = nt->OptionalHeader.SizeOfImage;
+
+		const std::string_view image{ base, size };
+		const std::string_view prefix = "CoD4 MP ";
+
+		const size_t pos = image.find(prefix);
+		if (pos == std::string_view::npos)
+			return 0;
+
+		const char* versionStart = base + pos + prefix.size();
+		const char* versionEnd = base + size;
+
+		std::string versionStr(versionStart, std::find(versionStart, versionEnd, ' '));
+		versionStr.erase(std::remove(versionStr.begin(), versionStr.end(), '.'), versionStr.end());
+
+		int version{};
+		const auto [ptr, ec] = std::from_chars(versionStr.data(), versionStr.data() + versionStr.size(), version);
+		return ec == std::errc{} ? version : 0;
 	}
 
 	void Patch::ReallocXAssetPools()
@@ -108,7 +170,6 @@ namespace IW3SR
 
 	void Patch::ReallocXAssetPoolsX()
 	{
-		XAssetsInitStdCount_h();
 		XAssetStdCount[XAssetType::ASSET_TYPE_FX] = 1200;
 		XAssetStdCount[XAssetType::ASSET_TYPE_GAMEWORLD_SP] = 1;
 		XAssetStdCount[XAssetType::ASSET_TYPE_IMAGE] = 7168;

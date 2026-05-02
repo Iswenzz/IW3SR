@@ -61,6 +61,9 @@ namespace IW3SR
 	Hook<HMODULE STDCALL(LPCWSTR lpLibFileName)>
 		LoadLibraryW_h(LoadLibraryW, GSystem::LoadDLLW);
 
+	Hook<HMODULE STDCALL(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)>
+		LoadLibraryExW_h(LoadLibraryExW, GSystem::LoadDLLExW);
+
 	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
 

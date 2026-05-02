@@ -12,6 +12,9 @@ namespace IW3SR
 	uintptr_t IW3MP_BASE = uintptr_t(GetModuleHandle(IW3MP_BIN.c_str()));
 	uintptr_t IW3XO_BASE = uintptr_t(GetModuleHandle(IW3XO_BIN.c_str()));
 
+	// Version
+	int COD4X_VERSION = 0;
+
 	// Game
 	CmdArgs* cmd_args = Signature(0x1410B40);
 	cmd_function_s** cmds = Signature(0x1410B3C);
