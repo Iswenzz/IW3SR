@@ -5,6 +5,11 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 {
 	static HMODULE module = nullptr;
 
+	char exe[MAX_PATH];
+	GetModuleFileName(nullptr, exe, MAX_PATH);
+	if (std::filesystem::path(exe).filename() != "iw3mp.exe")
+		return TRUE;
+
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
