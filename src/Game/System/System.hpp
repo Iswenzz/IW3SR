@@ -14,6 +14,8 @@ namespace IW3SR
 		static HWND STDCALL CreateMainWindow(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle,
 			int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
 		static LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+		static BOOL WINAPI GetCursorPos(LPPOINT lpPoint);
+		static BOOL WINAPI SetCursorPos(int X, int Y);
 		static void ExecuteSingleCommand(int localClientNum, int controllerIndex, char *command);
 		static void ScriptMenuResponse(int localClientNum, itemDef_s *item, const char **args);
 		static HMODULE STDCALL LoadDLL(LPCSTR lpLibFileName);

@@ -51,6 +51,8 @@ namespace IW3SR
 		CL_Connect_h.Install();
 		CL_Disconnect_h.Install();
 		CL_FinishMove_h.Install();
+		GetCursorPos_h.Install();
+		SetCursorPos_h.Install();
 		MainWndProc_h.Install();
 		PM_WalkMove_h.Install();
 		PM_AirMove_h.Install();

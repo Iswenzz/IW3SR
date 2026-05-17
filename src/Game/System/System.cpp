@@ -41,6 +41,10 @@ namespace IW3SR
 			Keyboard::Process(msg, lParam);
 			break;
 
+		case WM_MOUSEMOVE:
+			Mouse::Process(msg, lParam);
+			break;
+
 		case WM_CHAR:
 			Keyboard::Process(msg, wParam);
 			break;
@@ -50,6 +54,32 @@ namespace IW3SR
 		if (UI::Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 			return true;
 		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
+	}
+
+	BOOL WINAPI GSystem::GetCursorPos(LPPOINT lpPoint)
+	{
+		if (UI::Open && lpPoint && Window::Handle)
+		{
+			RECT rc;
+			POINT center{};
+			const HWND hwnd = reinterpret_cast<HWND>(Window::Handle);
+			if (GetClientRect(hwnd, &rc))
+			{
+				center.x = (rc.right - rc.left) / 2;
+				center.y = (rc.bottom - rc.top) / 2;
+				ClientToScreen(hwnd, &center);
+				*lpPoint = center;
+				return TRUE;
+			}
+		}
+		return GetCursorPos_h.Original(lpPoint);
+	}
+
+	BOOL WINAPI GSystem::SetCursorPos(int X, int Y)
+	{
+		if (UI::Open)
+			return TRUE;
+		return SetCursorPos_h.Original(X, Y);
 	}
 
 	void GSystem::ExecuteSingleCommand(int localClientNum, int controllerIndex, char* cmd)
