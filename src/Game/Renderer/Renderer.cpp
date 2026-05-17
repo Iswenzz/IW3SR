@@ -93,15 +93,15 @@ namespace IW3SR
 
 	HRESULT GRenderer::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)
 	{
-		HRESULT hr = device->TestCooperativeLevel();
-		if (hr == D3DERR_DEVICELOST)
-			return hr;
+		HRESULT coop = device->TestCooperativeLevel();
+		if (coop == D3DERR_DEVICELOST)
+			return coop;
 
-		Renderer::ShutdownAssets();
-		ImGui_ImplAPI_InvalidateDeviceObjects();
-		hr = IDirect3DDevice9_Reset_h(device, pPresentationParameters);
-		ImGui_ImplAPI_CreateDeviceObjects();
-		Renderer::InitializeAssets();
+		Renderer::DeviceLost();
+
+		HRESULT hr = IDirect3DDevice9_Reset_h(device, pPresentationParameters);
+		if (SUCCEEDED(hr))
+			Renderer::DeviceReset();
 		return hr;
 	}
 
