@@ -53,6 +53,8 @@ namespace IW3SR
 			return true;
 		if (UI::Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 			return true;
+		if (UI::Active)
+			s_wmv->mouseInitialized = !UI::Open;
 		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
