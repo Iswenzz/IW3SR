@@ -7,6 +7,8 @@ namespace IW3SR
 		LoadLibraryA_h.Install();
 		LoadLibraryW_h.Install();
 		LoadLibraryExW_h.Install();
+
+		DisableCoD4X = false;
 	}
 
 	void Patch::Base()
