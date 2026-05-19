@@ -340,6 +340,22 @@ namespace IW3SR
 		void(__cdecl* function)();
 	};
 
+	struct kbutton_t
+	{
+		int down[2];
+		unsigned int downtime;
+		unsigned int msec;
+		bool active;
+		bool wasPressed;
+		char pad[2];
+	};
+
+	enum kbutton_e
+	{
+		KB_JUMP = 10,
+		KB_MOVEUP = 12,
+	};
+
 	union DvarLimits
 	{
 		struct

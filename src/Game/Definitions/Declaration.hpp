@@ -26,10 +26,11 @@ namespace IW3SR
 	API extern clientConnection_t& clc;
 	API extern cg_s* cgs;
 	API extern centity_s* cg_entities;
-	extern int& com_frameTime;
-	extern float& com_timescaleValue;
+	API extern int& com_frameTime;
+	API extern float& com_timescaleValue;
 	API extern int* g_entities;
 	API extern int* g_clients;
+	API extern kbutton_t* playersKb;
 	API extern pmove_t* pmove;
 	API extern playerState_s* ps_loc;
 	extern const char* g_entityBeginParsePoint;

@@ -27,6 +27,7 @@ namespace IW3SR
 	float& com_timescaleValue = Signature(0x1435D68);
 	int* g_entities = Signature(0x12885C4);
 	int* g_clients = Signature(0x13255A8);
+	kbutton_t* playersKb = Signature(0x8F1518);
 	pmove_t* pmove = Signature(0x8C9C90);
 	playerState_s* ps_loc = Signature(0x13255A8);
 
