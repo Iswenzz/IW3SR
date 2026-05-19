@@ -60,12 +60,6 @@ namespace IW3SR
 	extern Hook<HMODULE STDCALL(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)>
 		LoadLibraryExW_h;
 
-	extern Hook<BOOL WINAPI(LPPOINT lpPoint)>
-		GetCursorPos_h;
-
-	extern Hook<BOOL WINAPI(int X, int Y)>
-		SetCursorPos_h;
-
 	extern Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h;
 

@@ -64,12 +64,6 @@ namespace IW3SR
 	Hook<HMODULE STDCALL(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)>
 		LoadLibraryExW_h(LoadLibraryExW, GSystem::LoadDLLExW);
 
-	Hook<BOOL WINAPI(LPPOINT lpPoint)>
-		GetCursorPos_h(::GetCursorPos, GSystem::GetCursorPos);
-
-	Hook<BOOL WINAPI(int X, int Y)>
-		SetCursorPos_h(::SetCursorPos, GSystem::SetCursorPos);
-
 	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
 
