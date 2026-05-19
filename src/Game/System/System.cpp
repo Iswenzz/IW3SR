@@ -41,6 +41,10 @@ namespace IW3SR
 			Keyboard::Process(msg, lParam);
 			break;
 
+		case WM_MOUSEMOVE:
+			Mouse::Process(msg, lParam);
+			break;
+
 		case WM_CHAR:
 			Keyboard::Process(msg, wParam);
 			break;

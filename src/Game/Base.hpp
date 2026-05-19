@@ -10,6 +10,7 @@
 #include "Engine/Core/System/Plugin.hpp"
 #include "Engine/Core/System/System.hpp"
 #include "Engine/Core/System/ThreadPool.hpp"
+#include "Engine/Core/System/AssetManager.hpp"
 #include "Engine/Core/System/Window.hpp"
 #include "Engine/Renderer/Common.hpp"
 
