@@ -1,8 +1,8 @@
 #pragma once
 #include "Structs.hpp"
 
-#include "Core/Memory/Assembler.hpp"
-#include "Core/Memory/Function.hpp"
+#include "Engine/Core/Memory/Assembler.hpp"
+#include "Engine/Core/Memory/Function.hpp"
 
 // clang-format off
 namespace IW3SR

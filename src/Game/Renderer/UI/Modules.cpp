@@ -2,8 +2,6 @@
 
 #include "Game/Renderer/Modules/Modules.hpp"
 
-#include <set>
-
 namespace IW3SR::UC
 {
 	Modules::Modules() : Frame("Modules")

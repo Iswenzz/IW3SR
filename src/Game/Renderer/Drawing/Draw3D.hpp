@@ -1,6 +1,4 @@
 #pragma once
-#include "Game/Base.hpp"
-
 #include "Lines.hpp"
 
 namespace IW3SR

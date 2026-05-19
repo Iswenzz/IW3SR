@@ -1,11 +1,11 @@
 #include "About.hpp"
 
-#include "Game/System/System.hpp"
+#include "Engine/Core/IO/Zip.hpp"
+#include "Engine/Core/Network/HTTP.hpp"
+#include "Engine/Core/System/Environment.hpp"
+#include "Engine/Core/System/ThreadPool.hpp"
 
-#include "Core/IO/Zip.hpp"
-#include "Core/Network/HTTP.hpp"
-#include "Core/System/Environment.hpp"
-#include "Core/System/ThreadPool.hpp"
+#include "Game/System/System.hpp"
 
 #include <shellapi.h>
 
@@ -138,14 +138,14 @@ namespace IW3SR::UC
 		bool showStatus = !StatusMessage.empty();
 
 		SetRect(-200, -150, 400, 0);
-		Logo = Texture::Create(VFS::GetFile("Textures/Logo/sr.jpg"));
+		Logo = Texture::Load("Textures/Logo/sr.jpg");
 
 		Begin();
 		ImGui::Spacing();
 		ImGui::Spacing();
-		if (Logo && Logo->Data)
+		if (Logo)
 		{
-			ImGui::Image(Logo->Data, ImVec2(logoSize, logoSize));
+			ImGui::Image(std::static_pointer_cast<DX9Texture>(Logo)->Data, ImVec2(logoSize, logoSize));
 			ImGui::SameLine(0.0f, padding);
 		}
 		float rightWidth = ImGui::GetWindowSize().x - logoSize - padding * 3;

@@ -1,5 +1,5 @@
 #pragma once
-#include "Base.hpp"
+#include "Player/Base.hpp"
 
 namespace IW3SR::Addons
 {

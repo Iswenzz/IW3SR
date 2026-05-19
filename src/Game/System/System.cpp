@@ -53,6 +53,8 @@ namespace IW3SR
 			return true;
 		if (UI::Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 			return true;
+		if (UI::Active)
+			s_wmv->mouseInitialized = !UI::Open;
 		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
@@ -122,13 +124,10 @@ namespace IW3SR
 	{
 		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
 		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
-		static bool disableCoD4x = false;
 
-		if (name == "launcher.dll" && disableCoD4x)
+		if (name == "launcher.dll" && Patch::DisableCoD4X)
 			FreeLibrary(mod);
-		if (name.starts_with("cod4x") && disableCoD4x)
-			FreeLibrary(mod);
-		if (name.starts_with("cod4x") && !disableCoD4x)
+		if (name.starts_with("cod4x"))
 			Patch::CoD4X(mod);
 		return mod;
 	}

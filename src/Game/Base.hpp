@@ -1,26 +1,14 @@
 #pragma once
-#include "DX9/Common.hpp"
-#include "ImGUI/Common.hpp"
-#include "Renderer/Common.hpp"
+#include "Engine/Common.hpp"
+#include "Engine/Backend/DX9/Common.hpp"
+#include "Engine/Core/Browser/Browser.hpp"
 
-#include "Definitions/Declaration.hpp"
-#include "Definitions/Defines.hpp"
-#include "Definitions/Events.hpp"
-#include "Definitions/Functions.hpp"
-#include "Definitions/Hooks.hpp"
-#include "Definitions/Structs.hpp"
-
-#include "Core/Console/Console.hpp"
-#include "Core/IO/VFS.hpp"
-#include "Core/Memory/Memory.hpp"
-#include "Core/System/Crash.hpp"
-#include "Core/System/Environment.hpp"
-#include "Core/System/Plugins.hpp"
-#include "Core/System/System.hpp"
-#include "Core/System/ThreadPool.hpp"
-#include "Core/System/Window.hpp"
-
-#include "Renderer/Resources/Browser.hpp"
+#include "Game/Definitions/Declaration.hpp"
+#include "Game/Definitions/Defines.hpp"
+#include "Game/Definitions/Events.hpp"
+#include "Game/Definitions/Functions.hpp"
+#include "Game/Definitions/Hooks.hpp"
+#include "Game/Definitions/Structs.hpp"
 
 // clang-format off
 namespace IW3SR { };

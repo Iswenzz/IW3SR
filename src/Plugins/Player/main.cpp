@@ -1,12 +1,12 @@
 #include "Base.hpp"
 
-#include "Modules/CEF.hpp"
-#include "Modules/CGAZ.hpp"
-#include "Modules/FPS.hpp"
-#include "Modules/KMOV.hpp"
-#include "Modules/Lagometer.hpp"
-#include "Modules/Movements.hpp"
-#include "Modules/Velocity.hpp"
+#include "Player/Modules/CEF.hpp"
+#include "Player/Modules/CGAZ.hpp"
+#include "Player/Modules/FPS.hpp"
+#include "Player/Modules/KMOV.hpp"
+#include "Player/Modules/Lagometer.hpp"
+#include "Player/Modules/Movements.hpp"
+#include "Player/Modules/Velocity.hpp"
 
 PLUGIN void Initialize()
 {

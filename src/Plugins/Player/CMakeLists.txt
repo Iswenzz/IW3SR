@@ -5,7 +5,7 @@ add_subdirectory(Movements)
 
 # Build
 target_link_libraries(Player PRIVATE IW3SR.API)
-target_include_directories(Player PRIVATE .)
+target_include_directories(Player PRIVATE ..)
 target_sources(Player PRIVATE main.cpp Base.hpp)
 target_precompile_headers(Player PRIVATE Base.hpp)
 

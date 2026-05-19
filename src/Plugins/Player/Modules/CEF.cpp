@@ -26,11 +26,11 @@ namespace IW3SR::Addons
 
 	void CEF::Menu()
 	{
-		if (!Browser::Open || !Browser::Texture || !Browser::Texture->Data)
+		if (!Browser::Open || !Browser::Texture)
 			return;
 
 		std::scoped_lock lock(Browser::TextureMutex);
-		Draw2D::Rect(Browser::Texture, MenuFrame.RenderPosition, MenuFrame.RenderSize, vec4(1));
+		Draw2D::DrawQuad(vec3(MenuFrame.RenderPosition, 0), MenuFrame.RenderSize, 0, Browser::Texture, vec4(1));
 		auto host = Browser::Instance->GetHost();
 
 		uint32_t modifiers = 0;

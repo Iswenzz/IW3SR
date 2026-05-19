@@ -8,6 +8,7 @@ namespace IW3SR
 	public:
 		static inline bool UseBase;
 		static inline bool UseCoD4X;
+		static inline bool DisableCoD4X;
 
 		static void Initialize();
 		static void Base();

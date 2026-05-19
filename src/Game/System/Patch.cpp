@@ -7,6 +7,8 @@ namespace IW3SR
 		LoadLibraryA_h.Install();
 		LoadLibraryW_h.Install();
 		LoadLibraryExW_h.Install();
+
+		DisableCoD4X = false;
 	}
 
 	void Patch::Base()
@@ -111,6 +113,7 @@ namespace IW3SR
 		db_xassetPool = Signature(0x488F05).DeRef();
 		g_poolSize = Signature(0x488F0F).DeRef();
 		XAssetStdCount = Signature(COD4X_BASE + 0x43161C0);
+		s_wmv = Signature(COD4X_BASE + 0x43427C0);
 
 		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 60 E8 ?? ?? ?? ?? 83 F8 02 74 ?? C7 44 24 04"));
 		CL_FinishMove_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 15 ?? ?? ?? ?? 8B 44 24 10 88 50 14 8B 15"));

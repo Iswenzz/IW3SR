@@ -1,7 +1,7 @@
 #include "Base.hpp"
 
-#include "Modules/Texts.hpp"
-#include "Modules/Tweaks.hpp"
+#include "Graphics/Modules/Texts.hpp"
+#include "Graphics/Modules/Tweaks.hpp"
 
 PLUGIN void Initialize()
 {

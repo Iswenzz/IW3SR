@@ -1,8 +1,8 @@
 #include "Base.hpp"
 
-#include "Renderer/Modules/Modules.hpp"
-#include "System/Console.hpp"
-#include "System/Patch.hpp"
+#include "Game/Renderer/Modules/Modules.hpp"
+#include "Game/System/Console.hpp"
+#include "Game/System/Patch.hpp"
 
 void Application::Start()
 {

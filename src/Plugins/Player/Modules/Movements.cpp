@@ -1,6 +1,7 @@
 #include "Movements.hpp"
-#include "Movements/CS.hpp"
-#include "Movements/Q3.hpp"
+
+#include "Player/Movements/CS.hpp"
+#include "Player/Movements/Q3.hpp"
 
 namespace IW3SR::Addons
 {

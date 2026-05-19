@@ -1,11 +1,10 @@
 #include "Renderer.hpp"
 
-#include "Drawing/Draw2D.hpp"
-#include "Drawing/Draw3D.hpp"
-#include "Modules/Modules.hpp"
-#include "UI/About.hpp"
-#include "UI/UI.hpp"
-
+#include "Game/Renderer/Drawing/Draw2D.hpp"
+#include "Game/Renderer/Drawing/Draw3D.hpp"
+#include "Game/Renderer/Modules/Modules.hpp"
+#include "Game/Renderer/UI/About.hpp"
+#include "Game/Renderer/UI/UI.hpp"
 #include "Game/System/System.hpp"
 
 namespace IW3SR
@@ -20,8 +19,8 @@ namespace IW3SR
 		Dvar::Initialize();
 		Modules::Deserialize();
 
-		Device::Swap(dx->d3d9, dx->device);
-		Renderer::Initialize();
+		DX9GraphicsContext::Swap(dx->d3d9, dx->device);
+		Renderer::Initialize(RendererBackend::DX9);
 		GUI::Initialize();
 	}
 
@@ -93,15 +92,20 @@ namespace IW3SR
 
 	HRESULT GRenderer::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)
 	{
-		HRESULT coop = device->TestCooperativeLevel();
-		if (coop == D3DERR_DEVICELOST)
-			return coop;
+		HRESULT hr = device->TestCooperativeLevel();
+		if (hr != D3D_OK && hr != D3DERR_DEVICENOTRESET)
+			return IDirect3DDevice9_Reset_h(device, pPresentationParameters);
 
-		Renderer::DeviceLost();
+		GPUResource::NotifyBeforeReset();
+		ImGui_ImplAPI_InvalidateDeviceObjects();
+		hr = IDirect3DDevice9_Reset_h(device, pPresentationParameters);
 
-		HRESULT hr = IDirect3DDevice9_Reset_h(device, pPresentationParameters);
 		if (SUCCEEDED(hr))
-			Renderer::DeviceReset();
+		{
+			DX9GraphicsContext::PresentParameters = *pPresentationParameters;
+			GPUResource::NotifyAfterReset();
+			ImGui_ImplAPI_CreateDeviceObjects();
+		}
 		return hr;
 	}
 
@@ -112,10 +116,10 @@ namespace IW3SR
 			const auto material = rgp->sortedMaterials[i];
 			const std::string_view name = material->info.name;
 
-			if (name == "mc/sr_screen" && Browser::Open && Browser::Texture && Browser::Texture->Data)
+			if (name == "mc/sr_screen" && Browser::Open && Browser::Texture)
 			{
 				material->textureTable[0].u.image->texture.map =
-					reinterpret_cast<IDirect3DTexture9*>(Browser::Texture->Data);
+					std::static_pointer_cast<DX9Texture>(Browser::Texture)->Data;
 			}
 		}
 		for (int i = 0; i < rgp->world->reflectionProbeCount; i++)
