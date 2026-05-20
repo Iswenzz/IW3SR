@@ -33,7 +33,7 @@ namespace IW3SR::Addons
 	void CEF::OnRender()
 	{
 		if (Instance)
-			Instance->Show = MenuFrame.Open;
+			Instance->Show = UI::Open && MenuFrame.Open;
 
 		Browser::Frame();
 	}
