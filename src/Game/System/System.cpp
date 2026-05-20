@@ -58,6 +58,13 @@ namespace IW3SR
 			Keyboard::Process(msg, wParam);
 			break;
 
+		case WM_SIZE:
+			Window::Size = vec2(LOWORD(lParam), HIWORD(lParam));
+			Window::IsMinimized = wParam == SIZE_MINIMIZED;
+			if (Renderer::Active && !Window::IsMinimized)
+				Renderer::Resize(Window::Size);
+			break;
+
 		case WM_CLOSE:
 			UI::Open = false;
 			break;
