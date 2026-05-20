@@ -57,6 +57,10 @@ namespace IW3SR
 		case WM_CHAR:
 			Keyboard::Process(msg, wParam);
 			break;
+
+		case WM_CLOSE:
+			UI::Open = false;
+			break;
 		}
 		if (UI::KeyOpen.IsPressed())
 			return true;
