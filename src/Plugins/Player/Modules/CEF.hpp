@@ -6,6 +6,7 @@ namespace IW3SR::Addons
 	class CEF : public Module
 	{
 	public:
+		Ref<BrowserInstance> Instance;
 		bool Open = false;
 
 		CEF();
@@ -13,8 +14,8 @@ namespace IW3SR::Addons
 
 		void Initialize() override;
 		void Release() override;
-		void Menu() override;
 
 		void OnExecuteCommand(EventClientCommand& event) override;
+		void OnRender() override;
 	};
 }

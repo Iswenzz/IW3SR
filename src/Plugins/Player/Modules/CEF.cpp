@@ -10,31 +10,31 @@ namespace IW3SR::Addons
 
 	void CEF::Initialize()
 	{
-		MenuFrame.Position = Browser::MenuPosition;
-		MenuFrame.Size = Browser::MenuSize;
-
-		Browser::Start();
-
-		if (Browser::Open)
-			Browser::SetURL(Dvar::Get<char*>("cef_url"));
+		Instance = Browser::Add("browser", Dvar::Get<char*>("cef_url"), { 20, 20 }, { 500, 300 });
+		MenuFrame.Position = Instance->Position;
+		MenuFrame.Size = Instance->Size;
 	}
 
 	void CEF::Release()
 	{
-		Browser::Stop();
-	}
-
-	void CEF::Menu()
-	{
-		Browser::Frame();
+		Browser::Remove("browser");
+		Instance = nullptr;
 	}
 
 	void CEF::OnExecuteCommand(EventClientCommand& event)
 	{
-		if (!Browser::Open)
+		if (!Instance->Open)
 			return;
 
 		if (event.command.starts_with("cef_url"))
-			Browser::SetURL(Dvar::Get<char*>("cef_url"));
+			Browser::SetURL(Instance, Dvar::Get<char*>("cef_url"));
+	}
+
+	void CEF::OnRender()
+	{
+		if (Instance)
+			Instance->Show = MenuFrame.Open;
+
+		Browser::Frame();
 	}
 }

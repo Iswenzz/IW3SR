@@ -116,10 +116,14 @@ namespace IW3SR
 			const auto material = rgp->sortedMaterials[i];
 			const std::string_view name = material->info.name;
 
-			if (name == "mc/sr_screen" && Browser::Open && Browser::Texture)
+			if (name == "mc/sr_screen")
 			{
-				material->textureTable[0].u.image->texture.map =
-					std::static_pointer_cast<DX9Texture>(Browser::Texture)->Data;
+				auto instance = Browser::Get("browser");
+				if (instance->Open && instance->Texture)
+				{
+					material->textureTable[0].u.image->texture.map =
+						std::static_pointer_cast<DX9Texture>(instance->Texture)->Data;
+				}
 			}
 		}
 		for (int i = 0; i < rgp->world->reflectionProbeCount; i++)
@@ -165,9 +169,6 @@ namespace IW3SR
 
 		EventRendererText event(buffer, font, { x, y }, { xScale, yScale }, color);
 		Application::Dispatch(event);
-
-		if (GSystem::ExitRequested)
-			Cmd_ExecuteSingleCommand(0, 0, "quit\n");
 	}
 
 	void GRenderer::AddCmdDrawTextWithEffects(const char* text, int maxChars, Font_s* font, float x, float y,
