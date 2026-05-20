@@ -67,6 +67,9 @@ namespace IW3SR
 	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
 
+	Hook<void STDCALL(int tickRate)>
+		PbServerProcessEvents_h(0x5C13C0, GSystem::MainLoop);
+
 	Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_WalkMove_h(0x40F7A0, PMove::WalkMove);
 

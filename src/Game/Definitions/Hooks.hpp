@@ -63,6 +63,9 @@ namespace IW3SR
 	extern Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h;
 
+	extern Hook<void STDCALL(int tickRate)>
+		PbServerProcessEvents_h;
+
 	extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_WalkMove_h;
 

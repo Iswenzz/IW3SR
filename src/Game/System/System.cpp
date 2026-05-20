@@ -6,12 +6,21 @@ namespace IW3SR
 	void GSystem::Initialize()
 	{
 		Com_PlayIntroMovies_h();
-		Browser::Initialize();
+
+		Browser::Initialize(true);
 	}
 
 	void GSystem::Shutdown(int localClientNum)
 	{
 		Browser::Shutdown();
+	}
+
+	void GSystem::MainLoop(int tickRate)
+	{
+		PbServerProcessEvents_h(tickRate);
+
+		if (ExitRequested)
+			Cmd_ExecuteSingleCommand(0, 0, "quit\n");
 	}
 
 	HWND GSystem::CreateMainWindow(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X,

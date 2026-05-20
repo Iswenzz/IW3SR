@@ -54,6 +54,7 @@ namespace IW3SR
 		CL_Disconnect_h.Install();
 		CL_FinishMove_h.Install();
 		MainWndProc_h.Install();
+		PbServerProcessEvents_h.Install();
 		PM_WalkMove_h.Install();
 		PM_AirMove_h.Install();
 		PM_GroundTrace_h.Install();

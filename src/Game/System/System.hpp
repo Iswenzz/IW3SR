@@ -10,6 +10,7 @@ namespace IW3SR
 
 		static void Initialize();
 		static void Shutdown(int localClientNum);
+		static void STDCALL MainLoop(int tickRate);
 
 		static HWND STDCALL CreateMainWindow(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle,
 			int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
