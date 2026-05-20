@@ -13,6 +13,7 @@ namespace IW3SR::Addons
 	class Movements : public Module
 	{
 	public:
+		Bind KeyBhop;
 		Bind KeyBhopToggle;
 		Text BhopText;
 
@@ -38,6 +39,7 @@ namespace IW3SR::Addons
 		void SetCrashLand(bool state);
 		void InterpolateViewForMover();
 
-		SERIALIZE_POLY(Movements, Module, KeyBhopToggle, BhopText, UseBhop, UseBhopToggle, UseInterpolateMovers)
+		SERIALIZE_POLY(Movements, Module, KeyBhop, KeyBhopToggle, BhopText, UseBhop, UseBhopToggle,
+			UseInterpolateMovers)
 	};
 }
