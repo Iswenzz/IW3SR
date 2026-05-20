@@ -1,7 +1,9 @@
 #pragma once
 #include "Engine/Common.hpp"
+
 #include "Engine/Backend/DX9/Common.hpp"
 #include "Engine/Core/Browser/Browser.hpp"
+#include "Engine/Core/Memory/PointerSwap.hpp"
 
 #include "Game/Definitions/Declaration.hpp"
 #include "Game/Definitions/Defines.hpp"

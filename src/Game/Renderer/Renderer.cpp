@@ -26,6 +26,8 @@ namespace IW3SR
 
 	void GRenderer::Shutdown(int window)
 	{
+		Swaps.Clear();
+
 		Renderer::Shutdown();
 		Modules::Serialize();
 
@@ -92,6 +94,8 @@ namespace IW3SR
 
 	HRESULT GRenderer::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)
 	{
+		DX9GraphicsContext::PresentParameters = *pPresentationParameters;
+
 		HRESULT hr = device->TestCooperativeLevel();
 		if (hr != D3D_OK && hr != D3DERR_DEVICENOTRESET)
 			return IDirect3DDevice9_Reset_h(device, pPresentationParameters);
@@ -102,7 +106,6 @@ namespace IW3SR
 
 		if (SUCCEEDED(hr))
 		{
-			DX9GraphicsContext::PresentParameters = *pPresentationParameters;
 			GPUResource::NotifyAfterReset();
 			ImGui_ImplAPI_CreateDeviceObjects();
 		}
@@ -119,10 +122,11 @@ namespace IW3SR
 			if (name == "mc/sr_screen")
 			{
 				auto instance = Browser::Get("browser");
-				if (instance->Open && instance->Texture)
+				if (instance && instance->Open && instance->Texture)
 				{
-					material->textureTable[0].u.image->texture.map =
-						std::static_pointer_cast<DX9Texture>(instance->Texture)->Data;
+					auto dxTexture = std::static_pointer_cast<DX9Texture>(instance->Texture);
+					Swaps.Add("sr_screen", reinterpret_cast<void**>(&material->textureTable[0].u.image->texture.map),
+						dxTexture->Data);
 				}
 			}
 		}
@@ -130,7 +134,11 @@ namespace IW3SR
 		{
 			const auto probe = &rgp->world->reflectionProbes[i];
 			if (IsRedCubemap(probe->reflectionImage->texture.cubemap))
-				probe->reflectionImage->texture.cubemap = rgp->blackImageCube->texture.cubemap;
+			{
+				Swaps.Add(std::format("probe_{}", i),
+					reinterpret_cast<void**>(&probe->reflectionImage->texture.cubemap),
+					rgp->blackImageCube->texture.cubemap);
+			}
 		}
 	}
 

@@ -25,6 +25,8 @@ namespace IW3SR
 			int fxDecayDuration);
 
 	private:
+		static inline PointerSwap Swaps;
+
 		static bool IsRedCubemap(IDirect3DCubeTexture9* cubemap);
 	};
 }
