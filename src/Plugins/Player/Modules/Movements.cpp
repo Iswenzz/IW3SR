@@ -157,7 +157,7 @@ namespace IW3SR::Addons
 			// Clear jump while in air so oldcmd is clean on landing
 			else if (!(ps->pm_flags & PMF_MANTLE) && !(ps->pm_flags & PMF_LADDER))
 			{
-				cmd->buttons &= ~BUTTON_JUMP;
+				cmd->buttons &= ~(BUTTON_JUMP | BUTTON_SPRINT);
 			}
 		}
 		if (BhopToggled && PMove::OnGround())
