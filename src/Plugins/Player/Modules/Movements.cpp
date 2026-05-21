@@ -141,12 +141,24 @@ namespace IW3SR::Addons
 		{
 			if (PMove::OnGround())
 			{
-				clients->stance = CL_STANCE_STAND;
-				cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD | BUTTON_PRONE | BUTTON_PRONE_HOLD);
-				cmd->buttons |= BUTTON_JUMP;
+				// Set jump only when 500ms cooldown has expired, otherwise Jump_Check returns
+				if (ps->commandTime - ps->jumpTime >= 500)
+				{
+					clients->stance = CL_STANCE_STAND;
+					cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD | BUTTON_PRONE | BUTTON_PRONE_HOLD);
+					cmd->buttons |= BUTTON_JUMP;
+				}
+				// Clear jump during cooldown to keep oldcmd clean for edge detection when it expires
+				else
+				{
+					cmd->buttons &= ~BUTTON_JUMP;
+				}
 			}
+			// Clear jump while in air so oldcmd is clean on landing
 			else if (!(ps->pm_flags & PMF_MANTLE) && !(ps->pm_flags & PMF_LADDER))
+			{
 				cmd->buttons &= ~BUTTON_JUMP;
+			}
 		}
 		if (BhopToggled && PMove::OnGround())
 		{
