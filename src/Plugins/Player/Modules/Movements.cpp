@@ -145,7 +145,7 @@ namespace IW3SR::Addons
 				cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD | BUTTON_PRONE | BUTTON_PRONE_HOLD);
 				cmd->buttons |= BUTTON_JUMP;
 			}
-			else
+			else if (!(ps->pm_flags & PMF_MANTLE) && !(ps->pm_flags & PMF_LADDER))
 				cmd->buttons &= ~BUTTON_JUMP;
 		}
 		if (BhopToggled && PMove::OnGround())

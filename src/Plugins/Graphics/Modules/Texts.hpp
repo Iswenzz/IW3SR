@@ -25,8 +25,8 @@ namespace IW3SR::Addons
 		void OnRender() override;
 
 	private:
-		static inline std::vector<EmojiCommand> EmojiCommands;
-		static inline std::unordered_map<std::string, Ref<Texture>> EmojiMap;
+		std::vector<EmojiCommand> EmojiCommands;
+		std::unordered_map<std::string, Ref<Texture>> EmojiMap;
 
 		SERIALIZE_POLY(Texts, Module, UseEmojis)
 	};
