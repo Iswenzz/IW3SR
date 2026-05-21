@@ -158,12 +158,10 @@ namespace IW3SR::Addons
 					cmd->buttons &= ~BUTTON_JUMP;
 				}
 			}
-			// Clear jump while in air so oldcmd is clean on landing
-			else if (!inMantle && !inLadder)
+			// Clear jump while in air so oldcmd is clean on landing, preserve on mantle and ladder
+			else if (!inMantle && !inLadder && !mantleAvailable)
 			{
-				// Preserve jump if mantle surface is available
-				if (!mantleAvailable)
-					cmd->buttons &= ~(BUTTON_JUMP | BUTTON_SPRINT);
+				cmd->buttons &= ~(BUTTON_JUMP | BUTTON_SPRINT);
 			}
 		}
 		if (BhopToggled && PMove::OnGround())
