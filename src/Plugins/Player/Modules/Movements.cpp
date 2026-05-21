@@ -139,6 +139,10 @@ namespace IW3SR::Addons
 
 		if (UseBhop && KeyBhop.IsDown())
 		{
+			bool inMantle = ps->pm_flags & PMF_MANTLE;
+			bool inLadder = ps->pm_flags & PMF_LADDER;
+			bool mantleAvailable = ps->mantleState.flags & 8;
+
 			if (PMove::OnGround())
 			{
 				// Set jump only when 500ms cooldown has expired, otherwise Jump_Check returns
@@ -155,9 +159,11 @@ namespace IW3SR::Addons
 				}
 			}
 			// Clear jump while in air so oldcmd is clean on landing
-			else if (!(ps->pm_flags & PMF_MANTLE) && !(ps->pm_flags & PMF_LADDER))
+			else if (!inMantle && !inLadder)
 			{
-				cmd->buttons &= ~(BUTTON_JUMP | BUTTON_SPRINT);
+				// Preserve jump if mantle surface is available
+				if (!mantleAvailable)
+					cmd->buttons &= ~(BUTTON_JUMP | BUTTON_SPRINT);
 			}
 		}
 		if (BhopToggled && PMove::OnGround())
