@@ -28,6 +28,7 @@ namespace IW3SR
 	{
 		Swaps.Clear();
 
+		Browser::ReleaseTextures();
 		Renderer::Shutdown();
 		Modules::Serialize();
 
@@ -86,6 +87,11 @@ namespace IW3SR
 
 	void GRenderer::Frame(IDirect3DDevice9* device)
 	{
+		if (PendingMaterialUpdate)
+		{
+			PendingMaterialUpdate = false;
+			UpdateMaterials();
+		}
 		Renderer::Frame();
 		Console::Frame();
 
@@ -100,6 +106,9 @@ namespace IW3SR
 		if (hr != D3D_OK && hr != D3DERR_DEVICENOTRESET)
 			return IDirect3DDevice9_Reset_h(device, pPresentationParameters);
 
+		Swaps.Clear();
+		auto browserLocks = Browser::LockTextures();
+
 		GPUResource::NotifyBeforeReset();
 		ImGui_ImplAPI_InvalidateDeviceObjects();
 		hr = IDirect3DDevice9_Reset_h(device, pPresentationParameters);
@@ -108,12 +117,16 @@ namespace IW3SR
 		{
 			GPUResource::NotifyAfterReset();
 			ImGui_ImplAPI_CreateDeviceObjects();
+			PendingMaterialUpdate = true;
 		}
 		return hr;
 	}
 
 	void GRenderer::UpdateMaterials()
 	{
+		if (!rgp->world)
+			return;
+
 		for (int i = 0; i < rgp->materialCount; i++)
 		{
 			const auto material = rgp->sortedMaterials[i];
