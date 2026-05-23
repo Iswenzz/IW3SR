@@ -87,18 +87,13 @@ namespace IW3SR
 
 	void GRenderer::Frame(IDirect3DDevice9* device)
 	{
-		if (NeedsMaterialUpdate)
+		if (PendingMaterialUpdate)
 		{
-			NeedsMaterialUpdate = false;
+			PendingMaterialUpdate = false;
 			UpdateMaterials();
 		}
-
-		DX9GraphicsContext::SaveState();
-
 		Renderer::Frame();
 		Console::Frame();
-
-		DX9GraphicsContext::RestoreState();
 
 		IDirect3DDevice9_EndScene_h(device);
 	}
@@ -112,9 +107,6 @@ namespace IW3SR
 			return IDirect3DDevice9_Reset_h(device, pPresentationParameters);
 
 		Swaps.Clear();
-
-		DX9GraphicsContext::ReleaseStateBlock();
-
 		auto browserLocks = Browser::LockTextures();
 
 		GPUResource::NotifyBeforeReset();
@@ -125,13 +117,16 @@ namespace IW3SR
 		{
 			GPUResource::NotifyAfterReset();
 			ImGui_ImplAPI_CreateDeviceObjects();
-			NeedsMaterialUpdate = true;
+			PendingMaterialUpdate = true;
 		}
 		return hr;
 	}
 
 	void GRenderer::UpdateMaterials()
 	{
+		if (!rgp->world)
+			return;
+
 		for (int i = 0; i < rgp->materialCount; i++)
 		{
 			const auto material = rgp->sortedMaterials[i];
@@ -148,8 +143,6 @@ namespace IW3SR
 				}
 			}
 		}
-		if (!rgp->world)
-			return;
 		for (int i = 0; i < rgp->world->reflectionProbeCount; i++)
 		{
 			const auto probe = &rgp->world->reflectionProbes[i];
