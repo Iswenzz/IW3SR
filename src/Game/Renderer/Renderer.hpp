@@ -27,7 +27,6 @@ namespace IW3SR
 	private:
 		static inline PointerSwap Swaps;
 		static inline bool NeedsMaterialUpdate = false;
-		static inline IDirect3DStateBlock9* StateBlock = nullptr;
 
 		static bool IsRedCubemap(IDirect3DCubeTexture9* cubemap);
 	};

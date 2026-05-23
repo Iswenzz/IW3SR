@@ -28,12 +28,6 @@ namespace IW3SR
 	{
 		Swaps.Clear();
 
-		if (StateBlock)
-		{
-			StateBlock->Release();
-			StateBlock = nullptr;
-		}
-
 		Browser::ReleaseTextures();
 		Renderer::Shutdown();
 		Modules::Serialize();
@@ -99,16 +93,12 @@ namespace IW3SR
 			UpdateMaterials();
 		}
 
-		if (!StateBlock)
-			device->CreateStateBlock(D3DSBT_ALL, &StateBlock);
-		if (StateBlock)
-			StateBlock->Capture();
+		DX9GraphicsContext::SaveState();
 
 		Renderer::Frame();
 		Console::Frame();
 
-		if (StateBlock)
-			StateBlock->Apply();
+		DX9GraphicsContext::RestoreState();
 
 		IDirect3DDevice9_EndScene_h(device);
 	}
@@ -123,11 +113,7 @@ namespace IW3SR
 
 		Swaps.Clear();
 
-		if (StateBlock)
-		{
-			StateBlock->Release();
-			StateBlock = nullptr;
-		}
+		DX9GraphicsContext::ReleaseStateBlock();
 
 		auto browserLocks = Browser::LockTextures();
 
