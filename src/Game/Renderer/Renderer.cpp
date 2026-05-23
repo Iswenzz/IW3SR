@@ -28,14 +28,13 @@ namespace IW3SR
 	{
 		Swaps.Clear();
 
-		for (const auto& instance : Browser::Instances)
+		if (StateBlock)
 		{
-			if (!instance)
-				continue;
-			std::scoped_lock lock(instance->TextureMutex);
-			instance->Texture = nullptr;
+			StateBlock->Release();
+			StateBlock = nullptr;
 		}
 
+		Browser::ReleaseTextures();
 		Renderer::Shutdown();
 		Modules::Serialize();
 
@@ -100,8 +99,16 @@ namespace IW3SR
 			UpdateMaterials();
 		}
 
+		if (!StateBlock)
+			device->CreateStateBlock(D3DSBT_ALL, &StateBlock);
+		if (StateBlock)
+			StateBlock->Capture();
+
 		Renderer::Frame();
 		Console::Frame();
+
+		if (StateBlock)
+			StateBlock->Apply();
 
 		IDirect3DDevice9_EndScene_h(device);
 	}
@@ -115,6 +122,15 @@ namespace IW3SR
 			return IDirect3DDevice9_Reset_h(device, pPresentationParameters);
 
 		Swaps.Clear();
+
+		if (StateBlock)
+		{
+			StateBlock->Release();
+			StateBlock = nullptr;
+		}
+
+		auto browserLocks = Browser::LockTextures();
+
 		GPUResource::NotifyBeforeReset();
 		ImGui_ImplAPI_InvalidateDeviceObjects();
 		hr = IDirect3DDevice9_Reset_h(device, pPresentationParameters);
