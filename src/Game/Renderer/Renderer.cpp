@@ -28,9 +28,10 @@ namespace IW3SR
 	{
 		Swaps.Clear();
 
-		Browser::ReleaseTextures();
+		Browser::Lock();
 		Renderer::Shutdown();
 		Modules::Serialize();
+		Browser::Unlock();
 
 		R_Shutdown_h(window);
 	}
@@ -106,8 +107,8 @@ namespace IW3SR
 		if (hr != D3D_OK && hr != D3DERR_DEVICENOTRESET)
 			return IDirect3DDevice9_Reset_h(device, pPresentationParameters);
 
+		Browser::Lock();
 		Swaps.Clear();
-		auto browserLocks = Browser::LockTextures();
 
 		GPUResource::NotifyBeforeReset();
 		ImGui_ImplAPI_InvalidateDeviceObjects();
@@ -119,6 +120,7 @@ namespace IW3SR
 			ImGui_ImplAPI_CreateDeviceObjects();
 			PendingMaterialUpdate = true;
 		}
+		Browser::Unlock();
 		return hr;
 	}
 
