@@ -6,6 +6,9 @@
 #define pm_slick_accelerate 15.0f
 #define pm_crouch_accelerate 15.0f
 #define pm_prone_accelerate 10.0f
+#define jump_stepSize 18.0f
+#define jump_height 39.0f
+#define friction 5.5f
 
 #define cpm_air_control 150.0f
 #define cpm_air_accelerate 1.0f
@@ -54,7 +57,8 @@ namespace IW3SR::Addons
 
 		vec3 wishdir = wishvel;
 		float wishspeed = glm::length(wishdir) * scale;
-		wishdir = glm::normalize(wishdir);
+		if (wishspeed > 0.0f)
+			wishdir = glm::normalize(wishdir);
 
 		// Clamp the speed lower if ducking
 		if ((pm->ps->pm_flags & PMF_DUCKED) && (wishspeed > speed * pm_duck_scale))
@@ -83,7 +87,8 @@ namespace IW3SR::Addons
 		ClipVelocity(pm->ps->velocity, pml->groundTrace.normal, pm->ps->velocity, OVERCLIP);
 
 		// Don't decrease velocity when going up or down a slope
-		pm->ps->velocity = glm::normalize(pm->ps->velocity) * vel;
+		if (vel > 0.0f)
+			pm->ps->velocity = glm::normalize(pm->ps->velocity) * vel;
 
 		// Don't do anything if standing still
 		if (pm->ps->velocity[0] == 0.0f && pm->ps->velocity[1] == 0.0f)
@@ -120,7 +125,8 @@ namespace IW3SR::Addons
 		wishvel[2] = 0;
 		wishdir = wishvel;
 		wishspeed = glm::length(wishdir) * scale;
-		wishdir = glm::normalize(wishdir);
+		if (wishspeed > 0.0f)
+			wishdir = glm::normalize(wishdir);
 
 		float accel;
 		const float wishspeed2 = wishspeed;
@@ -297,7 +303,6 @@ namespace IW3SR::Addons
 		if (!(pm->cmd.buttons & PMF_JUMP_HELD))
 			return false;
 
-		const auto jump_height = Dvar::Get<float>("jump_height");
 		float jump_velocity = sqrt(static_cast<float>(pm->ps->gravity) * (jump_height + jump_height));
 
 		// Jump
@@ -315,8 +320,6 @@ namespace IW3SR::Addons
 
 	void Q3::Friction(pmove_t* pm, pml_t* pml)
 	{
-		const float friction = Dvar::Get<float>("friction");
-
 		vec3 vel = pm->ps->velocity;
 		if (pml->walking)
 			vel[2] = 0.0f; // Ignore slope movement
@@ -542,7 +545,6 @@ namespace IW3SR::Addons
 
 	void Q3::StepSlideMove(pmove_t* pm, pml_t* pml, bool gravity)
 	{
-		const float jump_stepSize = Dvar::Get<float>("jump_stepSize");
 		const bool use_bouncing = true;
 		trace_t trace = {};
 
