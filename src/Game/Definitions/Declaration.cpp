@@ -30,7 +30,6 @@ namespace IW3SR
 	kbutton_t* playersKb = Signature(0x8F1518);
 	pmove_t* pmove = Signature(0x8C9C90);
 	playerState_s* ps_loc = Signature(0x13255A8);
-
 	const char* g_entityBeginParsePoint = Signature(0x1113674);
 	const char* g_entityEndParsePoint = Signature(0x1113678);
 	int* client_activeNumber = Signature(0xCC5FF8);
@@ -39,6 +38,7 @@ namespace IW3SR
 	dvar_s** dvars = Signature(0xCBA7408);
 	int& dvarCount = Signature(0xCBA73F8);
 	int* server_fps = Signature(0xCBAB908);
+	animScriptData_t* globalScriptData = Signature(0x5EC414);
 
 	// Render
 	DxGlobals* dx = Signature(0xCC9A400);

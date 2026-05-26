@@ -40,6 +40,7 @@ namespace IW3SR
 	API extern WeaponDef** bg_weaponNames;
 	extern dvar_s** dvars;
 	extern int& dvarCount;
+	extern animScriptData_t* globalScriptData;
 
 	// Render
 	API extern DxGlobals* dx;

@@ -182,9 +182,9 @@ namespace IW3SR::Addons
 		{
 			// Go into jump animation
 			if (pm->cmd.forwardmove >= 0)
-				pm->ps->pm_flags &= ~PMF_BACKWARDS_JUMP;
+				pm->ps->pm_flags &= ~PMF_BACKWARDS_RUN;
 			else
-				pm->ps->pm_flags |= PMF_BACKWARDS_JUMP;
+				pm->ps->pm_flags |= PMF_BACKWARDS_RUN;
 
 			pm->ps->groundEntityNum = ENTITYNUM_NONE;
 			pml->groundPlane = false;
@@ -290,7 +290,7 @@ namespace IW3SR::Addons
 
 	bool Q3::JumpCheck(pmove_t* pm, pml_t* pml)
 	{
-		if (pm->ps->pm_flags & PMF_RESPAWNED)
+		if (pm->ps->pm_flags & PMF_NO_JUMP)
 			return false;
 		if (pm->ps->pm_flags & PMF_JUMP_HELD)
 			return false;

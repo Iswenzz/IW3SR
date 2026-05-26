@@ -36,7 +36,7 @@ namespace IW3SR::Addons
 
 	private:
 		void Bhop(playerState_s* ps, usercmd_s* cmd);
-		void SetCrashLand(bool state);
+		void SetHardLanding(bool state);
 		void InterpolateViewForMover();
 
 		SERIALIZE_POLY(Movements, Module, KeyBhop, KeyBhopToggle, BhopText, UseBhop, UseBhopToggle,

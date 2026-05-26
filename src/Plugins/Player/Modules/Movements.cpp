@@ -24,14 +24,9 @@ namespace IW3SR::Addons
 	{
 		int mode = Dvar::Get<int>("pm_mode");
 
-		ImGui::Button(ICON_FA_CIRCLE_INFO);
-		ImGui::Tooltip("Use devmap to enable movement modifications.");
-		ImGui::BeginDisabled(!Dvar::Get<bool>("sv_running"));
-		ImGui::SameLine();
-
 		if (ImGui::RadioButton("CoD4", &mode, 0))
 		{
-			SetCrashLand(true);
+			SetHardLanding(true);
 
 			Dvar::Set<MovementMode>("pm_mode", MovementMode::COD4);
 			Dvar::Set<int>("g_speed", 190);
@@ -45,7 +40,7 @@ namespace IW3SR::Addons
 		ImGui::SameLine();
 		if (ImGui::RadioButton("Q3", &mode, 1))
 		{
-			SetCrashLand(false);
+			SetHardLanding(false);
 
 			Dvar::Set<MovementMode>("pm_mode", MovementMode::Q3);
 			Dvar::Set<int>("g_speed", 320);
@@ -59,7 +54,7 @@ namespace IW3SR::Addons
 		ImGui::SameLine();
 		if (ImGui::RadioButton("CS", &mode, 2))
 		{
-			SetCrashLand(false);
+			SetHardLanding(false);
 
 			Dvar::Set<MovementMode>("pm_mode", MovementMode::CS);
 			Dvar::Set<int>("g_speed", 190);
@@ -70,7 +65,6 @@ namespace IW3SR::Addons
 			Dvar::Set<float>("bg_bobMax", 8.0f);
 			Dvar::Set<float>("friction", 5.5f);
 		}
-		ImGui::EndDisabled();
 		ImGui::Checkbox("Interpolate Movers", &UseInterpolateMovers);
 		ImGui::Tooltip("Smooth camera interpolation on moving and rotating platforms.");
 
@@ -171,11 +165,18 @@ namespace IW3SR::Addons
 		}
 	}
 
-	void Movements::SetCrashLand(bool state)
+	void Movements::SetHardLanding(bool state)
 	{
-		Memory::Write(0x410315, "\xD9\x46\x28\xDD\x05");
-		if (!state)
+		if (state)
+		{
+			// Original code
+			Memory::Write(0x410315, "\xD9\x46\x28\xDD\x05");
+		}
+		else
+		{
+			// Skip the hard landing section in PM_CrashLand
 			Memory::JMP(0x410315, 0x410333);
+		}
 	}
 
 	void Movements::InterpolateViewForMover()

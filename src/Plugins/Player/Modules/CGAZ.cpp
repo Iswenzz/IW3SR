@@ -153,7 +153,7 @@ namespace IW3SR::Addons
 		float total = sqrt(static_cast<float>(cmd->rightmove * cmd->rightmove + cmd->forwardmove * cmd->forwardmove));
 		float scale = static_cast<float>(ps->speed * max) / (total * 127.0f);
 
-		if (ps->pm_flags & PMF_LEAN || 0.0f != ps->leanf)
+		if (ps->pm_flags & PMF_WALKING || 0.0f != ps->leanf)
 			scale *= 0.4f;
 		if (ps->pm_type == PM_NOCLIP)
 			scale *= 3.0f;
@@ -182,7 +182,7 @@ namespace IW3SR::Addons
 			return 0.0f;
 
 		float scale = static_cast<float>(pm.ps->speed) * speed / (127.0f * total);
-		if (pm.ps->pm_flags & PMF_LEAN || pm.ps->leanf != 0.0f || isProne)
+		if (pm.ps->pm_flags & PMF_WALKING || pm.ps->leanf != 0.0f || isProne)
 			scale *= 0.40000001f;
 		if (pm.ps->pm_flags & PMF_SPRINTING && pm.ps->viewHeightTarget == 60)
 			scale *= player_sprintSpeedScale;
@@ -196,7 +196,7 @@ namespace IW3SR::Addons
 		const auto weapon = bg_weaponNames[pm.ps->weapon];
 		if (weapon)
 		{
-			if (!pm.ps->weapon || weapon->moveSpeedScale <= 0.0f || pm.ps->pm_flags & PMF_LEAN || isProne)
+			if (!pm.ps->weapon || weapon->moveSpeedScale <= 0.0f || pm.ps->pm_flags & PMF_WALKING || isProne)
 			{
 				if (pm.ps->weapon && weapon->adsMoveSpeedScale > 0.0f)
 					scale = scale * weapon->adsMoveSpeedScale;
