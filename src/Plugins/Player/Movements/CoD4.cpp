@@ -51,4 +51,10 @@ namespace IW3SR::Addons
 			out[2] = newZ * lengthScale;
 		}
 	}
+
+	void CoD4::JumpClearState(playerState_s* ps)
+	{
+		ps->pm_flags &= ~PMF_JUMPING;
+		ps->jumpOriginZ = 0.0;
+	}
 }

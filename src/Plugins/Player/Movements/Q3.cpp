@@ -1,19 +1,18 @@
 #include "Q3.hpp"
 
+#define pm_friction 6.0f
 #define pm_duck_scale 0.5f
 #define pm_prone_scale 0.25f
 #define pm_accelerate 15.0f
 #define pm_slick_accelerate 15.0f
 #define pm_crouch_accelerate 15.0f
 #define pm_prone_accelerate 10.0f
-#define jump_stepSize 18.0f
+#define pm_aircontrol 150.0f
+#define pm_airaccelerate 1.0f
+#define pm_airstopaccelerate 3.0f
+#define pm_strafeaccelerate 70.0f
+#define pm_stepsize 18.0f
 #define jump_height 39.0f
-#define friction 5.5f
-
-#define cpm_air_control 150.0f
-#define cpm_air_accelerate 1.0f
-#define cpm_airstop_accelerate 3.0f
-#define cpm_strafe_accelerate 70.0f
 
 #define OVERCLIP 1.001f
 #define CPM_PM_CLIPTIME 200
@@ -32,8 +31,9 @@ namespace IW3SR::Addons
 
 		const float forwardmove = pm->cmd.forwardmove;
 		const float rightmove = pm->cmd.rightmove;
-		usercmd_s cmd = pm->cmd;
-		const float scale = CmdScale(pm->ps, &cmd);
+		const float scale = CoD4::CmdScale(pm->ps, &pm->cmd);
+
+		pm->ps->sprintState.sprintButtonUpRequired = 1;
 
 		// Set the movementDir so clients can rotate the legs for strafing
 		SetMovementDir(pm);
@@ -100,16 +100,16 @@ namespace IW3SR::Addons
 	void Q3::AirMove(pmove_t* pm, pml_t* pml)
 	{
 		const auto ps = pm->ps;
-		float fmove, smove, wishspeed, scale = 1.0f;
+		float forwardmove, rightmove, wishspeed, scale = 1.0f;
 		vec3 wishvel, wishdir;
 
-		PMove::DisableSprint(ps);
 		Friction(pm, pml);
 
-		fmove = pm->cmd.forwardmove;
-		smove = pm->cmd.rightmove;
+		pm->ps->sprintState.sprintButtonUpRequired = 1;
+		forwardmove = pm->cmd.forwardmove;
+		rightmove = pm->cmd.rightmove;
 
-		scale = CmdScale(ps, &pm->cmd);
+		scale = CoD4::CmdScale(ps, &pm->cmd);
 		SetMovementDir(pm);
 
 		pml->forward[2] = 0.0f;
@@ -120,7 +120,7 @@ namespace IW3SR::Addons
 
 		// Determine x and y parts of velocity
 		for (int i = 0; i < 2; i++)
-			wishvel[i] = pml->forward[i] * fmove + pml->right[i] * smove;
+			wishvel[i] = pml->forward[i] * forwardmove + pml->right[i] * rightmove;
 
 		wishvel[2] = 0;
 		wishdir = wishvel;
@@ -132,7 +132,7 @@ namespace IW3SR::Addons
 		const float wishspeed2 = wishspeed;
 
 		if (glm::dot(ps->velocity, wishdir) < 0)
-			accel = cpm_airstop_accelerate;
+			accel = pm_airstopaccelerate;
 		else
 			accel = 1.0f;
 
@@ -141,7 +141,7 @@ namespace IW3SR::Addons
 		{
 			if (wishspeed > 30.0f)
 				wishspeed = 30.0f;
-			accel = cpm_strafe_accelerate;
+			accel = pm_strafeaccelerate;
 		}
 		Accelerate(ps, pml, wishdir, wishspeed, accel);
 		AirControl(pm, pml, wishdir, wishspeed2);
@@ -149,7 +149,6 @@ namespace IW3SR::Addons
 		if (pml->groundPlane)
 			ClipVelocity(ps->velocity, pml->groundTrace.normal, ps->velocity, OVERCLIP);
 
-		// Ramp sliding and ramp jumping
 		StepSlideMove(pm, pml, true);
 	}
 
@@ -220,12 +219,12 @@ namespace IW3SR::Addons
 	}
 
 	// https://github.com/xzero450/revolution/blob/8d0b37ba438e65e19d5a5e77f5b9c2076b7900bc/game/bg_promode.c#L303
-	void Q3::AirControl(pmove_t* pm, pml_t* pml, const vec3& wishdir_b, float wishspeed_b)
+	void Q3::AirControl(pmove_t* pm, pml_t* pml, const vec3& wishdir, float wishspeed)
 	{
 		const auto ps = pm->ps;
 
-		// if (pm->cmd.forwardmove == 0.0f || wishspeed_b == 0.0)
-		if ((ps->movementDir && ps->movementDir != 4) || wishspeed_b == 0.0f)
+		// if (pm->cmd.forwardmove == 0.0f || wishspeed == 0.0)
+		if ((ps->movementDir && ps->movementDir != 4) || wishspeed == 0.0f)
 			return;
 
 		const float zspeed = ps->velocity[2];
@@ -233,13 +232,13 @@ namespace IW3SR::Addons
 
 		const float speed = glm::length(ps->velocity);
 		ps->velocity = glm::normalize(ps->velocity);
-		const float dot = glm::dot(ps->velocity, wishdir_b);
-		float k = 32.0f * cpm_air_control * dot * dot * pml->frametime * cpm_air_accelerate;
+		const float dot = glm::dot(ps->velocity, wishdir);
+		float k = 32.0f * pm_aircontrol * dot * dot * pml->frametime * pm_airaccelerate;
 
 		if (dot > 0)
 		{
 			for (int i = 0; i < 2; i++)
-				ps->velocity[i] = ps->velocity[i] * speed + wishdir_b[i] * k;
+				ps->velocity[i] = ps->velocity[i] * speed + wishdir[i] * k;
 			ps->velocity = glm::normalize(ps->velocity);
 		}
 		for (int i = 0; i < 2; i++)
@@ -248,26 +247,24 @@ namespace IW3SR::Addons
 	}
 
 	// https://github.com/xzero450/revolution/blob/master/game/bg_pmove.c#L221
-	void Q3::Accelerate(playerState_s* ps, pml_t* pml, const vec3& wishdir_b, float wishspeed_b, float accel_b)
+	void Q3::Accelerate(playerState_s* ps, pml_t* pml, const vec3& wishdir, float wishspeed, float accel)
 	{
-		const float currentspeed = glm::dot(ps->velocity, wishdir_b);
-		const float addspeed = wishspeed_b - currentspeed;
+		const float currentspeed = glm::dot(ps->velocity, wishdir);
+		const float addspeed = wishspeed - currentspeed;
 
 		if (addspeed <= 0)
 			return;
 
-		float accelspeed = accel_b * pml->frametime * wishspeed_b;
+		float accelspeed = accel * pml->frametime * wishspeed;
 		if (accelspeed > addspeed)
 			accelspeed = addspeed;
 
 		for (int i = 0; i < 3; i++)
-			ps->velocity[i] += accelspeed * wishdir_b[i];
+			ps->velocity[i] += accelspeed * wishdir[i];
 	}
 
 	void Q3::AccelerateWalk(const vec3& wishdir, pml_t* pml, playerState_s* ps, float wishspeed, float accel)
 	{
-		PMove::DisableSprint(ps);
-
 		const float currentspeed = glm::dot(ps->velocity, wishdir);
 		const float addspeed = wishspeed - currentspeed;
 
@@ -303,18 +300,18 @@ namespace IW3SR::Addons
 		if (!(pm->cmd.buttons & PMF_JUMP_HELD))
 			return false;
 
-		float jump_velocity = sqrt(static_cast<float>(pm->ps->gravity) * (jump_height + jump_height));
+		float jump_velocity = sqrt(2.0f * static_cast<float>(pm->ps->gravity) * jump_height);
 
-		// Jump
 		pml->groundPlane = false;
 		pml->almostGroundPlane = false;
 		pml->walking = false;
-		pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFFE7F | PMF_JUMPING;
+		pm->ps->pm_flags &= ~(PMF_TIME_HARDLANDING | PMF_TIME_KNOCKBACK);
+		pm->ps->pm_flags |= PMF_JUMPING;
+		pm->ps->pm_time = 0;
+		// pm->ps->pm_time = CPM_PM_CLIPTIME;
 		pm->ps->groundEntityNum = ENTITYNUM_NONE;
-		pm->ps->velocity[2] = jump_velocity;	 // Q3 = 270, COD4 = 250
-		pm->ps->jumpOriginZ = pm->ps->origin[2]; // What if we enable this for q3 too?
-		pm->ps->pm_time = CPM_PM_CLIPTIME;		 // Wallclip
-
+		pm->ps->velocity[2] = pm->ps->velocity[2] > 0.0f ? pm->ps->velocity[2] + jump_velocity : jump_velocity;
+		pm->ps->jumpOriginZ = pm->ps->origin[2];
 		return true;
 	}
 
@@ -342,7 +339,7 @@ namespace IW3SR::Addons
 			if (!(pm->ps->pm_flags & PMF_TIME_KNOCKBACK))
 			{
 				const float control = speed < 100.0f ? 100.0f : speed;
-				drop += control * friction * pml->frametime;
+				drop += control * pm_friction * pml->frametime;
 			}
 		}
 		// Apply flying friction
@@ -545,18 +542,15 @@ namespace IW3SR::Addons
 
 	void Q3::StepSlideMove(pmove_t* pm, pml_t* pml, bool gravity)
 	{
-		const bool use_bouncing = true;
 		trace_t trace = {};
-
 		vec3 start_o, start_v, endpos;
 		vec3 down_o, down_v;
 		vec3 up, down;
 
-		if (pm->ps->pm_flags & 8)
+		if (pm->ps->pm_flags & PMF_LADDER)
 		{
-			pm->ps->jumpOriginZ = 0.0;
 			trace.allsolid = false;
-			pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFBFFF;
+			CoD4::JumpClearState(pm->ps);
 		}
 		else if (pml->groundPlane)
 			trace.allsolid = true;
@@ -564,10 +558,7 @@ namespace IW3SR::Addons
 		{
 			trace.allsolid = false;
 			if (pm->ps->pm_flags & PMF_JUMPING && pm->ps->pm_time)
-			{
-				pm->ps->jumpOriginZ = 0.0f;
-				pm->ps->pm_flags = pm->ps->pm_flags & 0xFFFFBFFF;
-			}
+			CoD4::JumpClearState(pm->ps);
 		}
 		start_o = pm->ps->origin;
 		start_v = pm->ps->velocity;
@@ -577,7 +568,7 @@ namespace IW3SR::Addons
 			return;
 
 		down = start_o;
-		down[2] -= jump_stepSize;
+		down[2] -= pm_stepsize;
 
 		PM_PlayerTrace(pm, &trace, start_o, pm->mins, pm->maxs, down, pm->ps->clientNum, pm->tracemask);
 		up = { 0, 0, 1 };
@@ -589,7 +580,7 @@ namespace IW3SR::Addons
 		down_o = pm->ps->origin;
 		down_v = pm->ps->velocity;
 		up = start_o;
-		up[2] += jump_stepSize;
+		up[2] += pm_stepsize;
 
 		// Test the player position if they were a stepheight higher
 		PM_PlayerTrace(pm, &trace, start_o, pm->mins, pm->maxs, up, pm->ps->clientNum, pm->tracemask);
@@ -618,43 +609,24 @@ namespace IW3SR::Addons
 
 		if (trace.fraction < 1.0f)
 		{
-			if (use_bouncing)
+			// CoD4 bounce
+			if (!trace.walkable && trace.normal[2] < 0.30000001f)
 			{
-				if (!trace.walkable && trace.normal[2] < 0.30000001f)
-				{
-					pm->ps->velocity = start_o;
-					pm->ps->velocity = start_v;
-					return;
-				}
-				PM_ProjectVelocity(trace.normal, pm->ps->velocity, pm->ps->velocity);
+				pm->ps->velocity = start_v;
+				return;
 			}
-			else
+			if (!trace.walkable && (pm->ps->pm_flags & PMF_JUMPING) && pm->ps->jumpOriginZ > pm->ps->origin[2])
 			{
-				// Not in air
-				if (!((pm->ps->velocity[2] > 0.0f) && (trace.fraction == 1.0f || glm::dot(trace.normal, up) < 0.7f)))
-					ClipVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity, OVERCLIP);
-				else
-					pm->ps->velocity = start_v;
+				CoD4::ProjectVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity);
+				return;
 			}
+			if (!((pm->ps->velocity[2] > 0.0f) && (trace.fraction == 1.0f || glm::dot(trace.normal, up) < 0.7f)))
+			{
+				ClipVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity, OVERCLIP);
+				return;
+			}
+			pm->ps->velocity = start_v;
 		}
-	}
-
-	// https://github.com/jangroothuijse/openpromode/blob/master/code/game/bg_pmove.c#L287
-	float Q3::CmdScale(playerState_s* ps, usercmd_s* cmd)
-	{
-		const float fmove = static_cast<float>(cmd->forwardmove);
-		const float rmove = static_cast<float>(cmd->rightmove);
-
-		float max = abs(fmove);
-
-		if (abs(rmove) > max)
-			max = abs(rmove);
-
-		if (max == 0.0f)
-			return 0.0f;
-
-		const float total = sqrt(fmove * fmove + rmove * rmove);
-		return static_cast<float>(ps->speed) * max / (127.0f * total);
 	}
 
 	// https://github.com/ZdrytchX/GPP-1-1/blob/master/src/game/bg_pmove.c#L499
