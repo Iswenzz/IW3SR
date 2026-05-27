@@ -92,6 +92,10 @@ namespace IW3SR::Addons
 			event.PreventDefault = true;
 			Q3::WalkMove(event.pm, event.pml);
 			break;
+		case MovementMode::CS:
+			event.PreventDefault = true;
+			CS::WalkMove(event.pm, event.pml);
+			break;
 		}
 	}
 

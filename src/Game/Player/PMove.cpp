@@ -132,11 +132,6 @@ namespace IW3SR
 		return org;
 	}
 
-	void PMove::DisableSprint(playerState_s* ps)
-	{
-		ps->sprintState.sprintButtonUpRequired = 1;
-	}
-
 	bool PMove::OnGround()
 	{
 		return cgs->predictedPlayerState.groundEntityNum != ENTITYNUM_NONE;

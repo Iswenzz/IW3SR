@@ -21,7 +21,6 @@ namespace IW3SR
 		static usercmd_s* GetUserCommand(int cmdNumber);
 		static vec3 GetEyePos();
 
-		static void DisableSprint(playerState_s* ps);
 		static bool OnGround();
 	};
 }
