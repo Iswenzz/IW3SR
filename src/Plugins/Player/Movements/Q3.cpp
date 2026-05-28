@@ -202,8 +202,11 @@ namespace IW3SR::Addons
 		pml->walking = true;
 
 		if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
+		{
 			PM_CrashLand(pm->ps, pml);
-
+			CoD4::JumpClearState(pm->ps);
+			pm->ps->pm_time = 0;
+		}
 		switch (trace.hitType)
 		{
 		case TRACE_HITTYPE_ENTITY:
@@ -308,7 +311,6 @@ namespace IW3SR::Addons
 		pm->ps->pm_flags &= ~(PMF_TIME_HARDLANDING | PMF_TIME_KNOCKBACK);
 		pm->ps->pm_flags |= PMF_JUMPING;
 		pm->ps->pm_time = 0;
-		// pm->ps->pm_time = CPM_PM_CLIPTIME;
 		pm->ps->groundEntityNum = ENTITYNUM_NONE;
 		pm->ps->velocity[2] = pm->ps->velocity[2] > 0.0f ? pm->ps->velocity[2] + jump_velocity : jump_velocity;
 		pm->ps->jumpOriginZ = pm->ps->origin[2];
@@ -534,8 +536,9 @@ namespace IW3SR::Addons
 			pm->ps->velocity = end_velocity;
 
 		// Don't change velocity if in a timer, clipping is caused by this
-		if (pm->ps->pm_time)
-			pm->ps->velocity = primal_velocity;
+		// Allow clipping at all time, pm_time is colliding with CoD4 bounces
+		// if (pm->ps->pm_time)
+		pm->ps->velocity = primal_velocity;
 
 		return bumpcount != 0;
 	}
@@ -558,7 +561,7 @@ namespace IW3SR::Addons
 		{
 			trace.allsolid = false;
 			if (pm->ps->pm_flags & PMF_JUMPING && pm->ps->pm_time)
-			CoD4::JumpClearState(pm->ps);
+				CoD4::JumpClearState(pm->ps);
 		}
 		start_o = pm->ps->origin;
 		start_v = pm->ps->velocity;
