@@ -66,13 +66,13 @@ namespace IW3SR
 	extern Hook<void STDCALL(int tickRate)>
 		PbServerProcessEvents_h;
 
-	extern Hook<void(pmove_t* pm, pml_t* pml)>
+	API extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_WalkMove_h;
 
-	extern Hook<void(pmove_t* pm, pml_t* pml)>
+	API extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_AirMove_h;
 
-	extern Hook<void(pmove_t* pm, pml_t* pml)>
+	API extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_GroundTrace_h;
 
 	extern Hook<void(const char** text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation,
