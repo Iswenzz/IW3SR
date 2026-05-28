@@ -7,8 +7,8 @@ namespace IW3SR::Addons
 	{
 		COD4,
 		Q3,
+		Q3_CPM,
 		CS,
-		Bhop
 	};
 
 	class Movements : public Module

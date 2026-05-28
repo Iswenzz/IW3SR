@@ -8,7 +8,9 @@ namespace IW3SR::Addons
 	{
 	public:
 		static void WalkMove(pmove_t* pm, pml_t* pml);
+		static void WalkMoveCPM(pmove_t* pm, pml_t* pml);
 		static void AirMove(pmove_t* pm, pml_t* pml);
+		static void AirMoveCPM(pmove_t* pm, pml_t* pml);
 		static void GroundTrace(pmove_t* pm, pml_t* pml);
 		static void AirControl(pmove_t* pm, pml_t* pml, const vec3& wishdir, float wishspeed);
 		static void Accelerate(playerState_s* ps, pml_t* pml, const vec3& wishdir, float wishspeed, float accel);

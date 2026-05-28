@@ -3,7 +3,8 @@
 #define pm_friction 6.0f
 #define pm_duck_scale 0.5f
 #define pm_prone_scale 0.25f
-#define pm_accelerate 15.0f
+#define pm_accelerate 10.0f
+#define pm_accelerate_cpm 15.0f
 #define pm_slick_accelerate 15.0f
 #define pm_crouch_accelerate 15.0f
 #define pm_prone_accelerate 10.0f
@@ -97,7 +98,127 @@ namespace IW3SR::Addons
 		StepSlideMove(pm, pml, false);
 	}
 
+	void Q3::WalkMoveCPM(pmove_t* pm, pml_t* pml)
+	{
+		if (JumpCheck(pm, pml))
+		{
+			AirMoveCPM(pm, pml);
+			return;
+		}
+		Friction(pm, pml);
+
+		const float forwardmove = pm->cmd.forwardmove;
+		const float rightmove = pm->cmd.rightmove;
+		const float scale = CoD4::CmdScale(pm->ps, &pm->cmd);
+
+		pm->ps->sprintState.sprintButtonUpRequired = 1;
+
+		// Set the movementDir so clients can rotate the legs for strafing
+		SetMovementDir(pm);
+
+		// Project moves down to flat plane
+		pml->forward[2] = 0;
+		pml->right[2] = 0;
+
+		// Project the pml->forward and pml->right directions onto the ground plane
+		ClipVelocity(pml->forward, pml->groundTrace.normal, pml->forward, OVERCLIP);
+		ClipVelocity(pml->right, pml->groundTrace.normal, pml->right, OVERCLIP);
+
+		pml->forward = glm::normalize(pml->forward);
+		pml->right = glm::normalize(pml->right);
+
+		float speed = static_cast<float>(pm->ps->speed);
+
+		vec3 wishvel;
+		for (int i = 0; i < 3; i++)
+			wishvel[i] = pml->forward[i] * forwardmove + pml->right[i] * rightmove;
+
+		vec3 wishdir = wishvel;
+		float wishspeed = glm::length(wishdir) * scale;
+		if (wishspeed > 0.0f)
+			wishdir = glm::normalize(wishdir);
+
+		// Clamp the speed lower if ducking
+		if ((pm->ps->pm_flags & PMF_DUCKED) && (wishspeed > speed * pm_duck_scale))
+			wishspeed = speed * pm_duck_scale;
+		// Clamp the speed lower if prone
+		else if ((pm->ps->pm_flags & PMF_PRONE) && (wishspeed > speed * pm_prone_scale))
+			wishspeed = speed * pm_prone_scale;
+
+		// When a player gets hit, he temporarily loses full control, which allows him to be moved a bit
+		float accelerate = pm_accelerate_cpm;
+		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || pm->ps->pm_flags & PMF_TIME_KNOCKBACK)
+			accelerate = pm_slick_accelerate;
+		else if (pm->ps->pm_flags & PMF_DUCKED)
+			accelerate = pm_crouch_accelerate;
+		else if (pm->ps->pm_flags & PMF_PRONE)
+			accelerate = pm_prone_accelerate;
+
+		AccelerateWalk(wishdir, pml, pm->ps, wishspeed, accelerate);
+
+		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || (pm->ps->pm_flags & PMF_TIME_KNOCKBACK))
+			pm->ps->velocity[2] -= static_cast<float>(pm->ps->gravity) * pml->frametime;
+
+		float vel = glm::length(pm->ps->velocity);
+
+		// Slide along the ground plane
+		ClipVelocity(pm->ps->velocity, pml->groundTrace.normal, pm->ps->velocity, OVERCLIP);
+
+		// Don't decrease velocity when going up or down a slope
+		if (vel > 0.0f)
+			pm->ps->velocity = glm::normalize(pm->ps->velocity) * vel;
+
+		// Don't do anything if standing still
+		if (pm->ps->velocity[0] == 0.0f && pm->ps->velocity[1] == 0.0f)
+			return;
+
+		StepSlideMove(pm, pml, false);
+	}
+
 	void Q3::AirMove(pmove_t* pm, pml_t* pml)
+	{
+		const auto ps = pm->ps;
+		float forwardmove, rightmove, wishspeed, scale = 1.0f;
+		vec3 wishvel, wishdir;
+
+		Friction(pm, pml);
+
+		pm->ps->sprintState.sprintButtonUpRequired = 1;
+		forwardmove = pm->cmd.forwardmove;
+		rightmove = pm->cmd.rightmove;
+
+		scale = CoD4::CmdScale(ps, &pm->cmd);
+		SetMovementDir(pm);
+
+		pml->forward[2] = 0.0f;
+		pml->right[2] = 0.0f;
+
+		pml->forward = glm::normalize(pml->forward);
+		pml->right = glm::normalize(pml->right);
+
+		// Determine x and y parts of velocity
+		for (int i = 0; i < 2; i++)
+			wishvel[i] = pml->forward[i] * forwardmove + pml->right[i] * rightmove;
+
+		wishvel[2] = 0;
+		wishdir = wishvel;
+		wishspeed = glm::length(wishdir) * scale;
+		if (wishspeed > 0.0f)
+			wishdir = glm::normalize(wishdir);
+
+		float accel = pm_airaccelerate;
+		const float wishspeed2 = wishspeed;
+
+		Accelerate(ps, pml, wishdir, wishspeed, accel);
+		AirControl(pm, pml, wishdir, wishspeed2);
+
+		if (pml->groundPlane)
+			ClipVelocity(ps->velocity, pml->groundTrace.normal, ps->velocity, OVERCLIP);
+
+		StepSlideMove(pm, pml, true);
+	}
+
+	void Q3::AirMoveCPM(pmove_t* pm, pml_t* pml)
 	{
 		const auto ps = pm->ps;
 		float forwardmove, rightmove, wishspeed, scale = 1.0f;
@@ -130,7 +251,6 @@ namespace IW3SR::Addons
 
 		float accel;
 		const float wishspeed2 = wishspeed;
-
 		if (glm::dot(ps->velocity, wishdir) < 0)
 			accel = pm_airstopaccelerate;
 		else

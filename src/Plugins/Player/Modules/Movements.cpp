@@ -52,7 +52,21 @@ namespace IW3SR::Addons
 			Dvar::Set<float>("friction", 6.0f);
 		}
 		ImGui::SameLine();
-		if (ImGui::RadioButton("CS", &mode, 2))
+		if (ImGui::RadioButton("Q3 CPM", &mode, 2))
+		{
+			SetHardLanding(false);
+
+			Dvar::Set<MovementMode>("pm_mode", MovementMode::Q3_CPM);
+			Dvar::Set<int>("g_speed", 320);
+			Dvar::Set<float>("g_gravity", 800.0f);
+			Dvar::Set<float>("jump_height", 39.0f);
+			Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
+			Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
+			Dvar::Set<float>("bg_bobMax", 0.0f);
+			Dvar::Set<float>("friction", 6.0f);
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("CS", &mode, 3))
 		{
 			SetHardLanding(false);
 
@@ -92,6 +106,10 @@ namespace IW3SR::Addons
 			event.PreventDefault = true;
 			Q3::WalkMove(event.pm, event.pml);
 			break;
+		case MovementMode::Q3_CPM:
+			event.PreventDefault = true;
+			Q3::WalkMoveCPM(event.pm, event.pml);
+			break;
 		case MovementMode::CS:
 			event.PreventDefault = true;
 			CS::WalkMove(event.pm, event.pml);
@@ -107,6 +125,10 @@ namespace IW3SR::Addons
 			event.PreventDefault = true;
 			Q3::AirMove(event.pm, event.pml);
 			break;
+		case MovementMode::Q3_CPM:
+			event.PreventDefault = true;
+			Q3::AirMoveCPM(event.pm, event.pml);
+			break;
 		case MovementMode::CS:
 			event.PreventDefault = true;
 			CS::AirMove(event.pm, event.pml);
@@ -119,6 +141,7 @@ namespace IW3SR::Addons
 		switch (Dvar::Get<MovementMode>("pm_mode"))
 		{
 		case MovementMode::Q3:
+		case MovementMode::Q3_CPM:
 			event.PreventDefault = true;
 			Q3::GroundTrace(event.pm, event.pml);
 			break;
