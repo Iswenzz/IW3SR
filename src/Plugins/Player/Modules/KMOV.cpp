@@ -2,7 +2,7 @@
 
 #include <random>
 
-constexpr const char* types = "Player\0FPS\0Velocity\0Map\0Timer\0Health\0Hook\0";
+constexpr const char* modes = "Player\0FPS\0Velocity\0Map\0Timer\0Health\0Hook\0";
 
 namespace IW3SR::Addons
 {
@@ -68,7 +68,7 @@ namespace IW3SR::Addons
 
 	void KMOV::MenuNode(Node& node)
 	{
-		ImGui::Combo("Type", reinterpret_cast<int*>(&node.Type), types);
+		ImGui::Combo("Type", reinterpret_cast<int*>(&node.Type), modes);
 		if (node.Type == NodeEnum::Hook)
 		{
 			ImGui::InputInt("Hook HUD", &node.Hook);

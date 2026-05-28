@@ -6913,6 +6913,25 @@ namespace IW3SR
 		int mapped_bmodels;
 		dynBrushModel_t brushes[16];
 	};
+
+	struct statData_t
+	{
+		byte bytedata[2000];
+		int longdata[1547];
+	};
+
+	struct stats_t
+	{
+		int checksum;
+		statData_t data;
+	};
+
+	struct clStatData_t
+	{
+		stats_t stats;
+		byte dataValid;
+		byte writeFlag;
+	};
 }
 
 #pragma warning(pop)

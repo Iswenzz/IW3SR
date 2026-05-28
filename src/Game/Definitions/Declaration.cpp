@@ -39,6 +39,7 @@ namespace IW3SR
 	int& dvarCount = Signature(0xCBA73F8);
 	int* server_fps = Signature(0xCBAB908);
 	animScriptData_t* globalScriptData = Signature(0x5EC414);
+	clStatData_t* statData = Signature(0x0CC18C90);
 
 	// Render
 	DxGlobals* dx = Signature(0xCC9A400);

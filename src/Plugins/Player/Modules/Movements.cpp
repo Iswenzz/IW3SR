@@ -3,6 +3,8 @@
 #include "Player/Movements/CS.hpp"
 #include "Player/Movements/Q3.hpp"
 
+constexpr const char* modes = "CoD4\0Q3\0Q3 CPM\0CS\0";
+
 namespace IW3SR::Addons
 {
 	Movements::Movements() : Module("sr.player.movements", "Player", "Movements")
@@ -22,62 +24,59 @@ namespace IW3SR::Addons
 
 	void Movements::Menu()
 	{
-		int mode = Dvar::Get<int>("pm_mode");
-
-		if (ImGui::RadioButton("CoD4", &mode, 0))
+		if (Dvar::Get<bool>("sv_running"))
 		{
-			SetHardLanding(true);
-
-			Dvar::Set<MovementMode>("pm_mode", MovementMode::COD4);
-			Dvar::Set<int>("g_speed", 190);
-			Dvar::Set<float>("g_gravity", 800.0f);
-			Dvar::Set<float>("jump_height", 39.0f);
-			Dvar::Set<float>("bg_falldamageminheight", 128.0f);
-			Dvar::Set<float>("bg_falldamagemaxheight", 300.0f);
-			Dvar::Set<float>("bg_bobMax", 8.0f);
-			Dvar::Set<float>("friction", 5.5f);
-		}
-		ImGui::SameLine();
-		if (ImGui::RadioButton("Q3", &mode, 1))
-		{
-			SetHardLanding(false);
-
-			Dvar::Set<MovementMode>("pm_mode", MovementMode::Q3);
-			Dvar::Set<int>("g_speed", 320);
-			Dvar::Set<float>("g_gravity", 800.0f);
-			Dvar::Set<float>("jump_height", 39.0f);
-			Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
-			Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
-			Dvar::Set<float>("bg_bobMax", 0.0f);
-			Dvar::Set<float>("friction", 6.0f);
-		}
-		ImGui::SameLine();
-		if (ImGui::RadioButton("Q3 CPM", &mode, 2))
-		{
-			SetHardLanding(false);
-
-			Dvar::Set<MovementMode>("pm_mode", MovementMode::Q3_CPM);
-			Dvar::Set<int>("g_speed", 320);
-			Dvar::Set<float>("g_gravity", 800.0f);
-			Dvar::Set<float>("jump_height", 39.0f);
-			Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
-			Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
-			Dvar::Set<float>("bg_bobMax", 0.0f);
-			Dvar::Set<float>("friction", 6.0f);
-		}
-		ImGui::SameLine();
-		if (ImGui::RadioButton("CS", &mode, 3))
-		{
-			SetHardLanding(false);
-
-			Dvar::Set<MovementMode>("pm_mode", MovementMode::CS);
-			Dvar::Set<int>("g_speed", 250);
-			Dvar::Set<float>("g_gravity", 800.0f);
-			Dvar::Set<float>("jump_height", 39.0f);
-			Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
-			Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
-			Dvar::Set<float>("bg_bobMax", 8.0f);
-			Dvar::Set<float>("friction", 5.5f);
+			static MovementMode mode = MovementMode::COD4;
+			if (ImGui::Combo("Movements", reinterpret_cast<int*>(&mode), modes))
+			{
+				switch (mode)
+				{
+				case MovementMode::COD4:
+					SetHardLanding(true);
+					statData->stats.data.bytedata[1700] = 1;
+					Dvar::Set<int>("g_speed", 190);
+					Dvar::Set<float>("g_gravity", 800.0f);
+					Dvar::Set<float>("jump_height", 39.0f);
+					Dvar::Set<float>("bg_falldamageminheight", 128.0f);
+					Dvar::Set<float>("bg_falldamagemaxheight", 300.0f);
+					Dvar::Set<float>("bg_bobMax", 8.0f);
+					Dvar::Set<float>("friction", 5.5f);
+					break;
+				case MovementMode::Q3:
+					statData->stats.data.bytedata[1700] = 3;
+					SetHardLanding(false);
+					Dvar::Set<int>("g_speed", 320);
+					Dvar::Set<float>("g_gravity", 800.0f);
+					Dvar::Set<float>("jump_height", 39.0f);
+					Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
+					Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
+					Dvar::Set<float>("bg_bobMax", 0.0f);
+					Dvar::Set<float>("friction", 6.0f);
+					break;
+				case MovementMode::Q3_CPM:
+					statData->stats.data.bytedata[1700] = 4;
+					SetHardLanding(false);
+					Dvar::Set<int>("g_speed", 320);
+					Dvar::Set<float>("g_gravity", 800.0f);
+					Dvar::Set<float>("jump_height", 39.0f);
+					Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
+					Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
+					Dvar::Set<float>("bg_bobMax", 0.0f);
+					Dvar::Set<float>("friction", 6.0f);
+					break;
+				case MovementMode::CS:
+					statData->stats.data.bytedata[1700] = 5;
+					SetHardLanding(false);
+					Dvar::Set<int>("g_speed", 250);
+					Dvar::Set<float>("g_gravity", 800.0f);
+					Dvar::Set<float>("jump_height", 39.0f);
+					Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
+					Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
+					Dvar::Set<float>("bg_bobMax", 8.0f);
+					Dvar::Set<float>("friction", 5.5f);
+					break;
+				}
+			}
 		}
 		ImGui::Checkbox("Interpolate Movers", &UseInterpolateMovers);
 		ImGui::Tooltip("Smooth camera interpolation on moving and rotating platforms.");
@@ -100,7 +99,7 @@ namespace IW3SR::Addons
 
 	void Movements::OnWalkMove(EventPMoveWalk& event)
 	{
-		switch (Dvar::Get<MovementMode>("pm_mode"))
+		switch (GetMovementMode())
 		{
 		case MovementMode::Q3:
 			event.PreventDefault = true;
@@ -119,7 +118,7 @@ namespace IW3SR::Addons
 
 	void Movements::OnAirMove(EventPMoveAir& event)
 	{
-		switch (Dvar::Get<MovementMode>("pm_mode"))
+		switch (GetMovementMode())
 		{
 		case MovementMode::Q3:
 			event.PreventDefault = true;
@@ -138,7 +137,7 @@ namespace IW3SR::Addons
 
 	void Movements::OnGroundTrace(EventPMoveGroundTrace& event)
 	{
-		switch (Dvar::Get<MovementMode>("pm_mode"))
+		switch (GetMovementMode())
 		{
 		case MovementMode::Q3:
 		case MovementMode::Q3_CPM:
@@ -234,6 +233,24 @@ namespace IW3SR::Addons
 			deltaAngles[1] += delta.y;
 			deltaAngles[2] += delta.z;
 		}
+	}
+
+	MovementMode Movements::GetMovementMode()
+	{
+		switch (statData->stats.data.bytedata[1700]) // sr_mode
+		{
+		case 1: // 190
+		case 2: // 210
+			return MovementMode::COD4;
+		case 3: // Q3
+			return MovementMode::Q3;
+		case 4: // Q3 CPM
+			return MovementMode::Q3_CPM;
+		case 5: // CS
+		case 6: // Portal
+			return MovementMode::CS;
+		}
+		return MovementMode::COD4;
 	}
 
 	void Movements::OnLoadPosition()

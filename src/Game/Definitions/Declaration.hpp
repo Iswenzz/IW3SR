@@ -41,6 +41,7 @@ namespace IW3SR
 	extern dvar_s** dvars;
 	extern int& dvarCount;
 	extern animScriptData_t* globalScriptData;
+	API extern clStatData_t* statData;
 
 	// Render
 	API extern DxGlobals* dx;

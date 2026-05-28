@@ -39,6 +39,7 @@ namespace IW3SR::Addons
 		void Bhop(playerState_s* ps, usercmd_s* cmd);
 		void SetHardLanding(bool state);
 		void InterpolateViewForMover();
+		MovementMode GetMovementMode();
 
 		SERIALIZE_POLY(Movements, Module, KeyBhop, KeyBhopToggle, BhopText, UseBhop, UseBhopToggle,
 			UseInterpolateMovers)
