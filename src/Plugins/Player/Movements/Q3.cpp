@@ -311,6 +311,7 @@ namespace IW3SR::Addons
 		pm->ps->pm_flags &= ~(PMF_TIME_HARDLANDING | PMF_TIME_KNOCKBACK);
 		pm->ps->pm_flags |= PMF_JUMPING;
 		pm->ps->pm_time = 0;
+		pm->ps->jumpTime = CPM_PM_CLIPTIME; // Using this timer for clipping
 		pm->ps->groundEntityNum = ENTITYNUM_NONE;
 		pm->ps->velocity[2] = pm->ps->velocity[2] > 0.0f ? pm->ps->velocity[2] + jump_velocity : jump_velocity;
 		pm->ps->jumpOriginZ = pm->ps->origin[2];
@@ -526,10 +527,17 @@ namespace IW3SR::Addons
 		if (gravity)
 			pm->ps->velocity = end_velocity;
 
+		// Update clipping timer
+		if (pm->ps->jumpTime)
+		{
+			if (pml->msec < pm->ps->jumpTime)
+				pm->ps->jumpTime -= pml->msec;
+			else
+				pm->ps->jumpTime = 0;
+		}
 		// Don't change velocity if in a timer, clipping is caused by this
-		// Allow clipping at all time, pm_time is colliding with CoD4 bounces
-		// if (pm->ps->pm_time)
-		pm->ps->velocity = primal_velocity;
+		if (pm->ps->jumpTime)
+			pm->ps->velocity = primal_velocity;
 
 		return bumpcount != 0;
 	}
