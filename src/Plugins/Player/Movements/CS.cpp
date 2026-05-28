@@ -196,6 +196,7 @@ namespace IW3SR::Addons
 		// CoD4 bounce
 		if (!trace.walkable && (ps->pm_flags & PMF_JUMPING) && ps->jumpOriginZ > ps->origin[2])
 		{
+			pm->ps->velocity[2] *= 0.8f; // Tweak bounce velocity
 			CoD4::ProjectVelocity(ps->velocity, trace.normal, ps->velocity);
 			CoD4::JumpClearState(pm->ps); // Prevent double bounce
 			return;
