@@ -7,7 +7,7 @@ namespace IW3SR::Addons
 	{
 		COD4,
 		Q3,
-		Q3_CPM,
+		Q3CPM,
 		CS,
 	};
 

@@ -3,7 +3,7 @@
 #include "Player/Movements/CS.hpp"
 #include "Player/Movements/Q3.hpp"
 
-constexpr const char* modes = "CoD4\0Q3\0Q3 CPM\0CS\0";
+constexpr const char* modes = "CoD4\0Q3\0Q3CPM\0CS\0";
 
 namespace IW3SR::Addons
 {
@@ -53,7 +53,7 @@ namespace IW3SR::Addons
 					Dvar::Set<float>("bg_bobMax", 0.0f);
 					Dvar::Set<float>("friction", 6.0f);
 					break;
-				case MovementMode::Q3_CPM:
+				case MovementMode::Q3CPM:
 					statData->stats.data.bytedata[1700] = 4;
 					SetHardLanding(false);
 					Dvar::Set<int>("g_speed", 320);
@@ -105,7 +105,7 @@ namespace IW3SR::Addons
 			event.PreventDefault = true;
 			Q3::WalkMove(event.pm, event.pml);
 			break;
-		case MovementMode::Q3_CPM:
+		case MovementMode::Q3CPM:
 			event.PreventDefault = true;
 			Q3::WalkMoveCPM(event.pm, event.pml);
 			break;
@@ -124,7 +124,7 @@ namespace IW3SR::Addons
 			event.PreventDefault = true;
 			Q3::AirMove(event.pm, event.pml);
 			break;
-		case MovementMode::Q3_CPM:
+		case MovementMode::Q3CPM:
 			event.PreventDefault = true;
 			Q3::AirMoveCPM(event.pm, event.pml);
 			break;
@@ -140,7 +140,7 @@ namespace IW3SR::Addons
 		switch (GetMovementMode())
 		{
 		case MovementMode::Q3:
-		case MovementMode::Q3_CPM:
+		case MovementMode::Q3CPM:
 			event.PreventDefault = true;
 			Q3::GroundTrace(event.pm, event.pml);
 			break;
@@ -244,10 +244,11 @@ namespace IW3SR::Addons
 			return MovementMode::COD4;
 		case 3: // Q3
 			return MovementMode::Q3;
-		case 4: // Q3 CPM
-			return MovementMode::Q3_CPM;
-		case 5: // CS
-		case 6: // Portal
+		case 4: // Q3CPM
+		case 5: // Q3CPMW
+			return MovementMode::Q3CPM;
+		case 6: // CS
+		case 7: // Portal
 			return MovementMode::CS;
 		}
 		return MovementMode::COD4;
