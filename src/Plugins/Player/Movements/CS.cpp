@@ -196,6 +196,11 @@ namespace IW3SR::Addons
 		if (!trace.walkable && trace.normal[2] < 0.30000001f)
 			return;
 
+		// CoD4 bounce
+		if (!trace.walkable && trace.normal[2] >= 0.30000001f && (pm->ps->pm_flags & PMF_JUMPING)
+			&& pm->ps->jumpOriginZ > pm->ps->origin[2])
+			return;
+
 		ClipVelocity(ps->velocity, trace.normal, ps->velocity, OVERCLIP);
 	}
 
@@ -369,11 +374,6 @@ namespace IW3SR::Addons
 		if (gravity)
 			pm->ps->velocity = end_velocity;
 
-		// Don't change velocity if in a timer, clipping is caused by this
-		// Allow clipping at all time, pm_time is colliding with CoD4 bounces
-		// if (pm->ps->pm_time)
-		pm->ps->velocity = primal_velocity;
-
 		return bumpcount != 0;
 	}
 
@@ -450,7 +450,6 @@ namespace IW3SR::Addons
 			if (!trace.walkable && trace.normal[2] >= 0.30000001f && (pm->ps->pm_flags & PMF_JUMPING)
 				&& pm->ps->jumpOriginZ > pm->ps->origin[2])
 			{
-				pm->ps->velocity[2] *= 0.7f; // Tweak bounce velocity
 				CoD4::ProjectVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity);
 				CoD4::JumpClearState(pm->ps); // Prevent double bounce
 				return;
