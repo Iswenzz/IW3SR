@@ -22,8 +22,8 @@ namespace IW3SR::Addons
 		Friction(pm, pml);
 
 		const float scale = CoD4::CmdScale(pm->ps, &pm->cmd);
-		const float fmove = pm->cmd.forwardmove * scale;
-		const float smove = pm->cmd.rightmove * scale;
+		const float forwardmove = pm->cmd.forwardmove * scale;
+		const float rightmove = pm->cmd.rightmove * scale;
 
 		pm->ps->sprintState.sprintButtonUpRequired = 1;
 		pml->forward[2] = 0.0f;
@@ -33,7 +33,7 @@ namespace IW3SR::Addons
 
 		vec3 wishvel;
 		for (int i = 0; i < 2; i++)
-			wishvel[i] = pml->forward[i] * fmove + pml->right[i] * smove;
+			wishvel[i] = pml->forward[i] * forwardmove + pml->right[i] * rightmove;
 		wishvel[2] = 0.0f;
 
 		vec3 wishdir = wishvel;
@@ -52,27 +52,24 @@ namespace IW3SR::Addons
 
 	void CS::AirMove(pmove_t* pm, pml_t* pml)
 	{
-		const auto ps = pm->ps;
-		float forwardmove, rightmove, wishspeed, scale = 1.0f;
-		vec3 wishvel, wishdir;
+		const float scale = CoD4::CmdScale(pm->ps, &pm->cmd);
+		const float forwardmove = pm->cmd.forwardmove * scale;
+		const float rightmove = pm->cmd.rightmove * scale;
 
-		ps->sprintState.sprintButtonUpRequired = 1;
-		forwardmove = pm->cmd.forwardmove;
-		rightmove = pm->cmd.rightmove;
-
+		pm->ps->sprintState.sprintButtonUpRequired = 1;
 		pml->forward[2] = 0.0f;
 		pml->right[2] = 0.0f;
-
 		pml->forward = glm::normalize(pml->forward);
 		pml->right = glm::normalize(pml->right);
 
 		// Determine x and y parts of velocity
+		vec3 wishvel;
 		for (int i = 0; i < 2; i++)
 			wishvel[i] = pml->forward[i] * forwardmove + pml->right[i] * rightmove;
 
 		wishvel[2] = 0;
-		wishdir = wishvel;
-		wishspeed = glm::length(wishdir);
+		vec3 wishdir = wishvel;
+		float wishspeed = glm::length(wishdir);
 		wishdir = glm::normalize(wishdir);
 
 		if (wishspeed != 0 && (wishspeed > sv_maxspeed))
@@ -80,7 +77,7 @@ namespace IW3SR::Addons
 			wishvel *= sv_maxspeed / wishspeed;
 			wishspeed = sv_maxspeed;
 		}
-		AirAccelerate(wishdir, wishspeed, ps, pml);
+		AirAccelerate(wishdir, wishspeed, pm->ps, pml);
 		PM_StepSlideMove(pm, pml, true);
 		TryPlayerMove(pm, pml);
 	}
