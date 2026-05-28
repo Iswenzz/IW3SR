@@ -45,11 +45,11 @@ namespace IW3SR::Addons
 			Dvar::Set<MovementMode>("pm_mode", MovementMode::Q3);
 			Dvar::Set<int>("g_speed", 320);
 			Dvar::Set<float>("g_gravity", 800.0f);
-			Dvar::Set<float>("jump_height", 46.0f);
+			Dvar::Set<float>("jump_height", 39.0f);
 			Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
 			Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
 			Dvar::Set<float>("bg_bobMax", 0.0f);
-			Dvar::Set<float>("friction", 8.0f);
+			Dvar::Set<float>("friction", 6.0f);
 		}
 		ImGui::SameLine();
 		if (ImGui::RadioButton("CS", &mode, 2))
@@ -57,7 +57,7 @@ namespace IW3SR::Addons
 			SetHardLanding(false);
 
 			Dvar::Set<MovementMode>("pm_mode", MovementMode::CS);
-			Dvar::Set<int>("g_speed", 190);
+			Dvar::Set<int>("g_speed", 250);
 			Dvar::Set<float>("g_gravity", 800.0f);
 			Dvar::Set<float>("jump_height", 39.0f);
 			Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
