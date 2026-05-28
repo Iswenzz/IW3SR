@@ -15,5 +15,8 @@ namespace IW3SR::Addons
 		static void AirAccelerate(const vec3& wishdir, float wishspeed, playerState_s* ps, pml_t* pml);
 		static void TryPlayerMove(pmove_t* pm, pml_t* pml);
 		static void ClipVelocity(const vec3& in, const vec3& normal, vec3& out, float overbounce);
+		static float PermuteRestrictiveClipPlanes(const vec3& velocity, int planeCount, vec3* planes, int* permutation);
+		static bool SlideMove(pmove_t* pm, pml_t* pml, bool gravity);
+		static void StepSlideMove(pmove_t* pm, pml_t* pml, bool gravity);
 	};
 }

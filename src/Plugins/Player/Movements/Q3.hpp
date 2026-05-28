@@ -16,6 +16,7 @@ namespace IW3SR::Addons
 		static bool JumpCheck(pmove_t* pm, pml_t* pml);
 		static void Friction(pmove_t* pm, pml_t* pml);
 		static void ClipVelocity(const vec3& in, const vec3& normal, vec3& out, float overbounce);
+		static float PermuteRestrictiveClipPlanes(const vec3& velocity, int planeCount, vec3* planes, int* permutation);
 		static bool SlideMove(pmove_t* pm, pml_t* pml, bool gravity);
 		static void StepSlideMove(pmove_t* pm, pml_t* pml, bool gravity);
 		static void SetMovementDir(pmove_t* pm);

@@ -370,6 +370,24 @@ namespace IW3SR::Addons
 			out[i] = in[i] - (normal[i] * backoff);
 	}
 
+	float Q3::PermuteRestrictiveClipPlanes(const vec3& velocity, int planeCount, vec3* planes, int* permutation)
+	{
+		float parallel[MAX_CLIP_PLANES];
+
+		for (int planeIndex = 0; planeIndex < planeCount; planeIndex++)
+		{
+			parallel[planeIndex] = glm::dot(velocity, planes[planeIndex]);
+			int permutedIndex = planeIndex;
+			while (permutedIndex > 0 && parallel[planeIndex] <= parallel[permutation[permutedIndex - 1]])
+			{
+				permutation[permutedIndex] = permutation[permutedIndex - 1];
+				permutedIndex--;
+			}
+			permutation[permutedIndex] = planeIndex;
+		}
+		return parallel[permutation[0]];
+	}
+
 	bool Q3::SlideMove(pmove_t* pm, pml_t* pml, bool gravity)
 	{
 		const int NUM_BUMPS = 4;
@@ -446,12 +464,13 @@ namespace IW3SR::Addons
 				pm->ps->velocity = { 0, 0, 0 };
 				return true;
 			}
-			// If this is the same plane we hit before, nudge velocity out along it,
-			// which fixes some epsilon issues with non-axial planes
+			// If this is the same plane we hit before, clip and nudge velocity out along it,
+			// which fixes getting stuck on non-axial planes like wedges
 			for (i = 0; i < numplanes; i++)
 			{
-				if (glm::dot(trace.normal, planes[i]) > 0.99f)
+				if (glm::dot(trace.normal, planes[i]) > 0.999f)
 				{
+					ClipVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity, OVERCLIP);
 					pm->ps->velocity += trace.normal;
 					break;
 				}
@@ -462,74 +481,46 @@ namespace IW3SR::Addons
 			planes[numplanes] = trace.normal;
 			numplanes++;
 
-			// Modify velocity so it parallels all of the clip planes
-			// Find a plane that it enters
-			for (int i = 0; i < numplanes; i++)
+			int permutation[MAX_CLIP_PLANES] = {};
+			float into = PermuteRestrictiveClipPlanes(pm->ps->velocity, numplanes, planes, permutation);
+
+			if (into < 0.1f)
 			{
-				into = glm::dot(pm->ps->velocity, planes[i]);
-
-				// Move doesn't interact with the plane
-				if (into >= 0.1f)
-					continue;
-
-				// See how hard we are hitting things
 				if (-into > pml->impactSpeed)
 					pml->impactSpeed = -into;
 
-				// Slide along the plane
-				ClipVelocity(pm->ps->velocity, planes[i], clip_velocity, OVERCLIP);
-				ClipVelocity(end_velocity, planes[i], end_clip_velocity, OVERCLIP);
+				ClipVelocity(pm->ps->velocity, planes[permutation[0]], clip_velocity, OVERCLIP);
+				ClipVelocity(end_velocity, planes[permutation[0]], end_clip_velocity, OVERCLIP);
 
-				// see if there is a second plane that the new move enters
-				for (int j = 0; j < numplanes; j++)
+				for (int j = 1; j < numplanes; j++)
 				{
-					if (j == i)
-						continue;
-
-					// Move doesn't interact with the plane
-					if (glm::dot(clip_velocity, planes[j]) >= 0.1f)
-						continue;
-
-					// Try clipping the move to the plane
-					ClipVelocity(clip_velocity, planes[j], clip_velocity, OVERCLIP);
-					ClipVelocity(end_clip_velocity, planes[j], end_clip_velocity, OVERCLIP);
-
-					// See if it goes back into the first clip plane
-					if (glm::dot(clip_velocity, planes[i]) >= 0)
-						continue;
-
-					// Slide the original velocity along the crease
-					dir = glm::cross(planes[i], planes[j]);
-					dir = glm::normalize(dir);
-
-					float d = glm::dot(dir, pm->ps->velocity);
-					clip_velocity = dir * d;
-
-					dir = glm::cross(planes[i], planes[j]);
-					dir = glm::normalize(dir);
-
-					d = glm::dot(dir, end_velocity);
-					end_clip_velocity = dir * d;
-
-					// See if there is a third plane the the new move enters
-					for (int k = 0; k < numplanes; k++)
+					if (glm::dot(clip_velocity, planes[permutation[j]]) < 0.1f)
 					{
-						if (k == i || k == j)
-							continue;
+						ClipVelocity(clip_velocity, planes[permutation[j]], clip_velocity, OVERCLIP);
+						ClipVelocity(end_clip_velocity, planes[permutation[j]], end_clip_velocity, OVERCLIP);
 
-						// Move doesn't interact with the plane
-						if (glm::dot(clip_velocity, planes[k]) >= 0.1f)
-							continue;
+						if (glm::dot(clip_velocity, planes[permutation[0]]) < 0.0f)
+						{
+							dir = glm::cross(planes[permutation[0]], planes[permutation[j]]);
+							dir = glm::normalize(dir);
+							float d = glm::dot(dir, pm->ps->velocity);
+							clip_velocity = dir * d;
+							d = glm::dot(dir, end_velocity);
+							end_clip_velocity = dir * d;
 
-						// Stop dead at a tripple plane interaction
-						pm->ps->velocity = { 0, 0, 0 };
-						return true;
+							for (int k = 1; k < numplanes; k++)
+							{
+								if (k != j && glm::dot(clip_velocity, planes[permutation[k]]) < 0.1f)
+								{
+									pm->ps->velocity = { 0, 0, 0 };
+									return true;
+								}
+							}
+						}
 					}
 				}
-				// If we have fixed all interactions, try another move
 				pm->ps->velocity = clip_velocity;
 				end_velocity = end_clip_velocity;
-				break;
 			}
 		}
 		if (gravity)
@@ -613,24 +604,15 @@ namespace IW3SR::Addons
 		if (trace.fraction < 1.0f)
 		{
 			// CoD4 bounce
-			if (!trace.walkable && trace.normal[2] < 0.30000001f)
-			{
-				pm->ps->velocity = start_v;
-				return;
-			}
-			if (!trace.walkable && (pm->ps->pm_flags & PMF_JUMPING) && pm->ps->jumpOriginZ > pm->ps->origin[2])
+			if (!trace.walkable && trace.normal[2] >= 0.30000001f && (pm->ps->pm_flags & PMF_JUMPING)
+				&& pm->ps->jumpOriginZ > pm->ps->origin[2])
 			{
 				pm->ps->velocity[2] *= 0.7f; // Tweak bounce velocity
 				CoD4::ProjectVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity);
 				CoD4::JumpClearState(pm->ps); // Prevent double bounce
 				return;
 			}
-			if (!((pm->ps->velocity[2] > 0.0f) && (trace.fraction == 1.0f || glm::dot(trace.normal, up) < 0.7f)))
-			{
-				ClipVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity, OVERCLIP);
-				return;
-			}
-			pm->ps->velocity = start_v;
+			ClipVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity, OVERCLIP);
 		}
 	}
 
