@@ -200,6 +200,7 @@ namespace IW3SR::Addons
 		if (!trace.walkable && (ps->pm_flags & PMF_JUMPING) && ps->jumpOriginZ > ps->origin[2])
 		{
 			CoD4::ProjectVelocity(ps->velocity, trace.normal, ps->velocity);
+			CoD4::JumpClearState(pm->ps); // Prevent double bounce
 			return;
 		}
 		ClipVelocity(ps->velocity, trace.normal, ps->velocity, 1.0f);

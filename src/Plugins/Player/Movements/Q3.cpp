@@ -621,6 +621,7 @@ namespace IW3SR::Addons
 			if (!trace.walkable && (pm->ps->pm_flags & PMF_JUMPING) && pm->ps->jumpOriginZ > pm->ps->origin[2])
 			{
 				CoD4::ProjectVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity);
+				CoD4::JumpClearState(pm->ps); // Prevent double bounce
 				return;
 			}
 			if (!((pm->ps->velocity[2] > 0.0f) && (trace.fraction == 1.0f || glm::dot(trace.normal, up) < 0.7f)))
