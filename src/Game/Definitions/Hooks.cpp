@@ -123,7 +123,7 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (edi) localClientNum
+		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (eax) localClientNum
 		a.call(GSystem::Shutdown);
 		a.add(x86::esp, 0x04);
 
@@ -140,7 +140,7 @@ namespace IW3SR
 
 		a.call(ASM_TRAMPOLINE(CG_Respawn_h));
 
-		a.push(x86::dword_ptr(x86::ebp, -0x1C)); // (eax) localClientNum
+		a.push(x86::dword_ptr(x86::ebp, -0x1C)); // (esi) localClientNum
 		a.call(Client::Respawn);
 		a.add(x86::esp, 0x04);
 
@@ -155,7 +155,7 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.push(x86::dword_ptr(x86::ebp, -0x08)); // (esi) color
+		a.push(x86::dword_ptr(x86::ebp, -0x08)); // (ecx) color
 		a.push(x86::dword_ptr(x86::ebp, 0x28));	 // style
 		a.push(x86::dword_ptr(x86::ebp, 0x24));	 // rotation
 		a.push(x86::dword_ptr(x86::ebp, 0x20));	 // yScale
@@ -180,7 +180,7 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (edi) cmds
+		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (eax) cmds
 		a.call(GRenderer::ExecuteRenderCommandsLoop);
 		a.add(x86::esp, 0x04);
 
