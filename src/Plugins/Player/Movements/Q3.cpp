@@ -323,7 +323,7 @@ namespace IW3SR::Addons
 
 		if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
 		{
-			CoD4::CrashLand(pm->ps, pml, false);
+			PM_CrashLand(pm->ps, pml);
 			CoD4::JumpClearState(pm->ps);
 			pm->ps->pm_time = 0;
 		}
