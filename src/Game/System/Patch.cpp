@@ -58,6 +58,7 @@ namespace IW3SR
 		PM_WalkMove_h.Install();
 		PM_AirMove_h.Install();
 		PM_GroundTrace_h.Install();
+		PM_CrashLand_h.Install();
 		R_AddCmdDrawText_h.Install();
 		R_AddCmdDrawTextWithEffects_h.Install();
 		R_Init_h.Install();

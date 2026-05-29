@@ -31,13 +31,13 @@ namespace IW3SR::Addons
 		void OnWalkMove(EventPMoveWalk& event) override;
 		void OnAirMove(EventPMoveAir& event) override;
 		void OnGroundTrace(EventPMoveGroundTrace& event) override;
+		void OnCrashLand(EventPMoveCrashLand& event) override;
 		void OnFinishMove(EventPMoveFinish& event) override;
 		void OnLoadPosition() override;
 		void OnRender() override;
 
 	private:
 		void Bhop(playerState_s* ps, usercmd_s* cmd);
-		void SetHardLanding(bool state);
 		void InterpolateViewForMover();
 		MovementMode GetMovementMode();
 

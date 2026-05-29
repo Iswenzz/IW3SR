@@ -32,7 +32,6 @@ namespace IW3SR::Addons
 				switch (mode)
 				{
 				case MovementMode::COD4:
-					SetHardLanding(true);
 					statData->stats.data.bytedata[1700] = 1;
 					Dvar::Set<int>("g_speed", 190);
 					Dvar::Set<float>("g_gravity", 800.0f);
@@ -44,7 +43,6 @@ namespace IW3SR::Addons
 					break;
 				case MovementMode::Q3:
 					statData->stats.data.bytedata[1700] = 3;
-					SetHardLanding(false);
 					Dvar::Set<int>("g_speed", 320);
 					Dvar::Set<float>("g_gravity", 800.0f);
 					Dvar::Set<float>("jump_height", 39.0f);
@@ -55,7 +53,6 @@ namespace IW3SR::Addons
 					break;
 				case MovementMode::Q3CPM:
 					statData->stats.data.bytedata[1700] = 4;
-					SetHardLanding(false);
 					Dvar::Set<int>("g_speed", 320);
 					Dvar::Set<float>("g_gravity", 800.0f);
 					Dvar::Set<float>("jump_height", 39.0f);
@@ -65,8 +62,7 @@ namespace IW3SR::Addons
 					Dvar::Set<float>("friction", 6.0f);
 					break;
 				case MovementMode::CS:
-					statData->stats.data.bytedata[1700] = 5;
-					SetHardLanding(false);
+					statData->stats.data.bytedata[1700] = 6;
 					Dvar::Set<int>("g_speed", 250);
 					Dvar::Set<float>("g_gravity", 800.0f);
 					Dvar::Set<float>("jump_height", 39.0f);
@@ -147,6 +143,23 @@ namespace IW3SR::Addons
 		}
 	}
 
+	void Movements::OnCrashLand(EventPMoveCrashLand& event)
+	{
+		switch (GetMovementMode())
+		{
+		case MovementMode::COD4:
+			// Original code
+			Memory::Write(0x410315, "\xD9\x46\x28\xDD\x05");
+			break;
+		case MovementMode::Q3:
+		case MovementMode::Q3CPM:
+		case MovementMode::CS:
+			// Skip the hard landing section in PM_CrashLand
+			Memory::JMP(0x410315, 0x410333);
+			break;
+		}
+	}
+
 	void Movements::OnFinishMove(EventPMoveFinish& event)
 	{
 		Bhop(event.ps, event.cmd);
@@ -188,20 +201,6 @@ namespace IW3SR::Addons
 		{
 			cmd->buttons |= BUTTON_JUMP;
 			BhopToggled = false;
-		}
-	}
-
-	void Movements::SetHardLanding(bool state)
-	{
-		if (state)
-		{
-			// Original code
-			Memory::Write(0x410315, "\xD9\x46\x28\xDD\x05");
-		}
-		else
-		{
-			// Skip the hard landing section in PM_CrashLand
-			Memory::JMP(0x410315, 0x410333);
 		}
 	}
 

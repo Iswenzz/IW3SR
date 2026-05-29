@@ -40,6 +40,12 @@ namespace IW3SR
 			PM_GroundTrace_h(pm, pml);
 	}
 
+	void PMove::CrashLand(playerState_s* ps, pml_t* pml)
+	{
+		EventPMoveCrashLand event(ps, pml);
+		Application::Dispatch(event);
+	}
+
 	void PMove::SetYaw(usercmd_s* cmd, const vec3& target)
 	{
 		auto deltas = cgs->predictedPlayerState.delta_angles;

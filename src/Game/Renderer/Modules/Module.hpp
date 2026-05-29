@@ -27,6 +27,7 @@ namespace IW3SR
 		virtual void OnWalkMove(EventPMoveWalk& event);
 		virtual void OnAirMove(EventPMoveAir& event);
 		virtual void OnGroundTrace(EventPMoveGroundTrace& event);
+		virtual void OnCrashLand(EventPMoveCrashLand& event);
 		virtual void OnFinishMove(EventPMoveFinish& event);
 		virtual void OnLoadPosition();
 		virtual void OnExecuteCommand(EventClientCommand& event);

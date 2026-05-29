@@ -75,6 +75,9 @@ namespace IW3SR
 	API extern Hook<void(pmove_t* pm, pml_t* pml)>
 		PM_GroundTrace_h;
 
+	API extern Hook<void(playerState_s* ps, pml_t* pml)>
+		PM_CrashLand_h;
+
 	extern Hook<void(const char** text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation,
 		int style, const vec4& color)>
 		R_AddCmdDrawText_h;
@@ -113,6 +116,7 @@ namespace IW3SR
 {
 	ASM_FUNCTION(CL_Shutdown_h);
 	ASM_FUNCTION(CG_Respawn_h);
+	ASM_FUNCTION(PM_CrashLand_h);
 	ASM_FUNCTION(R_AddCmdDrawText_h);
 	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h);
 }

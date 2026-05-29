@@ -10,6 +10,7 @@ namespace IW3SR
 		static void WalkMove(pmove_t* pm, pml_t* pml);
 		static void AirMove(pmove_t* pm, pml_t* pml);
 		static void GroundTrace(pmove_t* pm, pml_t* pml);
+		static void CrashLand(playerState_s* ps, pml_t* pml);
 
 		static void SetYaw(usercmd_s* cmd, const vec3& target);
 		static void SetPitch(usercmd_s* cmd, const vec3& target);

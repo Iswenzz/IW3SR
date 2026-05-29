@@ -96,9 +96,17 @@ namespace IW3SR
 
 	class EventPMoveGroundTrace : public Event
 	{
-		EVENT_CLASS("pmove.ground.trace")
+		EVENT_CLASS("pmove.groundtrace")
 		EventPMoveGroundTrace(pmove_t* pm, pml_t* pml) : pm(pm), pml(pml) { }
 		pmove_t* pm;
+		pml_t* pml;
+	};
+
+	class EventPMoveCrashLand : public Event
+	{
+		EVENT_CLASS("pmove.crashland")
+		EventPMoveCrashLand(playerState_s* pm, pml_t* pml) : ps(ps), pml(pml) { }
+		playerState_s* ps;
 		pml_t* pml;
 	};
 

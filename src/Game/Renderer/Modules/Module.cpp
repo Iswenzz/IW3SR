@@ -27,6 +27,7 @@ namespace IW3SR
 	void Module::OnWalkMove(EventPMoveWalk& event) { }
 	void Module::OnAirMove(EventPMoveAir& event) { }
 	void Module::OnGroundTrace(EventPMoveGroundTrace& event) { }
+	void Module::OnCrashLand(EventPMoveCrashLand& event) { }
 	void Module::OnFinishMove(EventPMoveFinish& event) { }
 	void Module::OnLoadPosition() { }
 
@@ -54,6 +55,7 @@ namespace IW3SR
 		dispatcher.Dispatch<EventPMoveWalk>(EVENT_BIND(OnWalkMove));
 		dispatcher.Dispatch<EventPMoveAir>(EVENT_BIND(OnAirMove));
 		dispatcher.Dispatch<EventPMoveGroundTrace>(EVENT_BIND(OnGroundTrace));
+		dispatcher.Dispatch<EventPMoveCrashLand>(EVENT_BIND(OnCrashLand));
 		dispatcher.Dispatch<EventPMoveFinish>(EVENT_BIND(OnFinishMove));
 
 		dispatcher.Dispatch<EventClientCommand>(EVENT_BIND(OnExecuteCommand));
