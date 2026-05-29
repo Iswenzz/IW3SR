@@ -197,10 +197,14 @@ namespace IW3SR::Addons
 			return;
 
 		// CoD4 bounce
-		if (!trace.walkable && trace.normal[2] >= 0.30000001f && (pm->ps->pm_flags & PMF_JUMPING)
-			&& pm->ps->jumpOriginZ > pm->ps->origin[2])
+		if (!trace.walkable && trace.normal[2] >= 0.30000001f && (ps->pm_flags & PMF_JUMPING)
+			&& ps->jumpOriginZ > ps->origin[2])
+		{
+			ps->velocity[2] *= 0.9f;
+			CoD4::ProjectVelocity(ps->velocity, trace.normal, ps->velocity);
+			CoD4::JumpClearState(ps);
 			return;
-
+		}
 		ClipVelocity(ps->velocity, trace.normal, ps->velocity, OVERCLIP);
 	}
 
@@ -379,83 +383,63 @@ namespace IW3SR::Addons
 
 	void CS::StepSlideMove(pmove_t* pm, pml_t* pml, bool gravity)
 	{
-		trace_t trace = {};
-		vec3 start_o, start_v, endpos;
-		vec3 down_o, down_v;
-		vec3 up, down;
+		vec3 vecPos = pm->ps->origin;
+		vec3 vecVel = pm->ps->velocity;
 
-		if (pm->ps->pm_flags & PMF_LADDER)
-		{
-			trace.allsolid = false;
-			CoD4::JumpClearState(pm->ps);
-		}
-		else if (pml->groundPlane)
-			trace.allsolid = true;
-		else
-		{
-			trace.allsolid = false;
-			if (pm->ps->pm_flags & PMF_JUMPING && pm->ps->pm_time)
-				CoD4::JumpClearState(pm->ps);
-		}
-		start_o = pm->ps->origin;
-		start_v = pm->ps->velocity;
-
-		// We got exactly where we wanted to go first try
-		if (!SlideMove(pm, pml, gravity))
-			return;
-
-		down = start_o;
-		down[2] -= sv_stepsize;
-
-		PM_PlayerTrace(pm, &trace, start_o, pm->mins, pm->maxs, down, pm->ps->clientNum, pm->tracemask);
-		up = { 0, 0, 1 };
-
-		// Never step up when you still have up velocity
-		if (pm->ps->velocity[2] > 0.0f && (trace.fraction == 1.0f || glm::dot(trace.normal, up) < 0.7f))
-			return;
-
-		down_o = pm->ps->origin;
-		down_v = pm->ps->velocity;
-		up = start_o;
-		up[2] += sv_stepsize;
-
-		// Test the player position if they were a stepheight higher
-		PM_PlayerTrace(pm, &trace, start_o, pm->mins, pm->maxs, up, pm->ps->clientNum, pm->tracemask);
-		endpos = glm::mix(pm->ps->origin, up, trace.fraction);
-
-		// Can't step up
-		if (trace.allsolid)
-			return;
-		float stepSize = endpos[2] - start_o[2];
-
-		// Try slidemove from this position
-		pm->ps->origin = endpos;
-		pm->ps->velocity = start_v;
-
+		// Slide move down first
 		SlideMove(pm, pml, gravity);
 
-		// Push down the final amount
-		down = pm->ps->origin;
-		down[2] -= stepSize;
+		// Save down results
+		vec3 vecDownPos = pm->ps->origin;
+		vec3 vecDownVel = pm->ps->velocity;
 
-		PM_PlayerTrace(pm, &trace, pm->ps->origin, pm->mins, pm->maxs, down, pm->ps->clientNum, pm->tracemask);
-		endpos = glm::mix(pm->ps->origin, down, trace.fraction);
+		// Reset to original
+		pm->ps->origin = vecPos;
+		pm->ps->velocity = vecVel;
 
+		// Move up a step height
+		vec3 vecEndPos = vecPos;
+		vecEndPos[2] += sv_stepsize;
+
+		trace_t trace = {};
+		PM_PlayerTrace(pm, &trace, vecPos, pm->mins, pm->maxs, vecEndPos, pm->ps->clientNum, pm->tracemask);
+		if (!trace.startsolid && !trace.allsolid)
+			pm->ps->origin = glm::mix(vecPos, vecEndPos, trace.fraction);
+
+		// Slide move up
+		SlideMove(pm, pml, false);
+
+		// Push down
+		vecEndPos = pm->ps->origin;
+		vecEndPos[2] -= sv_stepsize;
+
+		PM_PlayerTrace(pm, &trace, pm->ps->origin, pm->mins, pm->maxs, vecEndPos, pm->ps->clientNum, pm->tracemask);
 		if (!trace.allsolid)
-			pm->ps->origin = endpos;
-
-		if (trace.fraction < 1.0f)
 		{
-			// CoD4 bounce
-			if (!trace.walkable && trace.normal[2] >= 0.30000001f && (pm->ps->pm_flags & PMF_JUMPING)
-				&& pm->ps->jumpOriginZ > pm->ps->origin[2])
-			{
-				pm->ps->velocity[2] *= 0.9f; // Tweak bounce velocity
-				CoD4::ProjectVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity);
-				CoD4::JumpClearState(pm->ps); // Prevent double bounce
-				return;
-			}
-			ClipVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity, OVERCLIP);
+			if (trace.fraction < 1.0f)
+				pm->ps->origin = glm::mix(pm->ps->origin, vecEndPos, trace.fraction);
+		}
+		// Save up results
+		vec3 vecUpPos = pm->ps->origin;
+		vec3 vecUpVel = pm->ps->velocity;
+
+		// Pick the move that went farther horizontally
+		float downDist = (vecDownPos[0] - vecPos[0]) * (vecDownPos[0] - vecPos[0])
+			+ (vecDownPos[1] - vecPos[1]) * (vecDownPos[1] - vecPos[1]);
+		float upDist = (vecUpPos[0] - vecPos[0]) * (vecUpPos[0] - vecPos[0])
+			+ (vecUpPos[1] - vecPos[1]) * (vecUpPos[1] - vecPos[1]);
+
+		if (downDist > upDist || trace.normal[2] < SURF_SLOPE_NORMAL)
+		{
+			pm->ps->origin = vecDownPos;
+			pm->ps->velocity = vecDownVel;
+		}
+		else
+		{
+			pm->ps->origin = vecUpPos;
+			pm->ps->velocity[0] = vecUpVel[0];
+			pm->ps->velocity[1] = vecUpVel[1];
+			pm->ps->velocity[2] = vecDownVel[2];
 		}
 	}
 }
