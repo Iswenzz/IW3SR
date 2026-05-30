@@ -85,6 +85,79 @@ namespace IW3SR::Addons
 		TryPlayerMove(pm, pml);
 	}
 
+	void CS::GroundTrace(pmove_t* pm, pml_t* pml)
+	{
+		vec3 point;
+		trace_t trace = {};
+
+		point[0] = pm->ps->origin[0];
+		point[1] = pm->ps->origin[1];
+		point[2] = pm->ps->origin[2] - 0.25f;
+
+		PM_PlayerTrace(pm, &trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+		pml->groundTrace = trace;
+
+		// Do something corrective if the trace starts in a solid...
+		if (trace.allsolid && !PM_CorrectAllSolid(pm, pml, &trace))
+			return;
+
+		// If the trace didn't hit anything, we are in free fall
+		if (trace.fraction == 1.0f)
+		{
+			PM_GroundTraceMissed(pm, pml);
+			pml->groundPlane = false;
+			pml->almostGroundPlane = false;
+			pml->walking = false;
+			return;
+		}
+		// Check if getting thrown off the ground
+		if (pm->ps->velocity[2] > 0.0f && glm::dot(pm->ps->velocity, trace.normal) > 10.0f)
+		{
+			// Go into jump animation
+			if (pm->cmd.forwardmove >= 0)
+				pm->ps->pm_flags &= ~PMF_BACKWARDS_RUN;
+			else
+				pm->ps->pm_flags |= PMF_BACKWARDS_RUN;
+
+			pm->ps->groundEntityNum = ENTITYNUM_NONE;
+			pml->groundPlane = false;
+			pml->almostGroundPlane = false;
+			pml->walking = false;
+			return;
+		}
+		// Slopes that are too steep will not be considered onground
+		if (trace.normal[2] < SURF_SLOPE_NORMAL)
+		{
+			pm->ps->groundEntityNum = ENTITYNUM_NONE;
+			pml->groundPlane = false;
+			pml->almostGroundPlane = false;
+			pml->walking = false;
+			CoD4::JumpClearState(pm->ps);
+			return;
+		}
+		pml->groundPlane = true;
+		pml->almostGroundPlane = true;
+		pml->walking = true;
+
+		if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
+			PM_CrashLand(pm->ps, pml);
+
+		switch (trace.hitType)
+		{
+		case TRACE_HITTYPE_ENTITY:
+			pm->ps->groundEntityNum = trace.hitId;
+			break;
+		case TRACE_HITTYPE_DYNENT_MODEL:
+		case TRACE_HITTYPE_DYNENT_BRUSH:
+			pm->ps->groundEntityNum = 1022;
+			break;
+		default:
+			pm->ps->groundEntityNum = 1023;
+		}
+
+		PM_AddTouchEnt(pm, pm->ps->groundEntityNum);
+	}
+
 	bool CS::JumpCheck(pmove_t* pm, pml_t* pml)
 	{
 		if (pm->ps->pm_flags & PMF_NO_JUMP)

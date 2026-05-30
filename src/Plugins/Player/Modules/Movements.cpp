@@ -140,6 +140,10 @@ namespace IW3SR::Addons
 			event.PreventDefault = true;
 			Q3::GroundTrace(event.pm, event.pml);
 			break;
+		case MovementMode::CS:
+			event.PreventDefault = true;
+			CS::GroundTrace(event.pm, event.pml);
+			break;
 		}
 	}
 
