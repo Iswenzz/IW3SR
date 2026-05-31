@@ -1,7 +1,6 @@
 # IW3SR
 
 [![Checks](https://img.shields.io/github/check-runs/Iswenzz/IW3SR/master?logo=github)](https://github.com/Iswenzz/IW3SR/actions)
-[![CodeFactor](https://img.shields.io/codefactor/grade/github/Iswenzz/IW3SR?label=codefactor&logo=codefactor)](https://www.codefactor.io/repository/github/iswenzz/IW3SR)
 [![License](https://img.shields.io/github/license/Iswenzz/IW3SR?color=blue&logo=gitbook&logoColor=white)](https://github.com/Iswenzz/IW3SR/blob/master/LICENSE)
 
 ![](https://i.imgur.com/O6goVqC.jpeg)
