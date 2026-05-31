@@ -29,8 +29,15 @@ namespace IW3SR
 		const float rightmove = pm->cmd.rightmove * scale;
 
 		pm->ps->sprintState.sprintButtonUpRequired = 1;
-		pml->forward[2] = 0.0f;
-		pml->right[2] = 0.0f;
+
+		// Project moves down to flat plane
+		pml->forward[2] = 0;
+		pml->right[2] = 0;
+
+		// Project the pml->forward and pml->right directions onto the ground plane
+		ClipVelocity(pml->forward, pml->groundTrace.normal, pml->forward, OVERCLIP);
+		ClipVelocity(pml->right, pml->groundTrace.normal, pml->right, OVERCLIP);
+
 		pml->forward = glm::normalize(pml->forward);
 		pml->right = glm::normalize(pml->right);
 
@@ -50,7 +57,7 @@ namespace IW3SR
 			wishspeed = sv_maxspeed;
 		}
 		Accelerate(wishdir, wishspeed, pm->ps, pml);
-		StepSlideMove(pm, pml, true);
+		StepSlideMove(pm, pml, false);
 	}
 
 	void CS::AirMove(pmove_t* pm, pml_t* pml)
