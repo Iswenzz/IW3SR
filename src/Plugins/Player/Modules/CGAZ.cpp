@@ -1,9 +1,21 @@
 #include "CGAZ.hpp"
 
-#define pm_accelerate 9.0f
-#define pm_crouch_accelerate 12.0f
-#define pm_prone_accelerate 19.0f
-#define pm_airaccelerate 1.0f
+#define cod4_accelerate 9.0f
+#define cod4_crouch_accelerate 12.0f
+#define cod4_prone_accelerate 19.0f
+#define cod4_airaccelerate 1.0f
+
+#define q3_accelerate 10.0f
+#define q3_airaccelerate 1.0f
+
+#define q3cpm_accelerate 15.0f
+#define q3cpm_airaccelerate 1.0f
+#define q3cpm_strafeaccelerate 70.0f
+#define q3cpm_airspeedcap 30.0f
+
+#define cs_accelerate 10.0f
+#define cs_airaccelerate 150.0f
+#define cs_airspeedcap 30.0f
 
 namespace IW3SR::Addons
 {
@@ -72,21 +84,36 @@ namespace IW3SR::Addons
 			w_vel[i] = static_cast<float>(pm.cmd.forwardmove) * pml.forward[i]
 				+ static_cast<float>(pm.cmd.rightmove) * pml.right[i];
 
+		float accelerate = 0;
 		const float dmg_scale = DamageScaleWalk(pm.ps->damageTimer) * CmdScaleWalk(&pm.cmd);
 		const float wishspeed = dmg_scale * glm::length(w_vel);
 
 		// When a player gets hit, they temporarily lose full control, which allows them to be moved a bit
 		if (pml.groundTrace.surfaceFlags & SURF_SLICK || pm.ps->pm_flags & PMF_TIME_KNOCKBACK)
-			SlickAccelerate(wishspeed, pm_airaccelerate);
-		else
 		{
-			float accelerate = pm_accelerate;
-			if (pm.ps->viewHeightTarget == 11)
-				accelerate = pm_prone_accelerate;
-			else if (pm.ps->viewHeightTarget == 40)
-				accelerate = pm_crouch_accelerate;
-			Accelerate(wishspeed, accelerate);
+			SlickAccelerate(wishspeed, cod4_airaccelerate);
+			return;
 		}
+		switch (PMove::GetMovementMode())
+		{
+		case MovementMode::COD4:
+			accelerate = cod4_accelerate;
+			if (pm.ps->viewHeightTarget == 11)
+				accelerate = cod4_prone_accelerate;
+			else if (pm.ps->viewHeightTarget == 40)
+				accelerate = cod4_crouch_accelerate;
+			break;
+		case MovementMode::Q3:
+			accelerate = q3_accelerate;
+			break;
+		case MovementMode::Q3CPM:
+			accelerate = q3cpm_accelerate;
+			break;
+		case MovementMode::CS:
+			accelerate = cs_accelerate;
+			break;
+		}
+		Accelerate(wishspeed, accelerate);
 	}
 
 	void CGAZ::AirMove()
@@ -104,8 +131,33 @@ namespace IW3SR::Addons
 		for (int i = 0; i < 2; ++i)
 			w_vel[i] = pm.cmd.forwardmove * pml.forward[i] + pm.cmd.rightmove * pml.right[i];
 
-		const float wishspeed = scale * glm::length(w_vel);
-		Accelerate(wishspeed, pm_airaccelerate);
+		float wishspeed = scale * glm::length(w_vel);
+		float accel = 0;
+
+		switch (PMove::GetMovementMode())
+		{
+		case MovementMode::COD4:
+			accel = cod4_airaccelerate;
+			break;
+		case MovementMode::Q3:
+			accel = q3_airaccelerate;
+			break;
+		case MovementMode::Q3CPM:
+			accel = q3cpm_airaccelerate;
+			if (pm.cmd.forwardmove == 0 && pm.cmd.rightmove != 0)
+			{
+				accel = q3cpm_strafeaccelerate;
+				if (wishspeed > q3cpm_airspeedcap)
+					wishspeed = q3cpm_airspeedcap;
+			}
+			break;
+		case MovementMode::CS:
+			accel = cs_airaccelerate;
+			if (wishspeed > cs_airspeedcap)
+				wishspeed = cs_airspeedcap;
+			break;
+		}
+		Accelerate(wishspeed, accel);
 	}
 
 	void CGAZ::Compute(float wishspeed, float accel, float gravity)
