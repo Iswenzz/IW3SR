@@ -1,7 +1,6 @@
 add_library(Player SHARED)
 
 add_subdirectory(Modules)
-add_subdirectory(Movements)
 
 # Build
 target_link_libraries(Player PRIVATE IW3SR.API)

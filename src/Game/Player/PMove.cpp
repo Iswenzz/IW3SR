@@ -1,5 +1,8 @@
 #include "PMove.hpp"
 
+#include "Game/Player/Movements/CS.hpp"
+#include "Game/Player/Movements/Q3.hpp"
+
 namespace IW3SR
 {
 	void PMove::FinishMove(usercmd_s* cmd)
@@ -15,29 +18,63 @@ namespace IW3SR
 
 	void PMove::WalkMove(pmove_t* pm, pml_t* pml)
 	{
+		switch (GetMovementMode())
+		{
+		case MovementMode::COD4:
+			PM_WalkMove_h(pm, pml);
+			break;
+		case MovementMode::Q3:
+			Q3::WalkMove(pm, pml);
+			break;
+		case MovementMode::Q3CPM:
+			Q3::WalkMoveCPM(pm, pml);
+			break;
+		case MovementMode::CS:
+			CS::WalkMove(pm, pml);
+			break;
+		}
 		EventPMoveWalk event(pm, pml);
 		Application::Dispatch(event);
-
-		if (!event.PreventDefault)
-			PM_WalkMove_h(pm, pml);
 	}
 
 	void PMove::AirMove(pmove_t* pm, pml_t* pml)
 	{
+		switch (GetMovementMode())
+		{
+		case MovementMode::COD4:
+			PM_AirMove_h(pm, pml);
+			break;
+		case MovementMode::Q3:
+			Q3::AirMove(pm, pml);
+			break;
+		case MovementMode::Q3CPM:
+			Q3::AirMoveCPM(pm, pml);
+			break;
+		case MovementMode::CS:
+			CS::AirMove(pm, pml);
+			break;
+		}
 		EventPMoveAir event(pm, pml);
 		Application::Dispatch(event);
-
-		if (!event.PreventDefault)
-			PM_AirMove_h(pm, pml);
 	}
 
 	void PMove::GroundTrace(pmove_t* pm, pml_t* pml)
 	{
+		switch (GetMovementMode())
+		{
+		case MovementMode::COD4:
+			PM_GroundTrace_h(pm, pml);
+			break;
+		case MovementMode::Q3:
+		case MovementMode::Q3CPM:
+			Q3::GroundTrace(pm, pml);
+			break;
+		case MovementMode::CS:
+			CS::GroundTrace(pm, pml);
+			break;
+		}
 		EventPMoveGroundTrace event(pm, pml);
 		Application::Dispatch(event);
-
-		if (!event.PreventDefault)
-			PM_GroundTrace_h(pm, pml);
 	}
 
 	void PMove::CrashLand(playerState_s* ps, pml_t* pml)
@@ -129,6 +166,25 @@ namespace IW3SR
 	usercmd_s* PMove::GetUserCommand(int cmdNumber)
 	{
 		return &clients->cmds[cmdNumber & 0x7F];
+	}
+
+	MovementMode PMove::GetMovementMode()
+	{
+		switch (statData->stats.data.bytedata[1700]) // sr_mode
+		{
+		case 1: // 190
+		case 2: // 210
+			return MovementMode::COD4;
+		case 3: // Q3
+			return MovementMode::Q3;
+		case 4: // Q3CPM
+		case 5: // Q3CPMW
+			return MovementMode::Q3CPM;
+		case 6: // CS
+		case 7: // Portal
+			return MovementMode::CS;
+		}
+		return MovementMode::COD4;
 	}
 
 	vec3 PMove::GetEyePos()

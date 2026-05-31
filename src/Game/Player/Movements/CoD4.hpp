@@ -1,7 +1,7 @@
 #pragma once
-#include "Player/Base.hpp"
+#include "Game/Base.hpp"
 
-namespace IW3SR::Addons
+namespace IW3SR
 {
 	class CoD4
 	{

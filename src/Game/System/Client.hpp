@@ -11,5 +11,8 @@ namespace IW3SR
 		static void Disconnect(int localClientNum);
 		static void Respawn(int localClientNum);
 		static void Predict(int localClientNum);
+
+	private:
+		static void InterpolateViewForMover();
 	};
 }

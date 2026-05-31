@@ -1,8 +1,5 @@
 #include "Movements.hpp"
 
-#include "Player/Movements/CS.hpp"
-#include "Player/Movements/Q3.hpp"
-
 constexpr const char* modes = "CoD4\0Q3\0Q3CPM\0CS\0";
 
 namespace IW3SR::Addons
@@ -18,7 +15,6 @@ namespace IW3SR::Addons
 
 		UseBhop = false;
 		UseBhopToggle = false;
-		UseInterpolateMovers = true;
 		BhopToggled = false;
 	}
 
@@ -26,7 +22,7 @@ namespace IW3SR::Addons
 	{
 		if (Dvar::Get<bool>("sv_running"))
 		{
-			static MovementMode mode = MovementMode::COD4;
+			static MovementMode mode = PMove::GetMovementMode();
 			if (ImGui::Combo("Movements", reinterpret_cast<int*>(&mode), modes))
 			{
 				switch (mode)
@@ -74,9 +70,6 @@ namespace IW3SR::Addons
 				}
 			}
 		}
-		ImGui::Checkbox("Interpolate Movers", &UseInterpolateMovers);
-		ImGui::Tooltip("Smooth camera interpolation on moving and rotating platforms.");
-
 		ImGui::Checkbox("Bhop", &UseBhop);
 		ImGui::SameLine();
 		ImGui::Keybind("##BhopKey", &KeyBhop.Input);
@@ -84,67 +77,6 @@ namespace IW3SR::Addons
 		ImGui::Checkbox("Bhop Toggle", &UseBhopToggle);
 		ImGui::SameLine();
 		ImGui::Keybind("##BhopToggleKey", &KeyBhopToggle.Input);
-
-		BhopText.Menu("Bhop Options");
-	}
-
-	void Movements::OnPredict(EventClientPredict& event)
-	{
-		InterpolateViewForMover();
-	}
-
-	void Movements::OnWalkMove(EventPMoveWalk& event)
-	{
-		switch (GetMovementMode())
-		{
-		case MovementMode::Q3:
-			event.PreventDefault = true;
-			Q3::WalkMove(event.pm, event.pml);
-			break;
-		case MovementMode::Q3CPM:
-			event.PreventDefault = true;
-			Q3::WalkMoveCPM(event.pm, event.pml);
-			break;
-		case MovementMode::CS:
-			event.PreventDefault = true;
-			CS::WalkMove(event.pm, event.pml);
-			break;
-		}
-	}
-
-	void Movements::OnAirMove(EventPMoveAir& event)
-	{
-		switch (GetMovementMode())
-		{
-		case MovementMode::Q3:
-			event.PreventDefault = true;
-			Q3::AirMove(event.pm, event.pml);
-			break;
-		case MovementMode::Q3CPM:
-			event.PreventDefault = true;
-			Q3::AirMoveCPM(event.pm, event.pml);
-			break;
-		case MovementMode::CS:
-			event.PreventDefault = true;
-			CS::AirMove(event.pm, event.pml);
-			break;
-		}
-	}
-
-	void Movements::OnGroundTrace(EventPMoveGroundTrace& event)
-	{
-		switch (GetMovementMode())
-		{
-		case MovementMode::Q3:
-		case MovementMode::Q3CPM:
-			event.PreventDefault = true;
-			Q3::GroundTrace(event.pm, event.pml);
-			break;
-		case MovementMode::CS:
-			event.PreventDefault = true;
-			CS::GroundTrace(event.pm, event.pml);
-			break;
-		}
 	}
 
 	void Movements::OnFinishMove(EventPMoveFinish& event)
@@ -189,55 +121,6 @@ namespace IW3SR::Addons
 			cmd->buttons |= BUTTON_JUMP;
 			BhopToggled = false;
 		}
-	}
-
-	void Movements::InterpolateViewForMover()
-	{
-		if (!UseInterpolateMovers)
-			return;
-
-		const centity_s* cent = &cg_entities[cgs->predictedPlayerState.groundEntityNum];
-		const entityType_t eType = cent->nextState.eType;
-
-		auto viewAngles = cgs->predictedPlayerState.viewangles;
-		auto deltaAngles = cgs->predictedPlayerState.delta_angles;
-		const int fromTime = cgs->snap->serverTime;
-		const int toTime = cgs->time;
-
-		if (eType == ET_SCRIPTMOVER || eType == ET_PLANE)
-		{
-			vec3 angles, oldAngles;
-			BG_EvaluateTrajectory(&cent->currentState.apos, fromTime, oldAngles);
-			BG_EvaluateTrajectory(&cent->currentState.apos, toTime, angles);
-			vec3 delta = angles - oldAngles;
-
-			viewAngles[0] += delta.x;
-			viewAngles[1] += delta.y;
-			viewAngles[2] += delta.z;
-
-			deltaAngles[0] += delta.x;
-			deltaAngles[1] += delta.y;
-			deltaAngles[2] += delta.z;
-		}
-	}
-
-	MovementMode Movements::GetMovementMode()
-	{
-		switch (statData->stats.data.bytedata[1700]) // sr_mode
-		{
-		case 1: // 190
-		case 2: // 210
-			return MovementMode::COD4;
-		case 3: // Q3
-			return MovementMode::Q3;
-		case 4: // Q3CPM
-		case 5: // Q3CPMW
-			return MovementMode::Q3CPM;
-		case 6: // CS
-		case 7: // Portal
-			return MovementMode::CS;
-		}
-		return MovementMode::COD4;
 	}
 
 	void Movements::OnLoadPosition()

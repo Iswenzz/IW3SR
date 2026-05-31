@@ -3,6 +3,14 @@
 
 namespace IW3SR
 {
+	enum class MovementMode
+	{
+		COD4,
+		Q3,
+		Q3CPM,
+		CS,
+	};
+
 	class API PMove
 	{
 	public:
@@ -20,6 +28,7 @@ namespace IW3SR
 		static pmove_t CreatePmove(playerState_s* ps, usercmd_s* cmd);
 		static void PredictPmoveSingle(pmove_t* pm, int amount = 1);
 		static usercmd_s* GetUserCommand(int cmdNumber);
+		static MovementMode GetMovementMode();
 		static vec3 GetEyePos();
 
 		static bool OnGround();

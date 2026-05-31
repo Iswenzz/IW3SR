@@ -9,7 +9,7 @@ void BG_AddPredictableEventToPlayerstate(int event, int parms, playerState_s* ps
 	ps->eventSequence = static_cast<uint8_t>(ps->eventSequence + 1);
 }
 
-namespace IW3SR::Addons
+namespace IW3SR
 {
 	float CoD4::CmdScale(playerState_s* ps, usercmd_s* cmd)
 	{
