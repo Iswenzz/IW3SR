@@ -7,6 +7,7 @@ on:
     branches: [master]
 
 env:
+  COD4: ${{ github.workspace }}
   BUILD_TYPE: Release
 
 jobs:
