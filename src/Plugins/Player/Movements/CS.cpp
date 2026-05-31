@@ -140,8 +140,21 @@ namespace IW3SR::Addons
 		pml->walking = true;
 
 		if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
+		{
+			vec3 velocity = pm->ps->velocity;
+			int pm_time = pm->ps->pm_time;
+			bool hadHardLanding = pm->ps->pm_flags & PMF_TIME_HARDLANDING;
+
 			PM_CrashLand(pm->ps, pml);
 
+			// Undo slowdowns
+			pm->ps->velocity = velocity;
+			if (!hadHardLanding && (pm->ps->pm_flags & PMF_TIME_HARDLANDING))
+			{
+				pm->ps->pm_flags &= ~PMF_TIME_HARDLANDING;
+				pm->ps->pm_time = pm_time;
+			}
+		}
 		switch (trace.hitType)
 		{
 		case TRACE_HITTYPE_ENTITY:

@@ -147,23 +147,6 @@ namespace IW3SR::Addons
 		}
 	}
 
-	void Movements::OnCrashLand(EventPMoveCrashLand& event)
-	{
-		switch (GetMovementMode())
-		{
-		case MovementMode::COD4:
-			// Original code
-			Memory::Write(0x410315, "\xD9\x46\x28\xDD\x05");
-			break;
-		case MovementMode::Q3:
-		case MovementMode::Q3CPM:
-		case MovementMode::CS:
-			// Skip the hard landing section in PM_CrashLand
-			Memory::JMP(0x410315, 0x410333);
-			break;
-		}
-	}
-
 	void Movements::OnFinishMove(EventPMoveFinish& event)
 	{
 		Bhop(event.ps, event.cmd);

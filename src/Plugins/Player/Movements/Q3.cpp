@@ -323,9 +323,19 @@ namespace IW3SR::Addons
 
 		if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
 		{
+			vec3 velocity = pm->ps->velocity;
+			bool hadHardLanding = pm->ps->pm_flags & PMF_TIME_HARDLANDING;
+
 			PM_CrashLand(pm->ps, pml);
+
+			// Clear jump clipping
 			CoD4::JumpClearState(pm->ps);
 			pm->ps->pm_time = 0;
+
+			// Undo slowdowns
+			pm->ps->velocity = velocity;
+			if (!hadHardLanding && (pm->ps->pm_flags & PMF_TIME_HARDLANDING))
+				pm->ps->pm_flags &= ~PMF_TIME_HARDLANDING;
 		}
 		switch (trace.hitType)
 		{
