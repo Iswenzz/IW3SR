@@ -23,6 +23,8 @@ namespace IW3SR
 {
 	void Q3::WalkMove(pmove_t* pm, pml_t* pml)
 	{
+		pm->ps->pm_flags |= PMF_NO_SPRINT;
+
 		if (JumpCheck(pm, pml))
 		{
 			AirMove(pm, pml);
@@ -33,8 +35,6 @@ namespace IW3SR
 		const float forwardmove = pm->cmd.forwardmove;
 		const float rightmove = pm->cmd.rightmove;
 		const float scale = CoD4::CmdScale(pm->ps, &pm->cmd);
-
-		pm->ps->sprintState.sprintButtonUpRequired = 1;
 
 		// Set the movementDir so clients can rotate the legs for strafing
 		SetMovementDir(pm);
@@ -100,6 +100,8 @@ namespace IW3SR
 
 	void Q3::WalkMoveCPM(pmove_t* pm, pml_t* pml)
 	{
+		pm->ps->pm_flags |= PMF_NO_SPRINT;
+
 		if (JumpCheck(pm, pml))
 		{
 			AirMoveCPM(pm, pml);
@@ -110,8 +112,6 @@ namespace IW3SR
 		const float forwardmove = pm->cmd.forwardmove;
 		const float rightmove = pm->cmd.rightmove;
 		const float scale = CoD4::CmdScale(pm->ps, &pm->cmd);
-
-		pm->ps->sprintState.sprintButtonUpRequired = 1;
 
 		// Set the movementDir so clients can rotate the legs for strafing
 		SetMovementDir(pm);
@@ -183,7 +183,6 @@ namespace IW3SR
 
 		Friction(pm, pml);
 
-		pm->ps->sprintState.sprintButtonUpRequired = 1;
 		forwardmove = pm->cmd.forwardmove;
 		rightmove = pm->cmd.rightmove;
 
@@ -226,7 +225,6 @@ namespace IW3SR
 
 		Friction(pm, pml);
 
-		pm->ps->sprintState.sprintButtonUpRequired = 1;
 		forwardmove = pm->cmd.forwardmove;
 		rightmove = pm->cmd.rightmove;
 
@@ -439,7 +437,7 @@ namespace IW3SR
 		pml->almostGroundPlane = false;
 		pml->walking = false;
 		pm->ps->pm_flags &= ~(PMF_TIME_HARDLANDING | PMF_TIME_KNOCKBACK);
-		pm->ps->pm_flags |= PMF_JUMPING;
+		pm->ps->pm_flags |= (PMF_JUMPING | PMF_NO_SPRINT);
 		pm->ps->pm_time = 0;
 		pm->ps->jumpTime = CPM_PM_CLIPTIME; // Using this timer for clipping
 		pm->ps->groundEntityNum = ENTITYNUM_NONE;

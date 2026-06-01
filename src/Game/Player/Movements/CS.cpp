@@ -17,6 +17,8 @@ namespace IW3SR
 {
 	void CS::WalkMove(pmove_t* pm, pml_t* pml)
 	{
+		pm->ps->pm_flags |= PMF_NO_SPRINT;
+
 		if (JumpCheck(pm, pml))
 		{
 			AirMove(pm, pml);
@@ -27,8 +29,6 @@ namespace IW3SR
 		const float scale = CoD4::CmdScale(pm->ps, &pm->cmd);
 		const float forwardmove = pm->cmd.forwardmove * scale;
 		const float rightmove = pm->cmd.rightmove * scale;
-
-		pm->ps->sprintState.sprintButtonUpRequired = 1;
 
 		// Project moves down to flat plane
 		pml->forward[2] = 0;
@@ -66,7 +66,6 @@ namespace IW3SR
 		const float forwardmove = pm->cmd.forwardmove * scale;
 		const float rightmove = pm->cmd.rightmove * scale;
 
-		pm->ps->sprintState.sprintButtonUpRequired = 1;
 		pml->forward[2] = 0.0f;
 		pml->right[2] = 0.0f;
 		pml->forward = glm::normalize(pml->forward);
@@ -200,7 +199,7 @@ namespace IW3SR
 		pml->almostGroundPlane = false;
 		pml->walking = false;
 		pm->ps->pm_flags &= ~(PMF_TIME_HARDLANDING | PMF_TIME_KNOCKBACK);
-		pm->ps->pm_flags |= PMF_JUMPING;
+		pm->ps->pm_flags |= (PMF_JUMPING | PMF_NO_SPRINT);
 		pm->ps->pm_time = 0;
 		pm->ps->groundEntityNum = ENTITYNUM_NONE;
 		pm->ps->velocity[2] = pm->ps->velocity[2] > 0.0f ? pm->ps->velocity[2] + jump_velocity : jump_velocity;
