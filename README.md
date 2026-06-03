@@ -2,7 +2,24 @@
 
 ![](https://i.imgur.com/O6goVqC.jpeg)
 
-IW3SR is a client modification for Call of Duty 4 powered by [IzEngine](https://github.com/Iswenzz/IzEngine). Enhance gameplay experience and performance through a range of improvements, features such as an in game GUI, a plugin system to reload modules at runtime, interpolation of rotating platforms, Q3 (CPM) and CS movements, CGAZ hud, shaders playing offline, a velocity meter and more.
+A client modification for Call of Duty 4, powered by [IzEngine](https://github.com/Iswenzz/IzEngine). It improves performance and gameplay with an in-game GUI, a runtime plugin system, new movement physics, and more.
+ 
+## Features
+ 
+- In-game GUI.
+- Plugin system to reload modules at runtime.
+- Interpolation of rotating platforms.
+- CGAZ HUD and velocity meter.
+- Offline shader playback.
+- Built-in browser for video playback.
+- Bunny hop script.
+- Emoji support.
+## Movement
+ 
+- **Q3** — Quake 3 original movements.
+- **Q3CPM** — Quake 3 CPM movements.
+- **CS** — Counter-Strike bhop and surf physics.
+
 
 ## Instructions
 In order to use this client, download the archived file down below, and extract it to your cod4 directory.
