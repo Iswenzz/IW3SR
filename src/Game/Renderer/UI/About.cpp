@@ -126,9 +126,9 @@ namespace IW3SR::UC
 	{
 		constexpr auto title = "IW3SR";
 		constexpr auto description =
-			"Powered by IzEngine — featuring an in-game GUI, plugin system, "
-			"runtime module reloading, rotating platform interpolation, Q3/CPM/CS movements, "
-			"CGAZ HUD, offline shaders, velocity meter and more.";
+			"A client modification for Call of Duty 4, powered by IzEngine."
+			"It improves performance and gameplay with an in-game GUI, a runtime plugin system, new movement physics, "
+			"and more.";
 
 		constexpr int logoSize = 250;
 		constexpr int padding = 30;
