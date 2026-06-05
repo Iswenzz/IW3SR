@@ -362,7 +362,9 @@ namespace IW3SR
 		ps->velocity[2] = 0.0f;
 
 		const float speed = glm::length(ps->velocity);
-		ps->velocity = glm::normalize(ps->velocity);
+		if (speed > 0.0f)
+			ps->velocity /= speed;
+
 		const float dot = glm::dot(ps->velocity, wishdir);
 		float k = 32.0f * pm_aircontrol * dot * dot * pml->frametime * pm_airaccelerate;
 
@@ -370,7 +372,10 @@ namespace IW3SR
 		{
 			for (int i = 0; i < 2; i++)
 				ps->velocity[i] = ps->velocity[i] * speed + wishdir[i] * k;
-			ps->velocity = glm::normalize(ps->velocity);
+
+			float len = glm::length(ps->velocity);
+			if (len > 0.0f)
+				ps->velocity /= len;
 		}
 		for (int i = 0; i < 2; i++)
 			ps->velocity[i] *= speed;
@@ -555,10 +560,12 @@ namespace IW3SR
 			numplanes = 0;
 
 		// Never turn against original velocity
-		planes[numplanes] = pm->ps->velocity;
-		planes[numplanes] = glm::normalize(planes[numplanes]);
-		numplanes++;
-
+		float velLen = glm::length(pm->ps->velocity);
+		if (velLen > 0.0f)
+		{
+			planes[numplanes] = pm->ps->velocity / velLen;
+			numplanes++;
+		}
 		for (bumpcount = 0; bumpcount < NUM_BUMPS; bumpcount++)
 		{
 			// Calculate position we are trying to move to
@@ -631,7 +638,13 @@ namespace IW3SR
 						if (glm::dot(clip_velocity, planes[permutation[0]]) < 0.0f)
 						{
 							dir = glm::cross(planes[permutation[0]], planes[permutation[j]]);
-							dir = glm::normalize(dir);
+							float dirLen = glm::length(dir);
+							if (dirLen < 0.001f)
+							{
+								pm->ps->velocity = { 0, 0, 0 };
+								return true;
+							}
+							dir /= dirLen;
 							float d = glm::dot(dir, pm->ps->velocity);
 							clip_velocity = dir * d;
 							d = glm::dot(dir, end_velocity);
