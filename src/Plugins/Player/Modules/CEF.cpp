@@ -21,19 +21,17 @@ namespace IW3SR::Addons
 		Instance = nullptr;
 	}
 
-	void CEF::OnExecuteCommand(EventClientCommand& event)
-	{
-		if (!Instance->Open)
-			return;
-
-		if (event.command.starts_with("cef_url"))
-			Browser::SetURL(Instance, Dvar::Get<char*>("cef_url"));
-	}
-
 	void CEF::OnRender()
 	{
+		static std::string prevUrl = "";
+
 		if (Instance)
 			Instance->Show = UI::Open && MenuFrame.Open;
+
+		const auto url = Dvar::Get<char*>("cef_url");
+		if (Instance && Instance->Open && url != prevUrl)
+			Browser::SetURL(Instance, url);
+		prevUrl = url;
 
 		Browser::Frame();
 	}

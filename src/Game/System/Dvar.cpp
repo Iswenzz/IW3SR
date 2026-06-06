@@ -5,7 +5,7 @@ namespace IW3SR
 	void Dvar::Initialize()
 	{
 		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
-		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "https://sr-speedrun.com/media");
+		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "about:blank");
 
 		Find("bg_bobmax")->flags = DVAR_SAVED;
 		Find("cg_fovscale")->flags = DVAR_SAVED;

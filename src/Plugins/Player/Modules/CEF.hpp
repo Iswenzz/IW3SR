@@ -15,7 +15,6 @@ namespace IW3SR::Addons
 		void Initialize() override;
 		void Release() override;
 
-		void OnExecuteCommand(EventClientCommand& event) override;
 		void OnRender() override;
 	};
 }
