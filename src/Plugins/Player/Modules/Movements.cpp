@@ -12,6 +12,8 @@ namespace IW3SR::Addons
 
 		KeyBhop = Bind(Key_Space);
 		KeyBhopToggle = Bind(Input_None);
+		KeyTurnLeft = Bind(Input_None);
+		KeyTurnRight = Bind(Input_None);
 
 		UseBhop = false;
 		UseBhopToggle = false;
@@ -77,11 +79,15 @@ namespace IW3SR::Addons
 		ImGui::Checkbox("Bhop Toggle", &UseBhopToggle);
 		ImGui::SameLine();
 		ImGui::Keybind("##BhopToggleKey", &KeyBhopToggle.Input);
+
+		ImGui::Keybind("CS Turn Left", &KeyTurnLeft.Input);
+		ImGui::Keybind("CS Turn Right", &KeyTurnRight.Input);
 	}
 
 	void Movements::OnFinishMove(EventPMoveFinish& event)
 	{
 		Bhop(event.ps, event.cmd);
+		TurnBind(event.ps, event.cmd);
 	}
 
 	void Movements::Bhop(playerState_s* ps, usercmd_s* cmd)
@@ -121,6 +127,20 @@ namespace IW3SR::Addons
 			cmd->buttons |= BUTTON_JUMP;
 			BhopToggled = false;
 		}
+	}
+
+	void Movements::TurnBind(playerState_s* ps, usercmd_s* cmd)
+	{
+		if (!KeyTurnLeft.IsDown() && !KeyTurnRight.IsDown())
+			return;
+
+		const float cl_yawspeed = Dvar::Get<float>("cl_yawspeed");
+		const float speed = cls->frametime;
+		const float deltaTime = speed * 0.001f;
+
+		cmd->rightmove = KeyTurnRight.IsDown() ? 127 : KeyTurnLeft.IsDown() ? -127 : 0;
+		clients->viewangles[1] += KeyTurnLeft.IsDown() * cl_yawspeed * deltaTime;
+		clients->viewangles[1] -= KeyTurnRight.IsDown() * cl_yawspeed * deltaTime;
 	}
 
 	void Movements::OnLoadPosition()

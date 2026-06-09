@@ -8,6 +8,8 @@ namespace IW3SR::Addons
 	public:
 		Bind KeyBhop;
 		Bind KeyBhopToggle;
+		Bind KeyTurnLeft;
+		Bind KeyTurnRight;
 		Text BhopText;
 
 		bool UseBhop;
@@ -24,7 +26,9 @@ namespace IW3SR::Addons
 
 	private:
 		void Bhop(playerState_s* ps, usercmd_s* cmd);
+		void TurnBind(playerState_s* ps, usercmd_s* cmd);
 
-		SERIALIZE_POLY(Movements, Module, KeyBhop, KeyBhopToggle, BhopText, UseBhop, UseBhopToggle)
+		SERIALIZE_POLY(Movements, Module, KeyBhop, KeyBhopToggle, KeyTurnLeft, KeyTurnRight, BhopText, UseBhop,
+			UseBhopToggle)
 	};
 }
