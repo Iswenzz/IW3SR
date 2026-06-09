@@ -17,6 +17,7 @@ namespace IW3SR::Addons
 
 		UseBhop = false;
 		UseBhopToggle = false;
+		UseTurnBind = false;
 		BhopToggled = false;
 	}
 
@@ -74,14 +75,17 @@ namespace IW3SR::Addons
 		}
 		ImGui::Checkbox("Bhop", &UseBhop);
 		ImGui::SameLine();
-		ImGui::Keybind("##BhopKey", &KeyBhop.Input);
+		ImGui::Keybind("##KeyBhop", &KeyBhop.Input);
 
 		ImGui::Checkbox("Bhop Toggle", &UseBhopToggle);
 		ImGui::SameLine();
-		ImGui::Keybind("##BhopToggleKey", &KeyBhopToggle.Input);
+		ImGui::Keybind("##KeyBhopToggle", &KeyBhopToggle.Input);
 
-		ImGui::Keybind("CS Turn Left", &KeyTurnLeft.Input);
-		ImGui::Keybind("CS Turn Right", &KeyTurnRight.Input);
+		ImGui::Checkbox("CS Turnbind", &UseTurnBind);
+		ImGui::SameLine();
+		ImGui::Keybind("##KeyTurnLeft", &KeyTurnLeft.Input);
+		ImGui::SameLine();
+		ImGui::Keybind("##KeyTurnRight", &KeyTurnRight.Input);
 	}
 
 	void Movements::OnFinishMove(EventPMoveFinish& event)
@@ -131,6 +135,9 @@ namespace IW3SR::Addons
 
 	void Movements::TurnBind(playerState_s* ps, usercmd_s* cmd)
 	{
+		if (!UseTurnBind)
+			return;
+
 		if (!KeyTurnLeft.IsDown() && !KeyTurnRight.IsDown())
 			return;
 

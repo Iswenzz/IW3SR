@@ -14,6 +14,7 @@ namespace IW3SR::Addons
 
 		bool UseBhop;
 		bool UseBhopToggle;
+		bool UseTurnBind;
 		bool BhopToggled;
 
 		Movements();
@@ -29,6 +30,6 @@ namespace IW3SR::Addons
 		void TurnBind(playerState_s* ps, usercmd_s* cmd);
 
 		SERIALIZE_POLY(Movements, Module, KeyBhop, KeyBhopToggle, KeyTurnLeft, KeyTurnRight, BhopText, UseBhop,
-			UseBhopToggle)
+			UseBhopToggle, UseTurnBind)
 	};
 }
