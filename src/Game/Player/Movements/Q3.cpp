@@ -206,10 +206,8 @@ namespace IW3SR
 			wishdir = glm::normalize(wishdir);
 
 		float accel = pm_airaccelerate;
-		const float wishspeed2 = wishspeed;
 
 		Accelerate(ps, pml, wishdir, wishspeed, accel);
-		AirControl(pm, pml, wishdir, wishspeed2);
 
 		if (pml->groundPlane)
 			ClipVelocity(ps->velocity, pml->groundTrace.normal, ps->velocity, OVERCLIP);
