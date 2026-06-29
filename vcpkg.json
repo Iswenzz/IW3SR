@@ -36,7 +36,7 @@
 		"polyhook2"
 	],
 	"overrides": [
-		{ "name": "cef", "version": "142.0.17" },
+		{ "name": "cef", "version": "149.0.6" },
 		{ "name": "curl", "version": "8.14.1" },
         { "name": "directxsdk", "version-string": "jun10#8" },
 		{ "name": "glm", "version": "1.0.1#2" },
