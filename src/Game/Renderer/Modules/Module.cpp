@@ -10,11 +10,6 @@ namespace IW3SR
 		MenuFrame = Frame(name);
 	}
 
-	Module::~Module()
-	{
-		Release();
-	}
-
 	void Module::Initialize() { }
 	void Module::Release() { }
 	void Module::Menu() { }
@@ -36,7 +31,7 @@ namespace IW3SR
 
 	void Module::OnDraw3D(EventRenderer3D& event) { }
 	void Module::OnDraw2D(EventRenderer2D& event) { }
-	void Module::OnDrawText(EventRendererText& event) {  }
+	void Module::OnDrawText(EventRendererText& event) { }
 	void Module::OnRender() { }
 
 	void Module::OnEvent(Event& event)

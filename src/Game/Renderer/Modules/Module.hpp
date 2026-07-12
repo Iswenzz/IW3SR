@@ -14,7 +14,7 @@ namespace IW3SR
 
 		Module() = default;
 		Module(const std::string& id, const std::string& group, const std::string& name);
-		virtual ~Module();
+		virtual ~Module() = default;
 
 		virtual void Initialize();
 		virtual void Release();
