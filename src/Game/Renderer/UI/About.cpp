@@ -24,7 +24,7 @@ namespace IW3SR::UC
 		Checking = true;
 		StatusMessage = "Checking for updates...";
 
-		auto* req = HTTP::Get("https://iswenzz.com/static/updates/iw3sr/version.txt",
+		auto req = HTTP::Get("https://iswenzz.com/static/updates/iw3sr/version.txt",
 			[this](const HTTPResponse& response)
 			{
 				Checking = false;
@@ -47,7 +47,7 @@ namespace IW3SR::UC
 				StatusMessage = "Update available: " + LatestVersion;
 			});
 
-		req->Send();
+		req.Send();
 	}
 
 	void About::StartUpdate()
@@ -68,7 +68,7 @@ namespace IW3SR::UC
 		Progress = 0.0f;
 		StatusMessage = "Downloading...";
 
-		auto* req = HTTP::Get("https://iswenzz.com/static/updates/iw3sr/IW3SR.zip",
+		auto req = HTTP::Get("https://iswenzz.com/static/updates/iw3sr/IW3SR.zip",
 			[=](const HTTPResponse& response)
 			{
 				if (response.Code != 200)
@@ -118,8 +118,8 @@ namespace IW3SR::UC
 				GSystem::ExitRequested = true;
 			});
 
-		req->OnProgress = [this](float progress) { Progress = progress; };
-		req->Send();
+		req.OnProgress = [this](float progress) { Progress = progress; };
+		req.Send();
 	}
 
 	void About::OnRender()
