@@ -4,17 +4,16 @@
 #include "Game/System/Console.hpp"
 #include "Game/System/Patch.hpp"
 
-void Application::Start()
+void Application::Prepare()
 {
 	Crash::Setup();
 	Environment::Binary();
 	Patch::Initialize();
 }
 
-void Application::LateStart()
+void Application::Initialize()
 {
-	LateStarted = true;
-
+	Browser::Initialize(true);
 	ThreadPool::Initialize();
 	GConsole::Initialize();
 	Plugins::Load();
@@ -22,9 +21,6 @@ void Application::LateStart()
 
 void Application::Shutdown()
 {
-	if (!LateStarted)
-		return;
-
 	Plugins::Free();
 	GConsole::Shutdown();
 	ThreadPool::Shutdown();

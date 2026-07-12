@@ -17,7 +17,7 @@ namespace IW3SR
 			return;
 		UseBase = true;
 
-		Application::LateStart();
+		Application::Initialize();
 
 		ReallocXAssetPools();
 
@@ -45,7 +45,6 @@ namespace IW3SR
 		}
 		CreateWindowExA_h.Install();
 		Cmd_ExecuteSingleCommand_h.Install();
-		Com_PlayIntroMovies_h.Install();
 		Com_PrintMessage_h.Install();
 		CG_DrawCrosshair_h.Install();
 		CG_PredictPlayerState_Internal_h.Install();

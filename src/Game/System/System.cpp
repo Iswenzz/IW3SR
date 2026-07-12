@@ -3,13 +3,6 @@
 
 namespace IW3SR
 {
-	void GSystem::Initialize()
-	{
-		Com_PlayIntroMovies_h();
-
-		Browser::Initialize(true);
-	}
-
 	void GSystem::Shutdown(int localClientNum)
 	{
 		Browser::Shutdown();

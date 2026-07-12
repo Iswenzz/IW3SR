@@ -15,9 +15,6 @@ namespace IW3SR
 	extern Hook<void(int localClientNum, int controllerIndex, char* command)>
 		Cmd_ExecuteSingleCommand_h;
 
-	extern Hook<void()>
-		Com_PlayIntroMovies_h;
-
 	extern Hook<void(ConChannel channel, const char* msg, int type)>
 		Com_PrintMessage_h;
 

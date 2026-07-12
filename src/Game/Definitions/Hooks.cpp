@@ -19,9 +19,6 @@ namespace IW3SR
 	Hook<void(int localClientNum, int controllerIndex, char* command)>
 		Cmd_ExecuteSingleCommand_h(0x4F9AB0, GSystem::ExecuteSingleCommand);
 
-	Hook<void()>
-		Com_PlayIntroMovies_h(0x4FEA00, GSystem::Initialize);
-
 	Hook<void(ConChannel channel, const char* msg, int type)>
 		Com_PrintMessage_h(0x4FCA50, GConsole::Write);
 

@@ -6,12 +6,11 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 	{
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hModule);
-		Application::Start();
+		Application::Prepare();
 		break;
 
 	case DLL_PROCESS_DETACH:
-		if (!lpReserved)
-			Application::Shutdown();
+		Application::Shutdown();
 		break;
 	}
 	return TRUE;
