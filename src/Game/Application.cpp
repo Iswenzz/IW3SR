@@ -8,15 +8,23 @@ void Application::Start()
 {
 	Crash::Setup();
 	Environment::Binary();
+	Patch::Initialize();
+}
+
+void Application::LateStart()
+{
+	LateStarted = true;
 
 	ThreadPool::Initialize();
 	GConsole::Initialize();
-	Patch::Initialize();
 	Plugins::Load();
 }
 
 void Application::Shutdown()
 {
+	if (!LateStarted)
+		return;
+
 	Plugins::Free();
 	GConsole::Shutdown();
 	ThreadPool::Shutdown();

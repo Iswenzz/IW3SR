@@ -1,38 +1,67 @@
 #include <windows.h>
 #include <filesystem>
+#include <string>
+
+static std::filesystem::path ExeDirectory()
+{
+	char exe[MAX_PATH] = { 0 };
+	GetModuleFileName(nullptr, exe, MAX_PATH);
+	return std::filesystem::path(exe).parent_path();
+}
+
+static bool IsGameProcess()
+{
+	char exe[MAX_PATH] = { 0 };
+	GetModuleFileName(nullptr, exe, MAX_PATH);
+	std::string name = std::filesystem::path(exe).filename().string();
+	for (char& c : name)
+		c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+	return name == "iw3mp.exe";
+}
+
+static HMODULE RealLibrary()
+{
+	static HMODULE library = []
+	{
+		char system32[MAX_PATH] = { 0 };
+		GetSystemDirectory(system32, MAX_PATH);
+		return LoadLibrary((std::filesystem::path(system32) / "ddraw.dll").string().c_str());
+	}();
+	return library;
+}
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 {
 	static HMODULE module = nullptr;
 
-	char exe[MAX_PATH];
-	GetModuleFileName(nullptr, exe, MAX_PATH);
-	if (std::filesystem::path(exe).filename() != "iw3mp.exe")
-		return TRUE;
-
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-		SetDllDirectory("iw3sr/Bin");
-		module = LoadLibrary("IW3SR.dll");
-		break;
+	{
+		DisableThreadLibraryCalls(hModule);
+		if (!IsGameProcess())
+			return TRUE;
 
+		const auto bin = ExeDirectory() / "iw3sr" / "Bin";
+		SetDllDirectory(bin.string().c_str());
+		module = LoadLibrary((bin / "IW3SR.dll").string().c_str());
+		break;
+	}
 	case DLL_PROCESS_DETACH:
-		FreeLibrary(module);
+		if (!lpReserved && module)
+			FreeLibrary(module);
 		break;
 	}
 	return TRUE;
 }
 
-static HMODULE library =
-	LoadLibrary((std::filesystem::path(std::getenv("WINDIR")) / "System32" / "ddraw.dll").string().c_str());
-
-#define PROXY_LIBRARY library
-#define PROXY(CallingConv, ReturnType, FuncName, Params, Args)                   \
-	__declspec(dllexport) ReturnType CallingConv _##FuncName Params              \
-	{                                                                            \
-		static auto address = GetProcAddress(PROXY_LIBRARY, #FuncName);          \
-		return reinterpret_cast<ReturnType(CallingConv *) Params>(address) Args; \
+#define PROXY(CallingConv, ReturnType, FuncName, Params, Args)                  \
+	__declspec(dllexport) ReturnType CallingConv _##FuncName Params             \
+	{                                                                           \
+		static auto address = GetProcAddress(RealLibrary(), #FuncName);         \
+		if (!address)                                                           \
+			return E_FAIL;                                                      \
+		return reinterpret_cast<ReturnType(CallingConv*) Params>(address) Args; \
 	}
 
 // clang-format off

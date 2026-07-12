@@ -7,25 +7,47 @@ namespace IW3SR
 		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
 		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "about:blank");
 
-		Find("bg_bobmax")->flags = DVAR_SAVED;
-		Find("cg_fovscale")->flags = DVAR_SAVED;
-		Find("cg_gun_x")->flags = DVAR_SAVED;
-		Find("cg_gun_y")->flags = DVAR_SAVED;
-		Find("cg_gun_z")->flags = DVAR_SAVED;
-		Find("r_fullbright")->flags = DVAR_SAVED;
-		Find("r_zfar")->flags = DVAR_SAVED;
+		if (const auto bg_bobmax = Find("bg_bobmax"))
+			bg_bobmax->flags = DVAR_SAVED;
 
-		Find("cg_draw2d")->flags = DVAR_NONE;
-		Find("cg_drawgun")->flags = DVAR_NONE;
-		Find("r_filmusetweaks")->flags = DVAR_NONE;
-		Find("r_glowusetweaks")->flags = DVAR_NONE;
-		Find("developer_script")->flags = DVAR_NONE;
+		if (const auto cg_draw2d = Find("cg_draw2d"))
+			cg_draw2d->flags = DVAR_NONE;
 
-		const auto r_lodBiasRigid = Find("r_lodBiasRigid");
-		r_lodBiasRigid->domain.value.min = -1000000;
+		if (const auto cg_drawgun = Find("cg_drawgun"))
+			cg_drawgun->flags = DVAR_NONE;
 
-		const auto r_lodBiasSkinned = Find("r_lodBiasSkinned");
-		r_lodBiasSkinned->domain.value.min = -1000000;
+		if (const auto cg_fovscale = Find("cg_fovscale"))
+			cg_fovscale->flags = DVAR_SAVED;
+
+		if (const auto cg_gun_x = Find("cg_gun_x"))
+			cg_gun_x->flags = DVAR_SAVED;
+
+		if (const auto cg_gun_y = Find("cg_gun_y"))
+			cg_gun_y->flags = DVAR_SAVED;
+
+		if (const auto cg_gun_z = Find("cg_gun_z"))
+			cg_gun_z->flags = DVAR_SAVED;
+
+		if (const auto developer_script = Find("developer_script"))
+			developer_script->flags = DVAR_NONE;
+
+		if (const auto r_filmusetweaks = Find("r_filmusetweaks"))
+			r_filmusetweaks->flags = DVAR_NONE;
+
+		if (const auto r_fullbright = Find("r_fullbright"))
+			r_fullbright->flags = DVAR_SAVED;
+
+		if (const auto r_glowusetweaks = Find("r_glowusetweaks"))
+			r_glowusetweaks->flags = DVAR_NONE;
+
+		if (const auto r_lodBiasRigid = Find("r_lodBiasRigid"))
+			r_lodBiasRigid->domain.value.min = -1000000;
+
+		if (const auto r_lodBiasSkinned = Find("r_lodBiasSkinned"))
+			r_lodBiasSkinned->domain.value.min = -1000000;
+
+		if (const auto r_zfar = Find("r_zfar"))
+			r_zfar->flags = DVAR_SAVED;
 	}
 
 	dvar_s* Dvar::RegisterInt(const char* name, DvarFlags flags, const char* description, int value, int min, int max)

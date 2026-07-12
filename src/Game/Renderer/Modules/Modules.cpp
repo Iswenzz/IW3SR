@@ -4,10 +4,14 @@ namespace IW3SR
 {
 	void Modules::Remove(const std::string& id)
 	{
-		const auto& entry = Entries[id];
+		const auto it = Entries.find(id);
+		if (it == Entries.end())
+			return;
+
+		const auto& entry = it->second;
 		entry->Serialize(Serialized[entry->ID]);
 		entry->Release();
-		Entries.erase(id);
+		Entries.erase(it);
 	}
 
 	void Modules::Deserialize()

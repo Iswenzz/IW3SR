@@ -52,11 +52,18 @@ namespace IW3SR
 
 	void Client::InterpolateViewForMover()
 	{
-		const centity_s* cent = &cg_entities[cgs->predictedPlayerState.groundEntityNum];
+		if (!cgs->snap)
+			return;
+
+		const int groundEntityNum = cgs->predictedPlayerState.groundEntityNum;
+		if (groundEntityNum < 0 || groundEntityNum >= ENTITYNUM_NONE)
+			return;
+
+		const centity_s* cent = &cg_entities[groundEntityNum];
 		const entityType_t eType = cent->nextState.eType;
 
-		auto viewAngles = cgs->predictedPlayerState.viewangles;
-		auto deltaAngles = cgs->predictedPlayerState.delta_angles;
+		auto& viewAngles = cgs->predictedPlayerState.viewangles;
+		auto& deltaAngles = cgs->predictedPlayerState.delta_angles;
 		const int fromTime = cgs->snap->serverTime;
 		const int toTime = cgs->time;
 

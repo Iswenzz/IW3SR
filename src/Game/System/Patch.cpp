@@ -17,6 +17,8 @@ namespace IW3SR
 			return;
 		UseBase = true;
 
+		Application::LateStart();
+
 		ReallocXAssetPools();
 
 		// Increase hunkTotal
@@ -82,6 +84,8 @@ namespace IW3SR
 		COD4X_BIN = std::filesystem::path(path).filename().string();
 		COD4X_BASE = reinterpret_cast<uintptr_t>(mod);
 		COD4X_VERSION = GetCoD4XVersion();
+
+		Crash::Patch(COD4X_BASE);
 	}
 
 	void Patch::CoD4X_21_1()
