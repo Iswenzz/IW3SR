@@ -3,9 +3,9 @@
 ![](https://i.imgur.com/O6goVqC.jpeg)
 
 A client modification for Call of Duty 4, powered by [IzEngine](https://github.com/Iswenzz/IzEngine). It improves performance and gameplay with an in-game GUI, a runtime plugin system, new movement physics, and more.
- 
+
 ## Features
- 
+
 - In-game GUI.
 - Plugin system to reload modules at runtime.
 - Interpolation of rotating platforms.
@@ -14,12 +14,16 @@ A client modification for Call of Duty 4, powered by [IzEngine](https://github.c
 - Built-in browser for video playback.
 - Bunny hop script.
 - Emoji support.
+
 ## Movement
- 
 - **Q3** — Quake 3 original movements.
 - **Q3CPM** — Quake 3 CPM movements.
 - **CS** — Counter-Strike bhop and surf physics.
 
+## Redistributables
+The client requires the following runtimes to be installed.
+- [Microsoft Visual C++ Redistributable (v14, x86)](https://aka.ms/vc14/vc_redist.x86.exe)
+- [DirectX End-User Runtime (June 2010)](https://www.microsoft.com/en-us/download/details.aspx?id=8109)
 
 ## Instructions
 In order to use this client, download the archived file down below, and extract it to your cod4 directory.
