@@ -24,15 +24,25 @@ namespace IW3SR::Addons
 	void CEF::OnRender()
 	{
 		static std::string prevUrl = "";
-
-		if (Instance)
-			Instance->Show = UI::Open && MenuFrame.Open;
+		static bool prevHasTexture = false;
 
 		const auto url = Dvar::Get<char*>("cef_url");
-		if (Instance && Instance->Open && url != prevUrl)
-			Browser::SetURL(Instance, url);
-		prevUrl = url;
 
+		if (Instance)
+		{
+			const bool hasTexture = !!Instance->Texture;
+			Instance->Show = UI::Open && MenuFrame.Open;
+
+			if (Instance->Open)
+			{
+				if (url != prevUrl)
+					Browser::SetURL(Instance, url);
+				if (hasTexture != prevHasTexture)
+					GRenderer::UpdateMaterials();
+			}
+			prevUrl = url;
+			prevHasTexture = hasTexture;
+		}
 		Browser::Frame();
 	}
 }

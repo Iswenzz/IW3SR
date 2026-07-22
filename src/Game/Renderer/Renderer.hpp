@@ -3,7 +3,7 @@
 
 namespace IW3SR
 {
-	class GRenderer
+	class API GRenderer
 	{
 	public:
 		static void Initialize();

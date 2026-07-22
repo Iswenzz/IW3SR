@@ -9,5 +9,6 @@
 #include "Game/Renderer/Drawing/Lines.hpp"
 #include "Game/Renderer/Drawing/Text.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
+#include "Game/Renderer/Renderer.hpp"
 #include "Game/Renderer/UI/UI.hpp"
 #include "Game/System/Dvar.hpp"
