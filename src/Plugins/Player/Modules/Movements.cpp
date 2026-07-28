@@ -64,7 +64,7 @@ namespace IW3SR::Addons
 					statData->stats.data.bytedata[1700] = 6;
 					Dvar::Set<int>("g_speed", 250);
 					Dvar::Set<float>("g_gravity", 800.0f);
-					Dvar::Set<float>("jump_height", 39.0f);
+					Dvar::Set<float>("jump_height", 45.0f);
 					Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
 					Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
 					Dvar::Set<float>("bg_bobMax", 8.0f);

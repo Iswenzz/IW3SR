@@ -8,7 +8,7 @@
 #define sv_airspeedcap 30.0f
 #define sv_stepsize 18.0f
 #define sv_air_tick_ms 10
-#define jump_height 39.0f
+#define jump_height 45.0f
 
 #define SURF_SLOPE_NORMAL 0.7f
 #define OVERCLIP 1.001f
