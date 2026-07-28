@@ -58,7 +58,7 @@ namespace IW3SR::Addons
 					Dvar::Set<float>("bg_falldamageminheight", 99998.0f);
 					Dvar::Set<float>("bg_falldamagemaxheight", 99999.0f);
 					Dvar::Set<float>("bg_bobMax", 0.0f);
-					Dvar::Set<float>("friction", 6.0f);
+					Dvar::Set<float>("friction", 8.0f);
 					break;
 				case MovementMode::CS:
 					statData->stats.data.bytedata[1700] = 6;
