@@ -14,7 +14,7 @@
 #define pm_strafeaccelerate 70.0f
 #define pm_stepsize 18.0f
 #define pm_double_jump_cpm 100.0f
-#define jump_height 45.5625f
+#define jump_height 39.0f
 
 #define OVERCLIP 1.001f
 #define MAX_CLIP_PLANES 5
