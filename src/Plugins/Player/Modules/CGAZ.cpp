@@ -16,6 +16,7 @@
 #define cs_accelerate 10.0f
 #define cs_airaccelerate 150.0f
 #define cs_airspeedcap 30.0f
+#define cs_air_tick_ms 10.0f
 
 namespace IW3SR::Addons
 {
@@ -89,12 +90,14 @@ namespace IW3SR::Addons
 		const float wishspeed = dmg_scale * glm::length(w_vel);
 
 		// When a player gets hit, they temporarily lose full control, which allows them to be moved a bit
-		if (pml.groundTrace.surfaceFlags & SURF_SLICK || pm.ps->pm_flags & PMF_TIME_KNOCKBACK)
+		const auto mode = PMove::GetMovementMode();
+		if ((pml.groundTrace.surfaceFlags & SURF_SLICK || pm.ps->pm_flags & PMF_TIME_KNOCKBACK)
+			&& mode != MovementMode::CS)
 		{
-			SlickAccelerate(wishspeed, cod4_airaccelerate);
+			SlickAccelerate(wishspeed, mode == MovementMode::Q3CPM ? q3cpm_accelerate : cod4_airaccelerate);
 			return;
 		}
-		switch (PMove::GetMovementMode())
+		switch (mode)
 		{
 		case MovementMode::COD4:
 			accelerate = cod4_accelerate;
@@ -155,6 +158,7 @@ namespace IW3SR::Addons
 			accel = cs_airaccelerate;
 			if (wishspeed > cs_airspeedcap)
 				wishspeed = cs_airspeedcap;
+			pml.frametime = cs_air_tick_ms / 1000.0f;
 			break;
 		}
 		Accelerate(wishspeed, accel);
