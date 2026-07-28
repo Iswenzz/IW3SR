@@ -24,10 +24,10 @@ namespace IW3SR
 			PM_WalkMove_h(pm, pml);
 			break;
 		case MovementMode::Q3:
-			Q3::WalkMove(pm, pml);
+			Q3::WalkMove(pm, pml, false);
 			break;
 		case MovementMode::Q3CPM:
-			Q3::WalkMoveCPM(pm, pml);
+			Q3::WalkMove(pm, pml, true);
 			break;
 		case MovementMode::CS:
 			CS::WalkMove(pm, pml);
@@ -45,10 +45,10 @@ namespace IW3SR
 			PM_AirMove_h(pm, pml);
 			break;
 		case MovementMode::Q3:
-			Q3::AirMove(pm, pml);
+			Q3::AirMove(pm, pml, false);
 			break;
 		case MovementMode::Q3CPM:
-			Q3::AirMoveCPM(pm, pml);
+			Q3::AirMove(pm, pml, true);
 			break;
 		case MovementMode::CS:
 			CS::AirMove(pm, pml);

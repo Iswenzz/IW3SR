@@ -1,36 +1,38 @@
 #include "Q3.hpp"
 
 #define pm_friction 6.0f
-#define pm_duck_scale 0.5f
+#define pm_friction_cpm 8.0f
+#define pm_duck_scale 0.25f
 #define pm_prone_scale 0.25f
 #define pm_accelerate 10.0f
 #define pm_accelerate_cpm 15.0f
-#define pm_slick_accelerate 15.0f
 #define pm_crouch_accelerate 15.0f
 #define pm_prone_accelerate 10.0f
 #define pm_aircontrol 150.0f
 #define pm_airaccelerate 1.0f
-#define pm_airstopaccelerate 3.0f
+#define pm_airstopaccelerate 2.5f
 #define pm_strafeaccelerate 70.0f
 #define pm_stepsize 18.0f
-#define jump_height 39.0f
+#define pm_double_jump_cpm 100.0f
+#define jump_height 45.5625f
 
 #define OVERCLIP 1.001f
-#define CPM_PM_CLIPTIME 200
 #define MAX_CLIP_PLANES 5
+#define PM_CLIPTIME 200
+#define DOUBLE_JUMP_TIME 400
 
 namespace IW3SR
 {
-	void Q3::WalkMove(pmove_t* pm, pml_t* pml)
+	void Q3::WalkMove(pmove_t* pm, pml_t* pml, bool cpm)
 	{
 		pm->ps->pm_flags |= PMF_NO_SPRINT;
 
-		if (JumpCheck(pm, pml))
+		if (JumpCheck(pm, pml, cpm))
 		{
-			AirMove(pm, pml);
+			AirMove(pm, pml, cpm);
 			return;
 		}
-		Friction(pm, pml);
+		Friction(pm, pml, cpm ? pm_friction_cpm : pm_friction);
 
 		const float forwardmove = pm->cmd.forwardmove;
 		const float rightmove = pm->cmd.rightmove;
@@ -68,97 +70,22 @@ namespace IW3SR
 		else if ((pm->ps->pm_flags & PMF_PRONE) && (wishspeed > speed * pm_prone_scale))
 			wishspeed = speed * pm_prone_scale;
 
-		// When a player gets hit, he temporarily loses full control, which allows him to be moved a bit
-		float accelerate = pm_accelerate;
-		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || pm->ps->pm_flags & PMF_TIME_KNOCKBACK)
-			accelerate = pm_slick_accelerate;
-		else if (pm->ps->pm_flags & PMF_DUCKED)
-			accelerate = pm_crouch_accelerate;
-		else if (pm->ps->pm_flags & PMF_PRONE)
-			accelerate = pm_prone_accelerate;
-
-		AccelerateWalk(wishdir, pml, pm->ps, wishspeed, accelerate);
-
 		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || (pm->ps->pm_flags & PMF_TIME_KNOCKBACK))
-			pm->ps->velocity[2] -= static_cast<float>(pm->ps->gravity) * pml->frametime;
-
-		float vel = glm::length(pm->ps->velocity);
-
-		// Slide along the ground plane
-		ClipVelocity(pm->ps->velocity, pml->groundTrace.normal, pm->ps->velocity, OVERCLIP);
-
-		// Don't decrease velocity when going up or down a slope
-		if (vel > 0.0f)
-			pm->ps->velocity = glm::normalize(pm->ps->velocity) * vel;
-
-		// Don't do anything if standing still
-		if (pm->ps->velocity[0] == 0.0f && pm->ps->velocity[1] == 0.0f)
-			return;
-
-		StepSlideMove(pm, pml, false);
-	}
-
-	void Q3::WalkMoveCPM(pmove_t* pm, pml_t* pml)
-	{
-		pm->ps->pm_flags |= PMF_NO_SPRINT;
-
-		if (JumpCheck(pm, pml))
 		{
-			AirMoveCPM(pm, pml);
-			return;
-		}
-		Friction(pm, pml);
-
-		const float forwardmove = pm->cmd.forwardmove;
-		const float rightmove = pm->cmd.rightmove;
-		const float scale = CoD4::CmdScale(pm->ps, &pm->cmd);
-
-		// Set the movementDir so clients can rotate the legs for strafing
-		SetMovementDir(pm);
-
-		// Project moves down to flat plane
-		pml->forward[2] = 0;
-		pml->right[2] = 0;
-
-		// Project the pml->forward and pml->right directions onto the ground plane
-		ClipVelocity(pml->forward, pml->groundTrace.normal, pml->forward, OVERCLIP);
-		ClipVelocity(pml->right, pml->groundTrace.normal, pml->right, OVERCLIP);
-
-		pml->forward = glm::normalize(pml->forward);
-		pml->right = glm::normalize(pml->right);
-
-		float speed = static_cast<float>(pm->ps->speed);
-
-		vec3 wishvel;
-		for (int i = 0; i < 3; i++)
-			wishvel[i] = pml->forward[i] * forwardmove + pml->right[i] * rightmove;
-
-		vec3 wishdir = wishvel;
-		float wishspeed = glm::length(wishdir) * scale;
-		if (wishspeed > 0.0f)
-			wishdir = glm::normalize(wishdir);
-
-		// Clamp the speed lower if ducking
-		if ((pm->ps->pm_flags & PMF_DUCKED) && (wishspeed > speed * pm_duck_scale))
-			wishspeed = speed * pm_duck_scale;
-		// Clamp the speed lower if prone
-		else if ((pm->ps->pm_flags & PMF_PRONE) && (wishspeed > speed * pm_prone_scale))
-			wishspeed = speed * pm_prone_scale;
-
-		// When a player gets hit, he temporarily loses full control, which allows him to be moved a bit
-		float accelerate = pm_accelerate_cpm;
-		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || pm->ps->pm_flags & PMF_TIME_KNOCKBACK)
-			accelerate = pm_slick_accelerate;
-		else if (pm->ps->pm_flags & PMF_DUCKED)
-			accelerate = pm_crouch_accelerate;
-		else if (pm->ps->pm_flags & PMF_PRONE)
-			accelerate = pm_prone_accelerate;
-
-		AccelerateWalk(wishdir, pml, pm->ps, wishspeed, accelerate);
-
-		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || (pm->ps->pm_flags & PMF_TIME_KNOCKBACK))
+			float accelerate = cpm ? pm_accelerate_cpm : pm_airaccelerate;
+			Accelerate(pm->ps, pml, wishdir, wishspeed, accelerate);
 			pm->ps->velocity[2] -= static_cast<float>(pm->ps->gravity) * pml->frametime;
+		}
+		else
+		{
+			float accelerate = cpm ? pm_accelerate_cpm : pm_accelerate;
+			if (pm->ps->pm_flags & PMF_DUCKED)
+				accelerate = pm_crouch_accelerate;
+			else if (pm->ps->pm_flags & PMF_PRONE)
+				accelerate = pm_prone_accelerate;
 
+			AccelerateWalk(wishdir, pml, pm->ps, wishspeed, accelerate);
+		}
 		float vel = glm::length(pm->ps->velocity);
 
 		// Slide along the ground plane
@@ -175,13 +102,13 @@ namespace IW3SR
 		StepSlideMove(pm, pml, false);
 	}
 
-	void Q3::AirMove(pmove_t* pm, pml_t* pml)
+	void Q3::AirMove(pmove_t* pm, pml_t* pml, bool cpm)
 	{
 		const auto ps = pm->ps;
 		float forwardmove, rightmove, wishspeed, scale = 1.0f;
 		vec3 wishvel, wishdir;
 
-		Friction(pm, pml);
+		Friction(pm, pml, cpm ? pm_friction_cpm : pm_friction);
 
 		forwardmove = pm->cmd.forwardmove;
 		rightmove = pm->cmd.rightmove;
@@ -206,61 +133,25 @@ namespace IW3SR
 			wishdir = glm::normalize(wishdir);
 
 		float accel = pm_airaccelerate;
-
-		Accelerate(ps, pml, wishdir, wishspeed, accel);
-
-		if (pml->groundPlane)
-			ClipVelocity(ps->velocity, pml->groundTrace.normal, ps->velocity, OVERCLIP);
-
-		StepSlideMove(pm, pml, true);
-	}
-
-	void Q3::AirMoveCPM(pmove_t* pm, pml_t* pml)
-	{
-		const auto ps = pm->ps;
-		float forwardmove, rightmove, wishspeed, scale = 1.0f;
-		vec3 wishvel, wishdir;
-
-		Friction(pm, pml);
-
-		forwardmove = pm->cmd.forwardmove;
-		rightmove = pm->cmd.rightmove;
-
-		scale = CoD4::CmdScale(ps, &pm->cmd);
-		SetMovementDir(pm);
-
-		pml->forward[2] = 0.0f;
-		pml->right[2] = 0.0f;
-
-		pml->forward = glm::normalize(pml->forward);
-		pml->right = glm::normalize(pml->right);
-
-		// Determine x and y parts of velocity
-		for (int i = 0; i < 2; i++)
-			wishvel[i] = pml->forward[i] * forwardmove + pml->right[i] * rightmove;
-
-		wishvel[2] = 0;
-		wishdir = wishvel;
-		wishspeed = glm::length(wishdir) * scale;
-		if (wishspeed > 0.0f)
-			wishdir = glm::normalize(wishdir);
-
-		float accel;
 		const float wishspeed2 = wishspeed;
-		if (glm::dot(ps->velocity, wishdir) < 0)
-			accel = pm_airstopaccelerate;
-		else
-			accel = 1.0f;
 
-		// if (ps->movementDir == 2 || ps->movementDir == 6)
-		if (pm->cmd.forwardmove == 0 && pm->cmd.rightmove != 0)
+		if (cpm)
 		{
-			if (wishspeed > 30.0f)
-				wishspeed = 30.0f;
-			accel = pm_strafeaccelerate;
+			if (glm::dot(ps->velocity, wishdir) < 0)
+				accel = pm_airstopaccelerate;
+
+			// if (ps->movementDir == 2 || ps->movementDir == 6)
+			if (pm->cmd.forwardmove == 0 && pm->cmd.rightmove != 0)
+			{
+				if (wishspeed > 30.0f)
+					wishspeed = 30.0f;
+				accel = pm_strafeaccelerate;
+			}
 		}
 		Accelerate(ps, pml, wishdir, wishspeed, accel);
-		AirControl(pm, pml, wishdir, wishspeed2);
+
+		if (cpm)
+			AirControl(pm, pml, wishdir, wishspeed2);
 
 		if (pml->groundPlane)
 			ClipVelocity(ps->velocity, pml->groundTrace.normal, ps->velocity, OVERCLIP);
@@ -419,7 +310,7 @@ namespace IW3SR
 			ps->velocity[i] += accelspeed * wishdir[i];
 	}
 
-	bool Q3::JumpCheck(pmove_t* pm, pml_t* pml)
+	bool Q3::JumpCheck(pmove_t* pm, pml_t* pml, bool cpm)
 	{
 		if (pm->ps->pm_flags & PMF_NO_JUMP)
 			return false;
@@ -435,6 +326,8 @@ namespace IW3SR
 			return false;
 
 		float jump_velocity = sqrt(2.0f * static_cast<float>(pm->ps->gravity) * jump_height);
+		if (cpm && pm->ps->jumpTime > 0)
+			jump_velocity += pm_double_jump_cpm;
 
 		pml->groundPlane = false;
 		pml->almostGroundPlane = false;
@@ -442,15 +335,23 @@ namespace IW3SR
 		pm->ps->pm_flags &= ~(PMF_TIME_HARDLANDING | PMF_TIME_KNOCKBACK);
 		pm->ps->pm_flags |= (PMF_JUMPING | PMF_NO_SPRINT);
 		pm->ps->pm_time = 0;
-		pm->ps->jumpTime = CPM_PM_CLIPTIME; // Using this timer for clipping
+		pm->ps->jumpTime = DOUBLE_JUMP_TIME; // Timer is required for clipping and double jump
 		pm->ps->groundEntityNum = ENTITYNUM_NONE;
-		pm->ps->velocity[2] = pm->ps->velocity[2] > 0.0f ? pm->ps->velocity[2] + jump_velocity : jump_velocity;
+		pm->ps->velocity[2] = cpm && pm->ps->velocity[2] > 0.0f ? pm->ps->velocity[2] + jump_velocity : jump_velocity;
 		pm->ps->jumpOriginZ = pm->ps->origin[2];
 		return true;
 	}
 
-	void Q3::Friction(pmove_t* pm, pml_t* pml)
+	void Q3::Friction(pmove_t* pm, pml_t* pml, float friction)
 	{
+		// Tick the timer used for clipping and double jump
+		if (pm->ps->jumpTime)
+		{
+			if (pml->msec < pm->ps->jumpTime)
+				pm->ps->jumpTime -= pml->msec;
+			else
+				pm->ps->jumpTime = 0;
+		}
 		vec3 vel = pm->ps->velocity;
 		if (pml->walking)
 			vel[2] = 0.0f; // Ignore slope movement
@@ -473,7 +374,7 @@ namespace IW3SR
 			if (!(pm->ps->pm_flags & PMF_TIME_KNOCKBACK))
 			{
 				const float control = speed < 100.0f ? 100.0f : speed;
-				drop += control * pm_friction * pml->frametime;
+				drop += control * friction * pml->frametime;
 			}
 		}
 		// Apply flying friction
@@ -530,6 +431,7 @@ namespace IW3SR
 
 		int numplanes, bumpcount, i;
 		float time_left, into;
+		bool clippedCeiling = false;
 
 		trace_t trace = {};
 		primal_velocity = pm->ps->velocity;
@@ -592,6 +494,9 @@ namespace IW3SR
 			// Save entity for contact
 			PM_AddTouchEnt(pm, pm->ps->groundEntityNum);
 			time_left -= time_left * trace.fraction;
+
+			if (trace.normal[2] < -0.1f)
+				clippedCeiling = true;
 
 			if (numplanes >= MAX_CLIP_PLANES)
 			{
@@ -666,16 +571,8 @@ namespace IW3SR
 		if (gravity)
 			pm->ps->velocity = end_velocity;
 
-		// Update clipping timer
-		if (pm->ps->jumpTime)
-		{
-			if (pml->msec < pm->ps->jumpTime)
-				pm->ps->jumpTime -= pml->msec;
-			else
-				pm->ps->jumpTime = 0;
-		}
-		// Don't change velocity if in a timer, clipping is caused by this
-		if (pm->ps->jumpTime)
+		// Clipping
+		if (pm->ps->jumpTime > DOUBLE_JUMP_TIME - PM_CLIPTIME && !clippedCeiling)
 			pm->ps->velocity = primal_velocity;
 
 		return bumpcount != 0;
@@ -725,7 +622,7 @@ namespace IW3SR
 
 		// Test the player position if they were a stepheight higher
 		PM_PlayerTrace(pm, &trace, start_o, pm->mins, pm->maxs, up, pm->ps->clientNum, pm->tracemask);
-		endpos = glm::mix(pm->ps->origin, up, trace.fraction);
+		endpos = glm::mix(start_o, up, trace.fraction);
 
 		// Can't step up
 		if (trace.allsolid)

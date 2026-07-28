@@ -7,16 +7,14 @@ namespace IW3SR
 	class Q3
 	{
 	public:
-		static void WalkMove(pmove_t* pm, pml_t* pml);
-		static void WalkMoveCPM(pmove_t* pm, pml_t* pml);
-		static void AirMove(pmove_t* pm, pml_t* pml);
-		static void AirMoveCPM(pmove_t* pm, pml_t* pml);
+		static void WalkMove(pmove_t* pm, pml_t* pml, bool cpm = false);
+		static void AirMove(pmove_t* pm, pml_t* pml, bool cpm = false);
 		static void GroundTrace(pmove_t* pm, pml_t* pml);
 		static void AirControl(pmove_t* pm, pml_t* pml, const vec3& wishdir, float wishspeed);
 		static void Accelerate(playerState_s* ps, pml_t* pml, const vec3& wishdir, float wishspeed, float accel);
 		static void AccelerateWalk(const vec3& wishdir, pml_t* pml, playerState_s* ps, float wishspeed, float accel);
-		static bool JumpCheck(pmove_t* pm, pml_t* pml);
-		static void Friction(pmove_t* pm, pml_t* pml);
+		static bool JumpCheck(pmove_t* pm, pml_t* pml, bool cpm = false);
+		static void Friction(pmove_t* pm, pml_t* pml, float friction = 6.0f);
 		static void ClipVelocity(const vec3& in, const vec3& normal, vec3& out, float overbounce);
 		static float PermuteRestrictiveClipPlanes(const vec3& velocity, int planeCount, vec3* planes, int* permutation);
 		static bool SlideMove(pmove_t* pm, pml_t* pml, bool gravity);
