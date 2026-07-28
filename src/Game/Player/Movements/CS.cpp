@@ -7,6 +7,7 @@
 #define sv_airaccelerate 150.0f
 #define sv_airspeedcap 30.0f
 #define sv_stepsize 18.0f
+#define sv_air_tick_ms 10
 #define jump_height 39.0f
 
 #define SURF_SLOPE_NORMAL 0.7f
@@ -87,7 +88,17 @@ namespace IW3SR
 			wishvel *= sv_maxspeed / wishspeed;
 			wishspeed = sv_maxspeed;
 		}
-		AirAccelerate(wishdir, wishspeed, pm->ps, pml);
+		// Fixed tick rate for air accel
+		const int tick = pm->cmd.serverTime / sv_air_tick_ms;
+		const int oldtick = pm->oldcmd.serverTime / sv_air_tick_ms;
+
+		if (tick != oldtick)
+		{
+			const float saved = pml->frametime;
+			pml->frametime = static_cast<float>(tick - oldtick) * (sv_air_tick_ms / 1000.0f);
+			AirAccelerate(wishdir, wishspeed, pm->ps, pml);
+			pml->frametime = saved;
+		}
 		StepSlideMove(pm, pml, true);
 		TryPlayerMove(pm, pml);
 	}
