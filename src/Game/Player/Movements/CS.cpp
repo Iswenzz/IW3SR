@@ -7,7 +7,8 @@
 #define sv_airaccelerate 150.0f
 #define sv_airspeedcap 30.0f
 #define sv_stepsize 18.0f
-#define sv_air_tick_ms 10
+#define sv_air_tick_hz 66.0f
+#define sv_air_tick_ms (1000.0f / sv_air_tick_hz)
 #define jump_height 39.0f
 
 #define SURF_SLOPE_NORMAL 0.7f
@@ -89,8 +90,8 @@ namespace IW3SR
 			wishspeed = sv_maxspeed;
 		}
 		// Fixed tick rate for air accel
-		const int tick = pm->cmd.serverTime / sv_air_tick_ms;
-		const int oldtick = pm->oldcmd.serverTime / sv_air_tick_ms;
+		const int tick = static_cast<int>(pm->cmd.serverTime / sv_air_tick_ms);
+		const int oldtick = static_cast<int>(pm->oldcmd.serverTime / sv_air_tick_ms);
 
 		if (tick != oldtick)
 		{
