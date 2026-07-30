@@ -7,7 +7,7 @@
 #define sv_airaccelerate 150.0f
 #define sv_airspeedcap 30.0f
 #define sv_stepsize 18.0f
-#define sv_air_tick_hz 66.0f
+#define sv_air_tick_hz 100.0f
 #define sv_air_tick_ms (1000.0f / sv_air_tick_hz)
 #define jump_height 39.0f
 
