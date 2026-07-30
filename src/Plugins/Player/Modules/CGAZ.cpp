@@ -16,7 +16,6 @@
 #define cs_accelerate 10.0f
 #define cs_airaccelerate 150.0f
 #define cs_airspeedcap 30.0f
-#define cs_air_tick_ms 10.0f
 
 namespace IW3SR::Addons
 {
@@ -158,7 +157,6 @@ namespace IW3SR::Addons
 			accel = cs_airaccelerate;
 			if (wishspeed > cs_airspeedcap)
 				wishspeed = cs_airspeedcap;
-			pml.frametime = cs_air_tick_ms / 1000.0f;
 			break;
 		}
 		Accelerate(wishspeed, accel);
