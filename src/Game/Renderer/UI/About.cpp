@@ -25,26 +25,31 @@ namespace IW3SR::UC
 		StatusMessage = "Checking for updates...";
 
 		auto req = HTTP::Get("https://iswenzz.com/static/updates/iw3sr/version.txt",
-			[this](const HTTPResponse& response)
+			[](const HTTPResponse& response)
 			{
-				Checking = false;
-				if (response.Code != 200)
-				{
-					StatusMessage = "Failed to check for updates.";
-					return;
-				}
+				const bool ok = response.Code == 200;
 				std::string latest = response.Body;
 				latest.erase(std::remove(latest.begin(), latest.end(), '\n'), latest.end());
 				latest.erase(std::remove(latest.begin(), latest.end(), '\r'), latest.end());
 
-				if (latest == APPLICATION_VERSION)
-				{
-					StatusMessage = "You are up to date.";
-					return;
-				}
-				UpdateAvailable = true;
-				LatestVersion = latest;
-				StatusMessage = "Update available: " + LatestVersion;
+				Actions::Add(
+					[ok, latest]()
+					{
+						Checking = false;
+						if (!ok)
+						{
+							StatusMessage = "Failed to check for updates.";
+							return;
+						}
+						if (latest == APPLICATION_VERSION)
+						{
+							StatusMessage = "You are up to date.";
+							return;
+						}
+						UpdateAvailable = true;
+						LatestVersion = latest;
+						StatusMessage = "Update available: " + LatestVersion;
+					});
 			});
 
 		req.Send();
@@ -61,35 +66,54 @@ namespace IW3SR::UC
 		std::string scriptPath = (tempDir / "updater.bat").string();
 		std::string gameDir = Environment::Path(Directory::Base).string();
 
-		std::filesystem::create_directories(tempDir);
-		std::filesystem::create_directories(filesDir);
+		std::error_code ec;
+		std::filesystem::create_directories(tempDir, ec);
+		std::filesystem::create_directories(filesDir, ec);
 
 		Downloading = true;
 		Progress = 0.0f;
 		StatusMessage = "Downloading...";
 
 		auto req = HTTP::Get("https://iswenzz.com/static/updates/iw3sr/IW3SR.zip",
-			[=](const HTTPResponse& response)
+			[zipPath, filesDir, scriptPath, gameDir](const HTTPResponse& response)
 			{
-				if (response.Code != 200)
+				const auto fail = [](std::string message)
 				{
-					Downloading = false;
-					StatusMessage = "Download failed.";
-					return;
+					Actions::Add(
+						[message = std::move(message)]()
+						{
+							Downloading = false;
+							Extracting = false;
+							StatusMessage = message;
+						});
+				};
+
+				if (response.Code != 200)
+					return fail("Download failed.");
+
+				{
+					std::ofstream file(zipPath, std::ios::binary);
+					if (!file)
+						return fail("Could not write the downloaded archive.");
+
+					file.write(response.Body.data(), response.Body.size());
+					if (!file)
+						return fail("Could not write the downloaded archive.");
 				}
-				std::ofstream file(zipPath, std::ios::binary);
-				file.write(response.Body.data(), response.Body.size());
-				file.close();
 
-				Downloading = false;
-				Extracting = true;
-				StatusMessage = "Extracting...";
+				Actions::Add(
+					[]()
+					{
+						Downloading = false;
+						Extracting = true;
+						StatusMessage = "Extracting...";
+					});
 
-				Zip::Extract(zipPath, filesDir);
-				std::filesystem::remove(zipPath);
+				if (!Zip::Extract(zipPath, filesDir))
+					return fail("Extraction failed.");
 
-				Extracting = false;
-				StatusMessage = "Launching updater...";
+				std::error_code ec;
+				std::filesystem::remove(zipPath, ec);
 
 				std::string script =
 					"@echo off\n"
@@ -113,12 +137,26 @@ namespace IW3SR::UC
 					"start \"\" \"" + gameDir + "\\iw3mp.exe\"\n"
 					"exit\n";
 
-				std::ofstream(scriptPath) << script;
-				ShellExecute(nullptr, "open", scriptPath.c_str(), nullptr, nullptr, SW_SHOW);
-				GSystem::ExitRequested = true;
+				{
+					std::ofstream file(scriptPath);
+					if (!file)
+						return fail("Could not write the updater script.");
+
+					file << script;
+				}
+
+				Actions::Add(
+					[scriptPath]()
+					{
+						Extracting = false;
+						StatusMessage = "Launching updater...";
+
+						ShellExecute(nullptr, "open", scriptPath.c_str(), nullptr, nullptr, SW_SHOW);
+						GSystem::ExitRequested = true;
+					});
 			});
 
-		req.OnProgress = [this](float progress) { Progress = progress; };
+		req.OnProgress = [](float progress) { Progress = progress; };
 		req.Send();
 	}
 
@@ -151,18 +189,18 @@ namespace IW3SR::UC
 		float rightWidth = ImGui::GetWindowSize().x - logoSize - padding * 3;
 		ImGui::BeginGroup();
 		ImGui::PushFont(ImGui::H2);
-		ImGui::Text(title);
+		ImGui::TextUnformatted(title);
 		ImGui::PopFont();
 
 		ImGui::Spacing();
 
 		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + rightWidth);
-		ImGui::TextWrapped(description);
+		ImGui::TextWrapped("%s", description);
 		ImGui::PopTextWrapPos();
 
 		ImGui::Spacing();
 
-		ImGui::Text("Version " APPLICATION_VERSION);
+		ImGui::TextUnformatted("Version " APPLICATION_VERSION);
 
 		ImGui::EndGroup();
 
@@ -174,7 +212,7 @@ namespace IW3SR::UC
 		if (showProgress)
 		{
 			ImGui::Spacing();
-			ImGui::ProgressBar(Progress, ImVec2(-1, 0));
+			ImGui::ProgressBar(Progress.load(), ImVec2(-1, 0));
 		}
 		if (showButton)
 		{

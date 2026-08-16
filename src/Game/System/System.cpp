@@ -5,7 +5,12 @@ namespace IW3SR
 {
 	void GSystem::Shutdown(int localClientNum)
 	{
+		if (IsShutdown)
+			return;
+		IsShutdown = true;
+
 		Browser::Shutdown();
+		Application::Shutdown();
 	}
 
 	void GSystem::MainLoop(int tickRate)

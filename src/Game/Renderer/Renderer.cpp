@@ -55,20 +55,34 @@ namespace IW3SR
 
 	void GRenderer::DrawVersion()
 	{
-		static GText text{ "", FONT_NORMAL, 600, 450, 1.4, vec4(1) };
+		constexpr size_t COD4X_VERSION_OFFSET = 8;
+		constexpr size_t COD4X_VERSION_LENGTH = 4;
+
+		constexpr float VERSION_MARGIN = 10.0f;
+
+		static GText text{ "", FONT_NORMAL, -VERSION_MARGIN, 450, 1.4, vec4(1) };
 		static GText update{ "", FONT_NORMAL, 10, 470, 1.4, vec4(0, 1, 1, 1) };
+
 		if (text.Value.empty())
 		{
-			const auto shortversion = Dvar::Get<const char*>("shortversion");
+			const auto shortversionDvar = Dvar::Get<const char*>("shortversion");
+			const std::string_view shortversion = shortversionDvar ? shortversionDvar : "";
+
 			text.Value = std::format("CoD4 {}\nIW3SR {}", shortversion, APPLICATION_VERSION);
 			if (COD4X_BASE)
 			{
-				const auto version = Dvar::Get<const char*>("version");
-				const auto cod4xversion = std::string_view(version).substr(8, 4);
+				const auto versionDvar = Dvar::Get<const char*>("version");
+				const std::string_view version = versionDvar ? versionDvar : "";
+
+				const auto cod4xversion = version.size() >= COD4X_VERSION_OFFSET + COD4X_VERSION_LENGTH
+					? version.substr(COD4X_VERSION_OFFSET, COD4X_VERSION_LENGTH)
+					: version;
+
 				text.Value =
 					std::format("CoD4 {}\nCoD4x {}\nIW3SR {}", shortversion, cod4xversion, APPLICATION_VERSION);
 			}
-			text.SetRectAlignment(Horizontal::Fullscreen, Vertical::Fullscreen);
+			text.SetRectAlignment(Horizontal::Right, Vertical::Fullscreen);
+			text.SetAlignment(Alignment::Right, Alignment::Top);
 		}
 		if (update.Value.empty() && UC::About::UpdateAvailable)
 		{
@@ -132,10 +146,16 @@ namespace IW3SR
 		for (int i = 0; i < rgp->materialCount; i++)
 		{
 			const auto material = rgp->sortedMaterials[i];
+			if (!material || !material->info.name)
+				continue;
+
 			const std::string_view name = material->info.name;
 
 			if (name == "mc/sr_screen")
 			{
+				if (!material->textureCount || !material->textureTable || !material->textureTable[0].u.image)
+					continue;
+
 				auto instance = Browser::Get("browser");
 				if (instance && instance->Open && instance->Texture)
 				{
@@ -148,6 +168,9 @@ namespace IW3SR
 		for (int i = 0; i < rgp->world->reflectionProbeCount; i++)
 		{
 			const auto probe = &rgp->world->reflectionProbes[i];
+			if (!probe->reflectionImage || !probe->reflectionImage->texture.cubemap)
+				continue;
+
 			if (IsRedCubemap(probe->reflectionImage->texture.cubemap))
 			{
 				Swaps.Add(std::format("probe_{}", i),
@@ -188,10 +211,11 @@ namespace IW3SR
 	{
 		static std::string buffer;
 		buffer = *text;
-		*text = buffer.data();
 
 		EventRendererText event(buffer, font, { x, y }, { xScale, yScale }, color);
 		Application::Dispatch(event);
+
+		*text = buffer.data();
 	}
 
 	void GRenderer::AddCmdDrawTextWithEffects(const char* text, int maxChars, Font_s* font, float x, float y,
@@ -201,7 +225,6 @@ namespace IW3SR
 	{
 		static std::string buffer;
 		buffer = text;
-		text = buffer.data();
 
 		EventRendererText event(buffer, font, { x, y }, { xScale, yScale }, color);
 		Application::Dispatch(event);

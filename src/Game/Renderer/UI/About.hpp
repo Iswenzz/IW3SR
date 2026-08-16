@@ -14,14 +14,15 @@ namespace IW3SR::UC
 
 	private:
 		Ref<Texture> Logo = nullptr;
-		bool Checking = false;
-		bool Downloading = false;
-		bool Extracting = false;
-		float Progress = 0.0f;
-		std::string LatestVersion;
-		std::string StatusMessage;
 
-		void CheckUpdate();
-		void StartUpdate();
+		static inline bool Checking = false;
+		static inline bool Downloading = false;
+		static inline bool Extracting = false;
+		static inline std::atomic<float> Progress = 0.0f;
+		static inline std::string LatestVersion;
+		static inline std::string StatusMessage;
+
+		static void CheckUpdate();
+		static void StartUpdate();
 	};
 }

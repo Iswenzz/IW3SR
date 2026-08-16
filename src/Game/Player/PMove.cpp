@@ -143,12 +143,12 @@ namespace IW3SR
 		pm.mins[2] = 0;
 		pm.maxs[0] = 15;
 		pm.maxs[1] = 15;
-		if (ps->viewHeightCurrent == 60)
-			pm.maxs[2] = 70;
-		if (ps->viewHeightCurrent == 40)
-			pm.maxs[2] = 50;
 		if (ps->viewHeightCurrent == 11)
 			pm.maxs[2] = 30;
+		else if (ps->viewHeightCurrent == 40)
+			pm.maxs[2] = 50;
+		else
+			pm.maxs[2] = 70;
 		pm.tracemask = MASK_PLAYERSOLID;
 		pm.handler = 1;
 

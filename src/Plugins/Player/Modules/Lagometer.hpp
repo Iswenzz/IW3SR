@@ -27,9 +27,13 @@ namespace IW3SR::Addons
 		virtual ~Lagometer() = default;
 
 		void Initialize() override;
+		void Release() override;
 		void Menu() override;
 
 		void OnRender() override;
+
+	private:
+		int PreviousDraw = 0;
 
 		SERIALIZE_POLY(Lagometer, Module, ColorSnap, ColorSnapDelay, ColorSnapFlag, ColorSnapFlagDrop, ColorPing,
 			ShowSnap, ShowSnapFlag, ShowPing, Graph)

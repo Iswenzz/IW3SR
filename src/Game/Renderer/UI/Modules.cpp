@@ -20,10 +20,9 @@ namespace IW3SR::UC
 		std::set<std::string> groups;
 		for (const auto& [_, current] : IW3SR::Modules::Entries)
 		{
-			if (std::ranges::find(groups, current->Group) != groups.end())
+			if (!groups.insert(current->Group).second)
 				continue;
 
-			groups.insert(current->Group);
 			if (!ImGui::CollapsingHeader(current->Group, true))
 				continue;
 
@@ -36,7 +35,7 @@ namespace IW3SR::UC
 					entry->IsEnabled ? entry->Initialize() : entry->Release();
 
 				ImGui::SameLine();
-				ImGui::Text(entry->Name.c_str());
+				ImGui::TextUnformatted(entry->Name.c_str());
 				ImGui::SameLine(availWidth - buttonWidth);
 				ImGui::Button(ICON_FA_GEAR, entry->ID + "menu", &entry->MenuFrame.Open);
 

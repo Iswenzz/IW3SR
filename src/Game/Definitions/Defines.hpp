@@ -9,6 +9,8 @@
 #define FONT_EXTRA_BIG "fonts/extraBigFont"
 #define FONT_OBJECTIVE "fonts/objectiveFont"
 
+#define FONT_IMAGE_TRACK 3
+
 #define MTL_ARG_MATERIAL_VERTEX_CONST 0x0
 #define MTL_ARG_LITERAL_VERTEX_CONST 0x1
 #define MTL_ARG_MATERIAL_PIXEL_SAMPLER 0x2

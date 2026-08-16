@@ -27,7 +27,7 @@ namespace IW3SR::Addons
 	private:
 		pmove_t pm = {};
 		pml_t pml = {};
-		vec2 w_vel;
+		vec2 w_vel = { 0, 0 };
 		float w_speed = 0;
 		float v = 0;
 		float v_squared = 0;
@@ -57,6 +57,7 @@ namespace IW3SR::Addons
 		float GetViewHeightLerpTime(int iTarget, int bDown);
 		float GetViewHeightLerp(int fromHeight, int toHeight);
 
+		static float SafeAcos(float num, float den);
 		float Min();
 		float Opt();
 		float MaxCos(float opt);

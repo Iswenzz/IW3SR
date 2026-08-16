@@ -14,6 +14,11 @@ namespace IW3SR::Addons
 		Hook
 	};
 
+	constexpr int HUD_ELEM_COUNT = 31;
+	constexpr int HUD_ELEM_MAX = HUD_ELEM_COUNT * 2 - 1;
+
+	constexpr float MIN_FIRE_DURATION = 0.05f;
+
 	struct Node
 	{
 		Text Element;

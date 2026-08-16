@@ -25,7 +25,7 @@ namespace IW3SR::Addons
 	{
 		if (Dvar::Get<bool>("sv_running"))
 		{
-			static MovementMode mode = PMove::GetMovementMode();
+			MovementMode mode = PMove::GetMovementMode();
 			if (ImGui::Combo("Movements", reinterpret_cast<int*>(&mode), modes))
 			{
 				switch (mode)

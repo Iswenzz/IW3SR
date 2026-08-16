@@ -27,7 +27,13 @@ namespace IW3SR::Addons
 
 	void Lagometer::Initialize()
 	{
+		PreviousDraw = Dvar::Get<int>("cg_drawLagometer");
 		Dvar::Set("cg_drawLagometer", 0);
+	}
+
+	void Lagometer::Release()
+	{
+		Dvar::Set("cg_drawLagometer", PreviousDraw);
 	}
 
 	void Lagometer::Menu()
@@ -62,7 +68,7 @@ namespace IW3SR::Addons
 			if (ping > pingRange)
 				ping = pingRange;
 
-			Pings.Add(ping < 0 ? pingRange : 0);
+			Pings.Add(ping < 0 ? pingRange : ping);
 			SnapsFlags.Add(snapFlags == 0 ? ping : 0);
 			SnapsFlagsDrop.Add(snapFlags != 0 ? ping : 0);
 		}

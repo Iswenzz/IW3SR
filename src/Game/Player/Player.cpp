@@ -4,6 +4,9 @@ namespace IW3SR
 {
 	Player::Player(int index)
 	{
+		if (index < 0 || index >= MAX_PLAYERS)
+			return;
+
 		ent = &cg_entities[index];
 		info = &cgs->bgs.clientinfo[index];
 	}
@@ -17,36 +20,39 @@ namespace IW3SR
 
 	bool Player::IsSelf()
 	{
-		return ent->nextState.clientNum == cgs->clientNum;
+		return ent && ent->nextState.clientNum == cgs->clientNum;
 	}
 
 	bool Player::IsAlive()
 	{
-		return ent->isAlive;
+		return ent && ent->isAlive;
 	}
 
 	bool Player::OnGround()
 	{
-		return ent->nextState.groundEntityNum != ENTITYNUM_NONE;
+		return ent && ent->nextState.groundEntityNum != ENTITYNUM_NONE;
 	}
 
 	Player::operator bool() const
 	{
-		return ent;
+		return ent != nullptr;
 	}
 
-	std::array<Ref<Player>, 64>& Player::GetAll()
+	std::array<Ref<Player>, MAX_PLAYERS>& Player::GetAll()
 	{
 		return Players;
 	}
 
 	Ref<Player>& Player::Get(int index)
 	{
+		if (index < 0 || index >= MAX_PLAYERS)
+			return None;
+
 		return Players[index];
 	}
 
 	Ref<Player>& Player::Self()
 	{
-		return Players[cgs->clientNum];
+		return Get(cgs->clientNum);
 	}
 }

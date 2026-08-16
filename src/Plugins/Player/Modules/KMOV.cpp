@@ -71,7 +71,9 @@ namespace IW3SR::Addons
 		ImGui::Combo("Type", reinterpret_cast<int*>(&node.Type), modes);
 		if (node.Type == NodeEnum::Hook)
 		{
-			ImGui::InputInt("Hook HUD", &node.Hook);
+			if (ImGui::InputInt("Hook HUD", &node.Hook))
+				node.Hook = std::clamp(node.Hook, 0, HUD_ELEM_MAX);
+
 			ImGui::InputText("Hook Value", &node.HookString);
 			ImGui::Tooltip("Display the value of a HUD element. Insert '{}' where you want the value to appear.");
 			ImGui::Checkbox("Hook Float", &node.HookFloat);
@@ -140,7 +142,7 @@ namespace IW3SR::Addons
 		// Weapons
 		else if (ps.weaponstate == 5)
 		{
-			FireDuration = ps.weaponTime / 1000.0f;
+			FireDuration = std::max(ps.weaponTime / 1000.0f, MIN_FIRE_DURATION);
 			IsShaking = true;
 		}
 		// States
@@ -161,9 +163,9 @@ namespace IW3SR::Addons
 	float KMOV::Jump()
 	{
 		const float jumpMax = 40;
-		float jumpOrigin = std::min(std::max(JumpOrigin, -jumpMax), jumpMax);
+		float jumpOrigin = std::clamp(JumpOrigin, -jumpMax, jumpMax);
 		float multiplier = IsBouncing ? 0.5f : 1.0f;
-		float jumpValue = ((JumpOrigin * multiplier) * JumpPower) * UI::DeltaTime();
+		float jumpValue = ((jumpOrigin * multiplier) * JumpPower) * UI::DeltaTime();
 		return std::clamp(-jumpValue, -0.5f, 0.5f);
 	}
 
@@ -176,9 +178,10 @@ namespace IW3SR::Addons
 		static float freqX = 0;
 		static float freqY = 0;
 
-		if (!IsShaking)
+		if (!IsShaking || FireDuration <= 0.0f)
 		{
 			elapsed = 0;
+			IsShaking = false;
 			return { 0, 0 };
 		}
 		if (elapsed == 0)
@@ -248,13 +251,18 @@ namespace IW3SR::Addons
 			break;
 		}
 		case NodeEnum::Health:
-			node.Element.Value = std::format("{} HP", Player::Self()->info->health);
+		{
+			const auto& self = Player::Self();
+			if (self && self->info)
+				node.Element.Value = std::format("{} HP", self->info->health);
 			break;
+		}
 		case NodeEnum::Hook:
 		{
 			const auto& ps = cgs->predictedPlayerState;
-			const hudelem_s* huds = node.Hook < 31 ? ps.hud.current : ps.hud.archival;
-			int index = node.Hook < 31 ? node.Hook : node.Hook - 31;
+			const int hook = std::clamp(node.Hook, 0, HUD_ELEM_MAX);
+			const hudelem_s* huds = hook < HUD_ELEM_COUNT ? ps.hud.current : ps.hud.archival;
+			const int index = hook < HUD_ELEM_COUNT ? hook : hook - HUD_ELEM_COUNT;
 			std::string value = "";
 			switch (huds[index].type)
 			{

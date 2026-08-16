@@ -157,7 +157,16 @@ namespace IW3SR
 	{
 		const auto ReallocXAssetPool = [](XAssetType type, int size)
 		{
-			const XAssetHeader data = { std::calloc(1, size * DB_GetXAssetSizeHandlers[type]()) };
+			const size_t entrySize = DB_GetXAssetSizeHandlers[type]();
+			void* memory = std::calloc(static_cast<size_t>(size), entrySize);
+
+			if (!memory)
+			{
+				Log::WriteLine(Channel::Error, "Failed to allocate the asset pool for type {}.",
+					static_cast<int>(type));
+				return;
+			}
+			const XAssetHeader data = { memory };
 			db_xassetPool[type] = data;
 			g_poolSize[type] = size;
 		};

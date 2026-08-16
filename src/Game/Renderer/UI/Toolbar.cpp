@@ -29,7 +29,7 @@ namespace IW3SR::UC
 		ImDrawList* draw = ImGui::GetBackgroundDrawList();
 		draw->AddRectFilled(position, position + size, ImColor(ImGui::GetStyleColorVec4(ImGuiCol_FrameBg)));
 
-		ImGui::Button(ICON_FA_GAMEPAD, "Modules", &UI::Frames["Modules"]->Open, buttonSize);
+		ImGui::Button(ICON_FA_GAMEPAD, "Modules", UI::GetWindowState("Modules"), buttonSize);
 		ImGui::Tooltip("Modules");
 		ImGui::SameLine();
 
@@ -44,30 +44,30 @@ namespace IW3SR::UC
 		ImGui::ButtonToggle(ICON_FA_GRIP, "Design", &UI::DesignMode, buttonSize);
 		ImGui::Tooltip("Design mode");
 		ImGui::SameLine();
-		ImGui::Button(ICON_FA_PAINTBRUSH, "Themes", &UI::Frames["Themes"]->Open, buttonSize);
+		ImGui::Button(ICON_FA_PAINTBRUSH, "Themes", UI::GetWindowState("Themes"), buttonSize);
 		ImGui::Tooltip("Themes");
 		ImGui::SameLine();
 
 		if (System::IsDebug())
 		{
-			ImGui::Button(ICON_FA_MEMORY, "Memory", &UI::Frames["Memory"]->Open, buttonSize);
+			ImGui::Button(ICON_FA_MEMORY, "Memory", UI::GetWindowState("Memory"), buttonSize);
 			ImGui::Tooltip("Memory");
 			ImGui::SameLine();
 		}
 		if (About::UpdateAvailable)
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 1, 1));
-			ImGui::Button(ICON_FA_CIRCLE_INFO, "About", &UI::Frames["About"]->Open, buttonSize);
+			ImGui::Button(ICON_FA_CIRCLE_INFO, "About", UI::GetWindowState("About"), buttonSize);
 			ImGui::PopStyleColor(1);
 			ImGui::Tooltip("About - Update available");
 		}
 		else
 		{
-			ImGui::Button(ICON_FA_CIRCLE_INFO, "About", &UI::Frames["About"]->Open, buttonSize);
+			ImGui::Button(ICON_FA_CIRCLE_INFO, "About", UI::GetWindowState("About"), buttonSize);
 			ImGui::Tooltip("About");
 		}
 		ImGui::SameLine();
-		ImGui::Button(ICON_FA_GEAR, "Settings", &UI::Frames["Settings"]->Open, buttonSize);
+		ImGui::Button(ICON_FA_GEAR, "Settings", UI::GetWindowState("Settings"), buttonSize);
 		ImGui::Tooltip("Settings");
 
 		End();

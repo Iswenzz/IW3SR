@@ -322,23 +322,38 @@ namespace IW3SR::Addons
 		return flerp_frac;
 	}
 
+	float CGAZ::SafeAcos(float num, float den)
+	{
+		if (den <= 0.0f)
+			return 0.0f;
+
+		return acos(std::clamp(num / den, -1.0f, 1.0f));
+	}
+
 	float CGAZ::Min()
 	{
 		const float num_squared = w_speed * w_speed - v_squared + vf_squared + g_squared;
+		if (num_squared < 0.0f)
+			return 0.0f;
+
 		const float num = sqrt(num_squared);
-		return num >= vf ? 0 : acos(num / vf);
+		return num >= vf ? 0 : SafeAcos(num, vf);
 	}
 
 	float CGAZ::Opt()
 	{
 		const float num = w_speed - a;
-		return num >= vf ? 0 : acos(num / vf);
+		return num >= vf ? 0 : SafeAcos(num, vf);
 	}
 
 	float CGAZ::MaxCos(float d_opt)
 	{
-		const float num = sqrt(v_squared - g_squared) - vf;
-		float d_max_cos = num >= a ? 0 : acos(num / a);
+		const float root = v_squared - g_squared;
+		if (root < 0.0f)
+			return d_opt;
+
+		const float num = sqrt(root) - vf;
+		float d_max_cos = num >= a ? 0 : SafeAcos(num, a);
 
 		if (d_max_cos < d_opt)
 			d_max_cos = d_opt;
@@ -351,12 +366,14 @@ namespace IW3SR::Addons
 		const float num = v_squared - vf_squared - a_squared - g_squared;
 		const float den = 2 * a * vf;
 
+		if (den <= 0.0f)
+			return d_max_cos;
 		if (num >= den)
 			return 0;
 		if (-num >= den)
 			return M_PI;
 
-		float d_max = acos(num / den);
+		float d_max = SafeAcos(num, den);
 		if (d_max < d_max_cos)
 			d_max = d_max_cos;
 
@@ -386,7 +403,7 @@ namespace IW3SR::Addons
 
 		pm = *pmove;
 
-		if (!(pm.ps->otherFlags & PMF_DUCKED) && glm::length(vec2(pm.ps->velocity)))
+		if (!(pm.ps->pm_flags & PMF_DUCKED) && glm::length(vec2(pm.ps->velocity)))
 		{
 			PmoveSingle();
 
