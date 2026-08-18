@@ -2,10 +2,11 @@
 // https://github.com/Jelvan1/cgame_proxymod/blob/master/src/cg_cgaz.c
 // https://github.com/xoxor4d/iw3xo-dev/blob/master/src/components/modules/cgaz.cpp
 #include "Player/Base.hpp"
+#include "Player/Modules/PmoveHud.hpp"
 
 namespace IW3SR::Addons
 {
-	class CGAZ : public Module
+	class CGAZ : public Module, public PmoveHud
 	{
 	public:
 		float Y;
@@ -25,10 +26,6 @@ namespace IW3SR::Addons
 		void OnDraw2D(EventRenderer2D& event) override;
 
 	private:
-		pmove_t pm = {};
-		pml_t pml = {};
-		vec2 w_vel = { 0, 0 };
-		float w_speed = 0;
 		float v = 0;
 		float v_squared = 0;
 		float vf = 0;
@@ -42,20 +39,7 @@ namespace IW3SR::Addons
 		float d_max = 0;
 		float d_vel = 0;
 
-		void PmoveSingle();
-		void WalkMove();
-		void AirMove();
 		void Compute(float wishspeed, float accel, float gravity);
-		void Accelerate(float wishspeed, float accel);
-		void SlickAccelerate(float wishspeed, float accel);
-
-		float CmdScale(playerState_s* ps, usercmd_s* cmd);
-		float CmdScaleWalk(usercmd_s* cmd);
-		float CmdScaleForStance();
-		float DamageScaleWalk(int damageTimer);
-
-		float GetViewHeightLerpTime(int iTarget, int bDown);
-		float GetViewHeightLerp(int fromHeight, int toHeight);
 
 		static float SafeAcos(float num, float den);
 		float Min();

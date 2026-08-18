@@ -6,6 +6,7 @@
 #include "Player/Modules/KMOV.hpp"
 #include "Player/Modules/Lagometer.hpp"
 #include "Player/Modules/Movements.hpp"
+#include "Player/Modules/Snap.hpp"
 #include "Player/Modules/Velocity.hpp"
 
 PLUGIN void Initialize()
@@ -18,6 +19,7 @@ PLUGIN void Initialize()
 	Modules::Load<KMOV>();
 	Modules::Load<Lagometer>();
 	Modules::Load<Movements>();
+	Modules::Load<Snap>();
 	Modules::Load<Velocity>();
 }
 
@@ -29,5 +31,6 @@ PLUGIN void Shutdown()
 	Modules::Remove("sr.player.kmov");
 	Modules::Remove("sr.player.lagometer");
 	Modules::Remove("sr.player.movements");
+	Modules::Remove("sr.player.snap");
 	Modules::Remove("sr.player.velocity");
 }

@@ -11,5 +11,9 @@ target_sources(Player PRIVATE
 	Lagometer.cpp
 	Movements.hpp
 	Movements.cpp
+	PmoveHud.hpp
+	PmoveHud.cpp
+	Snap.hpp
+	Snap.cpp
 	Velocity.hpp
 	Velocity.cpp)
