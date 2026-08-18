@@ -15,7 +15,7 @@ namespace IW3SR::Addons
 		float accelerate = 0;
 		float slick_gravity = 0;
 
-		bool Update();
+		bool Update(bool forceAir = false);
 
 		void WalkMove();
 		void AirMove();

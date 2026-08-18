@@ -8,13 +8,13 @@ namespace IW3SR::Addons
 	Snap::Snap() : Module("sr.player.snap", "Player", "Snap")
 	{
 		ColorPrimary = { 0, 1, 1, 0.7 };
-		ColorAlternate = { 0.05, 0.05, 0.05, 0.7 };
-		ColorActive = { 0, 0.9, 0.9, 0.7 };
+		ColorAlternate = { 0.1, 0.1, 0.1, 0.7 };
+		ColorActive = { 0, 0.7, 0, 0.7 };
 
 		Y = 236;
 		Height = 2;
 
-		UseActiveZone = true;
+		UseActiveZone = false;
 	}
 
 	void Snap::Menu()
@@ -93,7 +93,9 @@ namespace IW3SR::Addons
 
 	void Snap::OnDraw2D(EventRenderer2D& event)
 	{
-		if (!Update())
+		// Ground accel is large enough that its zones are unreadable and useless, so keep showing
+		// the air ones while walking, which is what the next jump will land in
+		if (!Update(true))
 			return;
 
 		// The zone count follows the pmove step, and the measured frame time swings by a whole

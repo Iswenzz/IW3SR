@@ -23,7 +23,7 @@ namespace IW3SR::Addons
 {
 	// Replays the accelerate step of the active movement mode without applying it, so the HUD
 	// modules see the same wish direction and acceleration pmove is about to use
-	bool PmoveHud::Update()
+	bool PmoveHud::Update(bool forceAir)
 	{
 		if (!pmove || !pmove->ps)
 			return false;
@@ -48,7 +48,7 @@ namespace IW3SR::Addons
 		// Trace
 		PM_GroundTrace(&pm, &pml);
 
-		if (pml.walking)
+		if (pml.walking && !forceAir)
 			WalkMove();
 		else
 			AirMove();
