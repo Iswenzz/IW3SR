@@ -165,8 +165,8 @@ namespace IW3SR
 
 			PM_CrashLand(pm->ps, pml);
 
-			// Clear jump
 			CoD4::JumpClearState(pm->ps);
+			pm->ps->pm_flags &= ~PMF_TIME_KNOCKBACK;
 			pm->ps->pm_time = 0;
 
 			// Undo slowdowns
@@ -519,19 +519,19 @@ namespace IW3SR
 		if (!trace.startsolid && !trace.allsolid)
 			pm->ps->origin = glm::mix(vecPos, vecEndPos, trace.fraction);
 
+		const float stepSize = pm->ps->origin[2] - vecPos[2];
+
 		// Slide move up
 		SlideMove(pm, pml, false);
 
-		// Push down
+		// Push down the amount that was actually stepped up
 		vecEndPos = pm->ps->origin;
-		vecEndPos[2] -= sv_stepsize;
+		vecEndPos[2] -= stepSize;
 
 		PM_PlayerTrace(pm, &trace, pm->ps->origin, pm->mins, pm->maxs, vecEndPos, pm->ps->clientNum, pm->tracemask);
 		if (!trace.allsolid)
-		{
-			if (trace.fraction < 1.0f)
-				pm->ps->origin = glm::mix(pm->ps->origin, vecEndPos, trace.fraction);
-		}
+			pm->ps->origin = glm::mix(pm->ps->origin, vecEndPos, trace.fraction);
+
 		// Save up results
 		vec3 vecUpPos = pm->ps->origin;
 		vec3 vecUpVel = pm->ps->velocity;
@@ -542,7 +542,11 @@ namespace IW3SR
 		float upDist = (vecUpPos[0] - vecPos[0]) * (vecUpPos[0] - vecPos[0])
 			+ (vecUpPos[1] - vecPos[1]) * (vecUpPos[1] - vecPos[1]);
 
-		if (downDist > upDist || trace.normal[2] < SURF_SLOPE_NORMAL)
+		// A step-up blocked by a ceiling lands back on the floor it started from, which would
+		// cancel the rise and pin the player there
+		const bool stepLostHeight = vecVel[2] > 0.0f && vecDownPos[2] > vecUpPos[2];
+
+		if (downDist > upDist || stepLostHeight || trace.normal[2] < SURF_SLOPE_NORMAL)
 		{
 			pm->ps->origin = vecDownPos;
 			pm->ps->velocity = vecDownVel;

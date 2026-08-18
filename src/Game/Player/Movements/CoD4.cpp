@@ -64,4 +64,9 @@ namespace IW3SR
 		ps->pm_flags &= ~PMF_JUMPING;
 		ps->jumpOriginZ = 0.0;
 	}
+
+	bool CoD4::InKnockback(playerState_s* ps)
+	{
+		return (ps->pm_flags & PMF_TIME_KNOCKBACK) && ps->pm_time;
+	}
 }

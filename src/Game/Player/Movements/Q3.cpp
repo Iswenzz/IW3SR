@@ -70,7 +70,7 @@ namespace IW3SR
 		else if ((pm->ps->pm_flags & PMF_PRONE) && (wishspeed > speed * pm_prone_scale))
 			wishspeed = speed * pm_prone_scale;
 
-		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || (pm->ps->pm_flags & PMF_TIME_KNOCKBACK))
+		if ((pml->groundTrace.surfaceFlags & SURF_SLICK) || CoD4::InKnockback(pm->ps))
 		{
 			float accelerate = cpm ? pm_accelerate_cpm : pm_airaccelerate;
 			Accelerate(pm->ps, pml, wishdir, wishspeed, accelerate);
@@ -215,8 +215,8 @@ namespace IW3SR
 
 			PM_CrashLand(pm->ps, pml);
 
-			// Clear jump
 			CoD4::JumpClearState(pm->ps);
+			pm->ps->pm_flags &= ~PMF_TIME_KNOCKBACK;
 			pm->ps->pm_time = 0;
 
 			// Undo slowdowns
@@ -371,7 +371,7 @@ namespace IW3SR
 		// Apply ground friction
 		if (pml->walking && !(pml->groundTrace.surfaceFlags & SURF_SLICK))
 		{
-			if (!(pm->ps->pm_flags & PMF_TIME_KNOCKBACK))
+			if (!CoD4::InKnockback(pm->ps))
 			{
 				const float control = speed < 100.0f ? 100.0f : speed;
 				drop += control * friction * pml->frametime;

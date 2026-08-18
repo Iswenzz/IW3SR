@@ -1,5 +1,7 @@
 #include "CGAZ.hpp"
 
+#include "Game/Player/Movements/CoD4.hpp"
+
 #define cod4_accelerate 9.0f
 #define cod4_crouch_accelerate 12.0f
 #define cod4_prone_accelerate 19.0f
@@ -71,7 +73,13 @@ namespace IW3SR::Addons
 			AirMove();
 			return;
 		}
-		PM_Friction(pm.ps, &pml);
+		const auto mode = PMove::GetMovementMode();
+		const bool is_q3 = mode == MovementMode::Q3 || mode == MovementMode::Q3CPM;
+		const bool is_slick = pml.groundTrace.surfaceFlags & SURF_SLICK;
+
+		// Q3 drops friction entirely on slick surfaces and during knockback
+		if (!is_q3 || !(is_slick || CoD4::InKnockback(pm.ps)))
+			PM_Friction(pm.ps, &pml);
 
 		// Project moves down to flat plane
 		pml.forward[2] = 0;
@@ -85,13 +93,14 @@ namespace IW3SR::Addons
 				+ static_cast<float>(pm.cmd.rightmove) * pml.right[i];
 
 		float accelerate = 0;
-		const float dmg_scale = DamageScaleWalk(pm.ps->damageTimer) * CmdScaleWalk(&pm.cmd);
-		const float wishspeed = dmg_scale * glm::length(w_vel);
+		// Only the CoD4 walk move scales by damage, stance, weapon and strafe direction
+		const float scale = mode == MovementMode::COD4
+			? DamageScaleWalk(pm.ps->damageTimer) * CmdScaleWalk(&pm.cmd)
+			: CmdScale(pm.ps, &pm.cmd);
+		const float wishspeed = scale * glm::length(w_vel);
 
 		// When a player gets hit, they temporarily lose full control, which allows them to be moved a bit
-		const auto mode = PMove::GetMovementMode();
-		if ((pml.groundTrace.surfaceFlags & SURF_SLICK || pm.ps->pm_flags & PMF_TIME_KNOCKBACK)
-			&& mode != MovementMode::CS)
+		if ((is_slick || CoD4::InKnockback(pm.ps)) && mode != MovementMode::CS)
 		{
 			SlickAccelerate(wishspeed, mode == MovementMode::Q3CPM ? q3cpm_accelerate : cod4_airaccelerate);
 			return;
