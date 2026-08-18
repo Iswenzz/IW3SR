@@ -7,12 +7,11 @@ namespace IW3SR::Addons
 {
 	Snap::Snap() : Module("sr.player.snap", "Player", "Snap")
 	{
-		ColorPrimary = { 0, 1, 1, 0.4 };
-		ColorAlternate = { 0.05, 0.05, 0.05, 0.12 };
-		ColorActive = { 0, 0.9, 0.9, 0.4 };
+		ColorPrimary = { 0, 1, 1, 0.7 };
+		ColorAlternate = { 0.05, 0.05, 0.05, 0.7 };
+		ColorActive = { 0, 0.9, 0.9, 0.7 };
 
-		// Same line as the CGAZ bar
-		Y = 238;
+		Y = 236;
 		Height = 2;
 
 		UseActiveZone = true;
