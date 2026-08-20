@@ -141,13 +141,13 @@ namespace IW3SR::Addons
 		if (!KeyTurnLeft.IsDown() && !KeyTurnRight.IsDown())
 			return;
 
-		const float cl_yawspeed = Dvar::Get<float>("cl_yawspeed");
+		static const auto cl_yawspeed = Dvar::Find("cl_yawspeed");
 		const float speed = cls->frametime;
 		const float deltaTime = speed * 0.001f;
 
 		cmd->rightmove = KeyTurnRight.IsDown() ? 127 : KeyTurnLeft.IsDown() ? -127 : 0;
-		clients->viewangles[1] += KeyTurnLeft.IsDown() * cl_yawspeed * deltaTime;
-		clients->viewangles[1] -= KeyTurnRight.IsDown() * cl_yawspeed * deltaTime;
+		clients->viewangles[1] += KeyTurnLeft.IsDown() * cl_yawspeed->current.value * deltaTime;
+		clients->viewangles[1] -= KeyTurnRight.IsDown() * cl_yawspeed->current.value * deltaTime;
 	}
 
 	void Movements::OnLoadPosition()

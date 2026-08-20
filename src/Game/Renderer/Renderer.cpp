@@ -65,21 +65,21 @@ namespace IW3SR
 
 		if (text.Value.empty())
 		{
-			const auto shortversionDvar = Dvar::Get<const char*>("shortversion");
-			const std::string_view shortversion = shortversionDvar ? shortversionDvar : "";
+			static const auto shortversion = Dvar::Find("shortversion");
+			const std::string_view shortversionString = shortversion->current.string;
 
-			text.Value = std::format("CoD4 {}\nIW3SR {}", shortversion, APPLICATION_VERSION);
+			text.Value = std::format("CoD4 {}\nIW3SR {}", shortversionString, APPLICATION_VERSION);
 			if (COD4X_BASE)
 			{
-				const auto versionDvar = Dvar::Get<const char*>("version");
-				const std::string_view version = versionDvar ? versionDvar : "";
+				static const auto version = Dvar::Find("version");
+				const std::string_view versionString = version->current.string;
 
-				const auto cod4xversion = version.size() >= COD4X_VERSION_OFFSET + COD4X_VERSION_LENGTH
-					? version.substr(COD4X_VERSION_OFFSET, COD4X_VERSION_LENGTH)
-					: version;
+				const auto cod4xversion = versionString.size() >= COD4X_VERSION_OFFSET + COD4X_VERSION_LENGTH
+					? versionString.substr(COD4X_VERSION_OFFSET, COD4X_VERSION_LENGTH)
+					: versionString;
 
 				text.Value =
-					std::format("CoD4 {}\nCoD4x {}\nIW3SR {}", shortversion, cod4xversion, APPLICATION_VERSION);
+					std::format("CoD4 {}\nCoD4x {}\nIW3SR {}", shortversionString, cod4xversion, APPLICATION_VERSION);
 			}
 			text.SetRectAlignment(Horizontal::Right, Vertical::Fullscreen);
 			text.SetAlignment(Alignment::Right, Alignment::Top);

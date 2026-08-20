@@ -178,7 +178,7 @@ namespace IW3SR::Addons
 
 	float PmoveHud::CmdScale(playerState_s* ps, usercmd_s* cmd)
 	{
-		const auto player_spectateSpeedScale = Dvar::Get<float>("player_spectateSpeedScale");
+		static const auto player_spectateSpeedScale = Dvar::Find("player_spectateSpeedScale");
 
 		int max = abs(cmd->forwardmove);
 		if (abs(cmd->rightmove) > max)
@@ -196,24 +196,24 @@ namespace IW3SR::Addons
 		if (ps->pm_type == PM_UFO)
 			scale *= 6.0f;
 		if (ps->pm_type == PM_SPECTATOR)
-			scale *= player_spectateSpeedScale;
+			scale *= player_spectateSpeedScale->current.value;
 		return scale;
 	}
 
 	float PmoveHud::CmdScaleWalk(usercmd_s* cmd)
 	{
-		const auto player_backSpeedScale = Dvar::Get<float>("player_backSpeedScale");
-		const auto player_strafeSpeedScale = Dvar::Get<float>("player_strafeSpeedScale");
-		const auto player_sprintSpeedScale = Dvar::Get<float>("player_sprintSpeedScale");
+		static const auto player_backSpeedScale = Dvar::Find("player_backSpeedScale");
+		static const auto player_strafeSpeedScale = Dvar::Find("player_strafeSpeedScale");
+		static const auto player_sprintSpeedScale = Dvar::Find("player_sprintSpeedScale");
 
 		float total = sqrt(static_cast<float>(cmd->rightmove * cmd->rightmove + cmd->forwardmove * cmd->forwardmove));
 		const bool isProne = pm.ps->pm_flags & PMF_PRONE && pm.ps->fWeaponPosFrac > 0.0f;
 
-		float speed = fabs(static_cast<float>(cmd->forwardmove) * player_backSpeedScale);
+		float speed = fabs(static_cast<float>(cmd->forwardmove) * player_backSpeedScale->current.value);
 		if (cmd->forwardmove >= 0)
 			speed = fabs(static_cast<float>(cmd->forwardmove));
-		if (speed - fabs(static_cast<float>(cmd->rightmove) * player_strafeSpeedScale) < 0.0f)
-			speed = fabs(static_cast<float>(cmd->rightmove) * player_strafeSpeedScale);
+		if (speed - fabs(static_cast<float>(cmd->rightmove) * player_strafeSpeedScale->current.value) < 0.0f)
+			speed = fabs(static_cast<float>(cmd->rightmove) * player_strafeSpeedScale->current.value);
 		if (speed == 0.0f)
 			return 0.0f;
 
@@ -221,7 +221,7 @@ namespace IW3SR::Addons
 		if (pm.ps->pm_flags & PMF_WALKING || pm.ps->leanf != 0.0f || isProne)
 			scale *= 0.40000001f;
 		if (pm.ps->pm_flags & PMF_SPRINTING && pm.ps->viewHeightTarget == 60)
-			scale *= player_sprintSpeedScale;
+			scale *= player_sprintSpeedScale->current.value;
 		if (pm.ps->pm_type == PM_NOCLIP)
 			scale *= 3.0f;
 		else if (pm.ps->pm_type == PM_UFO)
@@ -261,12 +261,12 @@ namespace IW3SR::Addons
 
 	float PmoveHud::DamageScaleWalk(int damageTimer)
 	{
-		const auto player_dmgtimer_maxTime = Dvar::Get<float>("player_dmgtimer_maxTime");
-		const auto player_dmgtimer_minScale = Dvar::Get<float>("player_dmgtimer_minScale");
+		static const auto player_dmgtimer_maxTime = Dvar::Find("player_dmgtimer_maxTime");
+		static const auto player_dmgtimer_minScale = Dvar::Find("player_dmgtimer_minScale");
 
-		if (!damageTimer || player_dmgtimer_maxTime == 0.0f)
+		if (!damageTimer || player_dmgtimer_maxTime->current.value == 0.0f)
 			return 1.0f;
-		return (-player_dmgtimer_minScale / player_dmgtimer_maxTime) * damageTimer + 1.0f;
+		return (-player_dmgtimer_minScale->current.value / player_dmgtimer_maxTime->current.value) * damageTimer + 1.0f;
 	}
 
 	float PmoveHud::GetViewHeightLerpTime(int iTarget, int bDown)

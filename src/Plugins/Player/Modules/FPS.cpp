@@ -23,7 +23,9 @@ namespace IW3SR::Addons
 
 	void FPS::OnRender()
 	{
-		Value = Dvar::Get<int>("com_maxfps");
+		static const auto com_maxfps = Dvar::Find("com_maxfps");
+
+		Value = com_maxfps->current.integer;
 		Values.Add(Value);
 
 		FrameText.Value = std::to_string(Value);

@@ -93,18 +93,13 @@ namespace IW3SR::Addons
 
 	void Snap::OnDraw2D(EventRenderer2D& event)
 	{
-		// Ground accel is large enough that its zones are unreadable and useless, so keep showing
-		// the air ones while walking, which is what the next jump will land in
 		if (!Update(true))
 			return;
 
-		// The zone count follows the pmove step, and the measured frame time swings by a whole
-		// millisecond, which rebuilds a different grid every frame. Model the step from the frame
-		// rate the player is capped at instead so the zones hold still.
-		const int maxfps = Dvar::Get<int>("com_maxfps");
-		const float msec = maxfps > 0 ? std::floor(1000.0f / maxfps) : static_cast<float>(cgs->frametime);
+		static const auto com_maxfps = Dvar::Find("com_maxfps");
+		const int fps = com_maxfps->current.integer;
 
-		// Beyond the cap the zones are thinner than a pixel
+		const float msec = fps > 0 ? std::floor(1000.0f / fps) : static_cast<float>(cgs->frametime);
 		const float accel = std::min(accelerate * w_speed * (std::max(msec, 1.0f) / 1000.0f), MAX_ACCEL);
 		if (accel <= 0.0f)
 			return;

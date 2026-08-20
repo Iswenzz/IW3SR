@@ -224,21 +224,25 @@ namespace IW3SR::Addons
 
 	void KMOV::RenderNode(Node& node)
 	{
+		static const auto name = Dvar::Find("name");
+		static const auto com_maxfps = Dvar::Find("com_maxfps");
+		static const auto mapname = Dvar::Find("mapname");
+
 		node.Element.Value = "";
 
 		switch (node.Type)
 		{
 		case NodeEnum::Player:
-			node.Element.Value = std::string(Dvar::Get<const char*>("name"));
+			node.Element.Value = name->current.string;
 			break;
 		case NodeEnum::FPS:
-			node.Element.Value = std::format("{} FPS", Dvar::Get<int>("com_maxfps"));
+			node.Element.Value = std::format("{} FPS", com_maxfps->current.integer);
 			break;
 		case NodeEnum::Velocity:
 			node.Element.Value = std::format("{} UPS", static_cast<int>(glm::length(vec2(pmove->ps->velocity))));
 			break;
 		case NodeEnum::Map:
-			node.Element.Value = std::string(Dvar::Get<const char*>("mapname"));
+			node.Element.Value = mapname->current.string;
 			break;
 		case NodeEnum::Timer:
 		{

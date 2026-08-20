@@ -386,7 +386,7 @@ namespace IW3SR
 		int integer;
 		uint32_t uinteger;
 		float value;
-		float vector[4];
+		vec4 vector;
 		const char* string;
 		char color[4];
 	};

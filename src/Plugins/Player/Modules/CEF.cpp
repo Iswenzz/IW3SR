@@ -26,7 +26,7 @@ namespace IW3SR::Addons
 		static std::string prevUrl = "";
 		static bool prevHasTexture = false;
 
-		const auto url = Dvar::Get<char*>("cef_url");
+		static const auto cef_url = Dvar::Find("cef_url");
 
 		if (Instance)
 		{
@@ -35,12 +35,12 @@ namespace IW3SR::Addons
 
 			if (Instance->Open)
 			{
-				if (url != prevUrl)
-					Browser::SetURL(Instance, url);
+				if (cef_url->current.string != prevUrl)
+					Browser::SetURL(Instance, cef_url->current.string);
 				if (hasTexture != prevHasTexture)
 					GRenderer::UpdateMaterials();
 			}
-			prevUrl = url;
+			prevUrl = cef_url->current.string;
 			prevHasTexture = hasTexture;
 		}
 		Browser::Frame();

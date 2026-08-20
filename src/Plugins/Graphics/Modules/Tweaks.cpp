@@ -54,25 +54,40 @@ namespace IW3SR::Addons
 
 	void Tweaks::OnRender()
 	{
-		Dvar::Set<bool>("r_filmTweakEnable", DrawTweaks);
-		Dvar::Set<bool>("r_filmUseTweaks", DrawTweaks);
-		Dvar::Set<bool>("r_glow", DrawGlow);
-		Dvar::Set<bool>("r_glowUseTweaks", DrawGlow);
-		Dvar::Set<bool>("r_drawSun", DrawSun);
+		static const auto r_filmTweakEnable = Dvar::Find("r_filmTweakEnable");
+		static const auto r_filmUseTweaks = Dvar::Find("r_filmUseTweaks");
+		static const auto r_glow = Dvar::Find("r_glow");
+		static const auto r_glowUseTweaks = Dvar::Find("r_glowUseTweaks");
+		static const auto r_drawSun = Dvar::Find("r_drawSun");
+		static const auto r_filmTweakBrightness = Dvar::Find("r_filmTweakBrightness");
+		static const auto r_filmTweakContrast = Dvar::Find("r_filmTweakContrast");
+		static const auto r_filmTweakDesaturation = Dvar::Find("r_filmTweakDesaturation");
+		static const auto r_filmTweakLightTint = Dvar::Find("r_filmTweakLightTint");
+		static const auto r_filmTweakDarkTint = Dvar::Find("r_filmTweakDarkTint");
+		static const auto r_glowTweakRadius0 = Dvar::Find("r_glowTweakRadius0");
+		static const auto r_glowTweakBloomDesaturation = Dvar::Find("r_glowTweakBloomDesaturation");
+		static const auto r_glowTweakBloomIntensity = Dvar::Find("r_glowTweakBloomIntensity");
+		static const auto r_glowTweakBloomCutoff = Dvar::Find("r_glowTweakBloomCutoff");
+		static const auto r_envMapSunIntensity = Dvar::Find("r_envMapSunIntensity");
+		static const auto r_lightTweakSunColor = Dvar::Find("r_lightTweakSunColor");
+		static const auto r_lightTweakSunDirection = Dvar::Find("r_lightTweakSunDirection");
 
-		Dvar::Set<float>("r_filmTweakBrightness", TweakBrightness);
-		Dvar::Set<float>("r_filmTweakContrast", TweakContrast);
-		Dvar::Set<float>("r_filmTweakDesaturation", TweakDesaturation);
-		Dvar::Set<vec3>("r_filmTweakLightTint", TweakLightTint);
-		Dvar::Set<vec3>("r_filmTweakDarkTint", TweakDarkTint);
-
-		Dvar::Set<float>("r_glowTweakRadius0", GlowRadius);
-		Dvar::Set<float>("r_glowTweakBloomDesaturation", GlowBloomDesaturation);
-		Dvar::Set<float>("r_glowTweakBloomIntensity", GlowBloomIntensity);
-		Dvar::Set<float>("r_glowTweakBloomCutoff", GlowBloomCutoff);
-
-		Dvar::Set<float>("r_envMapSunIntensity", SunIntensity);
-		Dvar::Set<vec4>("r_lightTweakSunColor", SunColor);
-		Dvar::Set<vec3>("r_lightTweakSunDirection", SunDirection);
+		r_filmTweakEnable->current.enabled = DrawTweaks;
+		r_filmUseTweaks->current.enabled = DrawTweaks;
+		r_glow->current.enabled = DrawGlow;
+		r_glowUseTweaks->current.enabled = DrawGlow;
+		r_drawSun->current.enabled = DrawSun;
+		r_filmTweakBrightness->current.value = TweakBrightness;
+		r_filmTweakContrast->current.value = TweakContrast;
+		r_filmTweakDesaturation->current.value = TweakDesaturation;
+		r_filmTweakLightTint->current.vector = vec4(TweakLightTint, 1);
+		r_filmTweakDarkTint->current.vector = vec4(TweakDarkTint, 1);
+		r_glowTweakRadius0->current.value = GlowRadius;
+		r_glowTweakBloomDesaturation->current.value = GlowBloomDesaturation;
+		r_glowTweakBloomIntensity->current.value = GlowBloomIntensity;
+		r_glowTweakBloomCutoff->current.value = GlowBloomCutoff;
+		r_envMapSunIntensity->current.value = SunIntensity;
+		r_lightTweakSunColor->current.vector = SunColor;
+		r_lightTweakSunDirection->current.vector = vec4(SunDirection, 1);
 	}
 }
