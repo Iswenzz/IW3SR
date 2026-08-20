@@ -14,7 +14,6 @@
 #define pm_strafeaccelerate 70.0f
 #define pm_stepsize 18.0f
 #define pm_double_jump_cpm 100.0f
-#define jump_height 39.0f
 
 #define OVERCLIP 1.001f
 #define MAX_CLIP_PLANES 5
@@ -312,6 +311,8 @@ namespace IW3SR
 
 	bool Q3::JumpCheck(pmove_t* pm, pml_t* pml, bool cpm)
 	{
+		static const auto jump_height = Dvar::Find("jump_height");
+
 		if (pm->ps->pm_flags & PMF_NO_JUMP)
 			return false;
 		if (pm->ps->pm_flags & PMF_JUMP_HELD)
@@ -325,7 +326,7 @@ namespace IW3SR
 		if (!(pm->cmd.buttons & PMF_JUMP_HELD))
 			return false;
 
-		float jump_velocity = sqrt(2.0f * static_cast<float>(pm->ps->gravity) * jump_height);
+		float jump_velocity = sqrt(2.0f * static_cast<float>(pm->ps->gravity) * jump_height->current.value);
 		if (cpm && pm->ps->jumpTime > 0)
 			jump_velocity += pm_double_jump_cpm;
 
