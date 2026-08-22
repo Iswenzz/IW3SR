@@ -57,8 +57,8 @@ namespace IW3SR::UC
 			return { height * 1.9f, height };
 		}
 
-		void BeginPanel(const std::string& id, const vec2& size, const ImVec4& background,
-			ImGuiChildFlags flags = 0, ImGuiWindowFlags window = 0)
+		void BeginPanel(const std::string& id, const vec2& size, const ImVec4& background, ImGuiChildFlags flags = 0,
+			ImGuiWindowFlags window = 0)
 		{
 			ImGui::PushStyleColor(ImGuiCol_ChildBg, background);
 			ImGui::BeginChild(id.c_str(), size, flags, window);
