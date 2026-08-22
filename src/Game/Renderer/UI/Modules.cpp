@@ -224,7 +224,7 @@ namespace IW3SR::UC
 		else if (entry)
 		{
 			ImGui::PushID(entry->ID.c_str());
-			Header(entry->Name, entry->Group + Dot + entry->ID, entry);
+			Header(entry->Name, entry->Group + Dot + entry->ID);
 
 			BeginPanel("##content", { 0, 0 }, PanelColor);
 			const float cursor = ImGui::GetCursorPosY();
@@ -242,38 +242,21 @@ namespace IW3SR::UC
 		ImGui::EndChild();
 	}
 
-	void Modules::Header(const std::string& title, const std::string& subtitle, const Ref<Module>& entry)
+	void Modules::Header(const std::string& title, const std::string& subtitle)
 	{
-		const ImGuiStyle& style = ImGui::GetStyle();
-		const vec2 toggle = ToggleSize();
-		const float width = ImGui::GetContentRegionAvail().x;
-		const vec2 cursor = ImGui::GetCursorPos();
-
-		ImGui::BeginGroup();
 		ImGui::PushFont(ImGui::H3);
 		ImGui::TextUnformatted(title.c_str());
 		ImGui::PopFont();
 		ImGui::TextDisabled("%s", subtitle.c_str());
-		ImGui::EndGroup();
 
-		const float height = ImGui::GetItemRectSize().y;
-
-		if (entry)
-		{
-			ImGui::SetCursorPos({ cursor.x + width - toggle.x, cursor.y + (height - toggle.y) * 0.5f });
-			if (ImGui::Toggle("##enabled", &entry->IsEnabled, toggle))
-				entry->IsEnabled ? entry->Initialize() : entry->Release();
-
-			ImGui::Tooltip(entry->IsEnabled ? "Enabled" : "Disabled");
-		}
-		ImGui::SetCursorPos({ cursor.x, cursor.y + height + style.ItemSpacing.y });
+		ImGui::Spacing();
 		ImGui::Separator();
 		ImGui::Spacing();
 	}
 
 	void Modules::Settings()
 	{
-		Header("Settings", std::string("Interface") + Dot + "Input", nullptr);
+		Header("Settings", std::string("Interface") + Dot + "Input");
 
 		BeginPanel("##settings", { 0, 0 }, PanelColor);
 		if (ImGui::CollapsingHeader("General", ImGuiTreeNodeFlags_DefaultOpen))

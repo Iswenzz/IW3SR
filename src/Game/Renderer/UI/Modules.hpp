@@ -24,7 +24,7 @@ namespace IW3SR::UC
 		void Category(const std::string& group);
 		void Entry(const Ref<Module>& entry);
 		void Details();
-		void Header(const std::string& title, const std::string& subtitle, const Ref<Module>& entry);
+		void Header(const std::string& title, const std::string& subtitle);
 		void Settings();
 		void Placeholder();
 
