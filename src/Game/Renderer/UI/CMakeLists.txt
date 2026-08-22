@@ -3,8 +3,6 @@ target_sources(IW3SR PRIVATE
 	About.cpp
 	Modules.hpp
 	Modules.cpp
-	Settings.hpp
-	Settings.cpp
 	Toolbar.hpp
 	Toolbar.cpp
 	UI.hpp

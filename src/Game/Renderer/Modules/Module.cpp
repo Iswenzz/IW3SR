@@ -7,7 +7,6 @@ namespace IW3SR
 		ID = id;
 		Name = name;
 		Group = group;
-		MenuFrame = Frame(name);
 	}
 
 	void Module::Initialize() { }

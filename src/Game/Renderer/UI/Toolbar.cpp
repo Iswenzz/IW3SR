@@ -66,10 +66,6 @@ namespace IW3SR::UC
 			ImGui::Button(ICON_FA_CIRCLE_INFO, "About", UI::GetWindowState("About"), buttonSize);
 			ImGui::Tooltip("About");
 		}
-		ImGui::SameLine();
-		ImGui::Button(ICON_FA_GEAR, "Settings", UI::GetWindowState("Settings"), buttonSize);
-		ImGui::Tooltip("Settings");
-
 		End();
 		ImGui::PopStyleVar(2);
 	}

@@ -11,13 +11,13 @@ namespace IW3SR::Addons
 		vec4 Color;
 	};
 
-	class Texts : public Module
+	class General : public Module
 	{
 	public:
 		bool UseEmojis;
 
-		Texts();
-		virtual ~Texts() = default;
+		General();
+		virtual ~General() = default;
 
 		void Menu() override;
 		void ProcessText(std::string& text, Font_s* font, vec2 position, vec2 scale, const vec4& color);
@@ -28,6 +28,6 @@ namespace IW3SR::Addons
 		std::vector<EmojiCommand> EmojiCommands;
 		std::unordered_map<std::string, Ref<Texture>> EmojiMap;
 
-		SERIALIZE_POLY(Texts, Module, UseEmojis)
+		SERIALIZE_POLY(General, Module, UseEmojis)
 	};
 }

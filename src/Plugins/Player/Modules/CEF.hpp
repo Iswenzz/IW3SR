@@ -7,7 +7,7 @@ namespace IW3SR::Addons
 	{
 	public:
 		Ref<BrowserInstance> Instance;
-		bool Open = false;
+		bool Interactive = false;
 
 		CEF();
 		virtual ~CEF() = default;
@@ -15,6 +15,9 @@ namespace IW3SR::Addons
 		void Initialize() override;
 		void Release() override;
 
+		void Menu() override;
 		void OnRender() override;
+
+		SERIALIZE_POLY(CEF, Module, Interactive)
 	};
 }

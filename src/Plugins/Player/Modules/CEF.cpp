@@ -2,23 +2,23 @@
 
 namespace IW3SR::Addons
 {
-	CEF::CEF() : Module("sr.player.cef", "Player", "Browser")
-	{
-		MenuFrame.SetFlags(ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoTitleBar);
-	}
+	CEF::CEF() : Module("sr.player.cef", "Player", "Browser") { }
 
 	void CEF::Initialize()
 	{
 		Instance = Browser::Add("browser", Dvar::Get<char*>("cef_url"), { 20, 20 }, { 500, 300 });
-		MenuFrame.Position = Instance->Position;
-		MenuFrame.Size = Instance->Size;
 	}
 
 	void CEF::Release()
 	{
 		Browser::Remove("browser");
 		Instance = nullptr;
+	}
+
+	void CEF::Menu()
+	{
+		ImGui::Checkbox("Interactive", &Interactive);
+		ImGui::Tooltip("Send the mouse and keyboard to the page while the menu is open");
 	}
 
 	void CEF::OnRender()
@@ -31,7 +31,7 @@ namespace IW3SR::Addons
 		if (Instance)
 		{
 			const bool hasTexture = !!Instance->Texture;
-			Instance->Show = UI::Open && MenuFrame.Open;
+			Instance->Show = UI::Open && Interactive;
 
 			if (Instance->Open)
 			{

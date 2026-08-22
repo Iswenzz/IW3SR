@@ -9,7 +9,6 @@ namespace IW3SR
 		std::string ID;
 		std::string Name;
 		std::string Group;
-		Frame MenuFrame;
 		bool IsEnabled = false;
 
 		Module() = default;
@@ -38,6 +37,6 @@ namespace IW3SR
 		virtual void OnRender();
 		virtual void OnEvent(Event& event) override;
 
-		SERIALIZE_POLY_BASE(Module, IsEnabled, MenuFrame)
+		SERIALIZE_POLY_BASE(Module, IsEnabled)
 	};
 }

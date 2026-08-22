@@ -1,8 +1,8 @@
-#include "Texts.hpp"
+#include "General.hpp"
 
 namespace IW3SR::Addons
 {
-	Texts::Texts() : Module("sr.graphics.texts", "Graphics", "Texts")
+	General::General() : Module("sr.graphics.general", "Graphics", "General")
 	{
 		UseEmojis = true;
 
@@ -51,12 +51,12 @@ namespace IW3SR::Addons
 		};
 	}
 
-	void Texts::Menu()
+	void General::Menu()
 	{
 		ImGui::Checkbox("Show Emojis", &UseEmojis);
 	}
 
-	void Texts::ProcessText(std::string& text, Font_s* font, vec2 position, vec2 scale, const vec4& color)
+	void General::ProcessText(std::string& text, Font_s* font, vec2 position, vec2 scale, const vec4& color)
 	{
 		size_t i = 0;
 		while (i < text.size())
@@ -105,13 +105,13 @@ namespace IW3SR::Addons
 		}
 	}
 
-	void Texts::OnDrawText(EventRendererText& event)
+	void General::OnDrawText(EventRendererText& event)
 	{
 		if (UseEmojis)
 			ProcessText(event.text, event.font, event.position, event.size, event.color);
 	}
 
-	void Texts::OnRender()
+	void General::OnRender()
 	{
 		if (UseEmojis)
 		{

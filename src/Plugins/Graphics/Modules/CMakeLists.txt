@@ -1,5 +1,5 @@
 target_sources(Graphics PRIVATE
-	Texts.hpp
-	Texts.cpp
+	General.hpp
+	General.cpp
 	Tweaks.hpp
 	Tweaks.cpp)
