@@ -83,6 +83,8 @@ namespace IW3SR
 	extern int* scr_numParam;
 	API extern gentity_s* scr_g_entities;
 	API extern level_locals_t* level_locals;
+	API extern corpseInfo_t* g_corpseInfo;
+	API extern uint16_t& scr_const_player;
 
 	// Console
 	extern float* con_matchtxtColor_currentDvar;

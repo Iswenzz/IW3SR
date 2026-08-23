@@ -61,6 +61,9 @@ namespace IW3SR
 		float r, float g, int b, int a, int null4, int null5)>
 		Dvar_RegisterVariantColor = ASM_LOAD(Dvar_RegisterVariant);
 
+	Function<void(gentity_s* ent)>
+		G_FreeEntity = 0x4E3A50;
+
 	Function<void(const vec3& end, int passEntityNum, trace_t* results, const vec3& start, int contentMask)>
 		G_MissileTrace = ASM_LOAD(G_MissileTrace);
 

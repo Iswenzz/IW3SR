@@ -65,6 +65,9 @@ namespace IW3SR
 		float r, float g, int b, int a, int null4, int null5)>
 		Dvar_RegisterVariantColor;
 
+	API extern Function<void(gentity_s* ent)>
+		G_FreeEntity;
+
 	API extern Function<void(const vec3& end, int passEntityNum, trace_t* results, const vec3& start, int contentMask)>
 		G_MissileTrace;
 

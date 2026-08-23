@@ -6,6 +6,7 @@
 #include "Game/System/Client.hpp"
 #include "Game/System/Console.hpp"
 #include "Game/System/Patch.hpp"
+#include "Game/System/Server.hpp"
 #include "Game/System/System.hpp"
 
 // clang-format off
@@ -45,6 +46,9 @@ namespace IW3SR
 
 	Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h(0x463A60, PMove::FinishMove);
+
+	Hook<int()>
+		G_GetFreeCorpseSlot_h(0x4C9770, GServer::GetFreeCorpseSlot);
 
 	Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
 		IDirect3DDevice9_Reset_h(GRenderer::Reset);

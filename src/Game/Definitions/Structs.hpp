@@ -6148,6 +6148,16 @@ namespace IW3SR
 		float tagMat[4][3];
 	};
 
+	// Slot of the server corpse pool recycled by the clonePlayer() script call.
+	// Only the fields the engine's slot picker touches are mapped.
+	struct corpseInfo_t
+	{
+		char pad[4];
+		int entnum;
+		int time;
+		char pad2[0x4D0];
+	};
+
 	struct level_locals_t
 	{
 		gclient_s* clients;

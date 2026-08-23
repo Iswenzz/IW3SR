@@ -42,6 +42,9 @@ namespace IW3SR
 	extern Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h;
 
+	extern Hook<int()>
+		G_GetFreeCorpseSlot_h;
+
 	extern Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
 		IDirect3DDevice9_Reset_h;
 

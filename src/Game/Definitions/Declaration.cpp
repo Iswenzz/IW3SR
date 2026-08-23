@@ -81,6 +81,8 @@ namespace IW3SR
 	int* scr_numParam = Signature(0x1794074);
 	gentity_s* scr_g_entities = Signature(0x1288500);
 	level_locals_t* level_locals = Signature(0x13EB6A8);
+	corpseInfo_t* g_corpseInfo = Signature(0x13FB31C);
+	uint16_t& scr_const_player = Signature(0x1406EEC);
 
 	// Console
 	float* con_matchtxtColor_currentDvar = Signature(0x6BDF14);

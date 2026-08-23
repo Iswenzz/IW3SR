@@ -7,5 +7,7 @@ target_sources(IW3SR PRIVATE
 	Dvar.cpp
 	Patch.hpp
 	Patch.cpp
+	Server.hpp
+	Server.cpp
 	System.hpp
 	System.cpp)
