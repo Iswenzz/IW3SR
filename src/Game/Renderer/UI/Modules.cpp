@@ -67,6 +67,18 @@ namespace IW3SR::UC
 			ImGui::PopStyleColor();
 		}
 
+		// Checkbox bound straight to a boolean dvar, so the console and the panel stay in step.
+		void Setting(const char* label, const char* name, const char* tooltip)
+		{
+			const auto dvar = Dvar::Find(name);
+			if (!dvar)
+				return;
+
+			if (ImGui::Checkbox(label, &dvar->current.enabled))
+				dvar->latched.enabled = dvar->current.enabled;
+			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
+		}
+
 		// Marks the selected row with an accent bar over its left edge.
 		void Accent()
 		{
@@ -265,14 +277,12 @@ namespace IW3SR::UC
 		{
 			ImGui::Keybind("Menu", &UI::KeyOpen.Input, false);
 			ImGui::Checkbox("Design Mode", &UI::DesignMode);
-		}
-		if (ImGui::CollapsingHeader("Mouse", ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			if (const auto rawInput = Dvar::Find("sr_rawinput"))
-			{
-				if (ImGui::Checkbox("Raw Input", &rawInput->current.enabled))
-					rawInput->latched.enabled = rawInput->current.enabled;
-			}
+
+			Setting("Raw Input", "sr_rawinput",
+				"Reads the mouse through raw input instead of the Windows pointer.\n"
+				"Drops pointer acceleration and the movement the old path lost at the\n"
+				"edges of the screen, and stays smooth and stable on the frame rate at\n"
+				"high polling rates, where 1000 Hz and above used to stutter and flicker.");
 		}
 		ImGui::EndChild();
 	}
