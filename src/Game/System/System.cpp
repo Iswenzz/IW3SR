@@ -1,4 +1,5 @@
 #include "System.hpp"
+#include "Mouse.hpp"
 #include "Patch.hpp"
 
 namespace IW3SR
@@ -9,6 +10,7 @@ namespace IW3SR
 			return;
 		IsShutdown = true;
 
+		GMouse::Shutdown();
 		Browser::Shutdown();
 		Application::Shutdown();
 	}
@@ -16,6 +18,7 @@ namespace IW3SR
 	void GSystem::MainLoop(int tickRate)
 	{
 		PbServerProcessEvents_h(tickRate);
+		GMouse::Frame();
 
 		if (ExitRequested)
 			Cmd_ExecuteSingleCommand(0, 0, "quit\n");
@@ -44,9 +47,14 @@ namespace IW3SR
 		switch (msg)
 		{
 		case WM_INPUT:
-			Mouse::Process(msg, lParam);
-			Keyboard::Process(msg, lParam);
+		{
+			const RawInput result = GMouse::Process(lParam);
+			if (result == RawInput::Keyboard)
+				Keyboard::Process(msg, lParam);
+			else if (result == RawInput::Consumed)
+				return DefWindowProc(hWnd, msg, wParam, lParam); // WM_INPUT still needs its cleanup
 			break;
+		}
 
 		case WM_MOUSEMOVE:
 			Mouse::Process(msg, lParam);

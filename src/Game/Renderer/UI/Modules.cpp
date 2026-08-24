@@ -1,5 +1,7 @@
 #include "Modules.hpp"
 
+#include "Game/System/Dvar.hpp"
+
 namespace IW3SR::UC
 {
 	namespace
@@ -263,6 +265,14 @@ namespace IW3SR::UC
 		{
 			ImGui::Keybind("Menu", &UI::KeyOpen.Input, false);
 			ImGui::Checkbox("Design Mode", &UI::DesignMode);
+		}
+		if (ImGui::CollapsingHeader("Mouse", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			if (const auto rawInput = Dvar::Find("sr_rawinput"))
+			{
+				if (ImGui::Checkbox("Raw Input", &rawInput->current.enabled))
+					rawInput->latched.enabled = rawInput->current.enabled;
+			}
 		}
 		ImGui::EndChild();
 	}

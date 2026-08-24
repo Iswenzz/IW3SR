@@ -5,6 +5,7 @@
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/UI/About.hpp"
 #include "Game/Renderer/UI/UI.hpp"
+#include "Game/System/Mouse.hpp"
 #include "Game/System/System.hpp"
 
 namespace IW3SR
@@ -17,6 +18,7 @@ namespace IW3SR
 		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
 
 		Dvar::Initialize();
+		GMouse::Initialize();
 		Modules::Deserialize();
 
 		DX9GraphicsContext::Swap(dx->d3d9, dx->device);

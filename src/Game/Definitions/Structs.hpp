@@ -481,6 +481,18 @@ namespace IW3SR
 		char pad[2];
 	};
 
+	struct WinVars_t
+	{
+		HINSTANCE reflibLibrary;
+		int reflibActive;
+		HWND hWnd;
+		HINSTANCE hInstance;
+		int activeApp;
+		int isMinimized;
+		int recenterMouse;
+		uint32_t sysMsgTime;
+	};
+
 	union PackedUnitVec
 	{
 		uint32_t packed;

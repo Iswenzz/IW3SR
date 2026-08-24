@@ -70,6 +70,7 @@ namespace IW3SR
 	extern UiContext* ui_cg_dc;
 	extern UiContext* ui_context;
 	extern WinMouseVars_t* s_wmv;
+	extern WinVars_t* g_wv;
 	extern PlayerKeyState* player_keys;
 	API extern clientUIActive_t* client_ui;
 	API extern Fonts_t* g_fonts;

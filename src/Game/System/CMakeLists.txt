@@ -5,6 +5,8 @@ target_sources(IW3SR PRIVATE
 	Console.cpp
 	Dvar.hpp
 	Dvar.cpp
+	Mouse.hpp
+	Mouse.cpp
 	Patch.hpp
 	Patch.cpp
 	Server.hpp
