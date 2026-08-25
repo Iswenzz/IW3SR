@@ -1,6 +1,9 @@
 #include "Client.hpp"
 
 #include "Game/Renderer/Renderer.hpp"
+#include "Game/System/Assets.hpp"
+#include "Game/System/Capture.hpp"
+#include "Game/System/Timestep.hpp"
 
 namespace IW3SR
 {
@@ -21,6 +24,8 @@ namespace IW3SR
 	void Client::Connect()
 	{
 		CL_Connect_h();
+		Assets::Reset();
+		Timestep::Reset();
 
 		EventClientConnect event;
 		Application::Dispatch(event);
@@ -29,6 +34,8 @@ namespace IW3SR
 	void Client::Disconnect(int localClientNum)
 	{
 		CL_Disconnect_h(localClientNum);
+		Timestep::Reset();
+		Capture::Disconnected();
 
 		EventClientDisconnect event;
 		Application::Dispatch(event);

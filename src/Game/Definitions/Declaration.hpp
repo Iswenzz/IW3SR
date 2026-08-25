@@ -53,6 +53,7 @@ namespace IW3SR
 	extern GfxCmdBufSourceState* gfx_cmdBufSourceState;
 	extern GfxCmdBufState* gfx_cmdBufState;
 	extern GfxBackEndData* gfx_frontEndDataOut;
+	extern GfxCmdArray** gfx_cmdList;
 	extern GfxBackEndData* gfx_backEndData;
 	extern GfxBuffers* gfx_buf;
 	extern GfxWorld* gfx_world;

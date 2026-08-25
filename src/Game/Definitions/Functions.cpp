@@ -19,6 +19,12 @@ namespace IW3SR
 	Function<char*(const char** pData, bool allowLineBreaks)>
 		Com_ParseExt = 0x570FB0;
 
+	Function<void(ConChannel channel, const char* msg, int error)>
+		Com_PrintMessage = 0x4FCA50;
+
+	Function<bool(const char* zoneName, DB_FILE_EXISTS_PATH path)>
+		DB_FileExists = ASM_LOAD(DB_FileExists);
+
 	Function<void(const char *localName, const char *remoteName)>
 		DL_BeginDownload = 0x500AE0;
 
@@ -121,6 +127,24 @@ namespace IW3SR
 	Function<void(GfxCmdBufSourceState* source, float gameTime)>
 		R_SetGameTime = ASM_LOAD(R_SetGameTime);
 
+	Function<void()>
+		R_EndFrame = 0x5F7680;
+
+	Function<void()>
+		R_SyncRenderThread = 0x5F78F0;
+
+	Function<void(uint32_t drawType)>
+		R_IssueRenderCommands = 0x5F6210;
+
+	Function<void(uint32_t localClientNum)>
+		R_ClearScene = ASM_LOAD(R_ClearScene);
+
+	Function<void(const refdef_s* refdef)>
+		R_SetLodOrigin = ASM_LOAD(R_SetLodOrigin);
+
+	Function<void(const refdef_s* refdef)>
+		R_RenderScene = ASM_LOAD(R_RenderScene);
+
 	Function<int(const char* text, int maxChars, Font_s* font)>
 		R_TextWidth = ASM_LOAD(R_TextWidth);
 
@@ -143,6 +167,24 @@ namespace IW3SR
 		a.push(x86::dword_ptr(x86::ebp, 0x08));			 // tr
 		a.call(0x40BD70);
 		a.add(x86::esp, 0x04);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(DB_FileExists)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // path
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // zoneName
+		a.call(0x48B9B0);
+		a.add(x86::esp, 0x04);
+		a.movzx(x86::eax, x86::al);
+		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
 
 		a.popad();
 		a.pop(x86::ebp);
@@ -419,6 +461,48 @@ namespace IW3SR
 		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x08)); // source
 		a.call(0x6490E0);
 		a.add(x86::esp, 0x04);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(R_ClearScene)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // localClientNum
+		a.call(0x5FA840);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(R_SetLodOrigin)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // refdef
+		a.call(0x5FAE90);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(R_RenderScene)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // refdef
+		a.call(0x5FAF00);
 
 		a.popad();
 		a.pop(x86::ebp);

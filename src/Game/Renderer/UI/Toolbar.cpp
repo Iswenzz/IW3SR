@@ -32,6 +32,9 @@ namespace IW3SR::UC
 		ImGui::Button(ICON_FA_GAMEPAD, "Modules", UI::GetWindowState("Modules"), buttonSize);
 		ImGui::Tooltip("Modules");
 		ImGui::SameLine();
+		ImGui::Button(ICON_FA_VIDEO, "Demo", UI::GetWindowState("Demo"), buttonSize);
+		ImGui::Tooltip("Demo capture and missing assets");
+		ImGui::SameLine();
 
 		if (System::IsDebug())
 		{

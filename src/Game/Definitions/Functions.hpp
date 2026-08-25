@@ -23,6 +23,12 @@ namespace IW3SR
 	extern Function<char*(const char** pData, bool allowLineBreaks)>
 		Com_ParseExt;
 
+	API extern Function<void(ConChannel channel, const char* msg, int error)>
+		Com_PrintMessage;
+
+	API extern Function<bool(const char* zoneName, DB_FILE_EXISTS_PATH path)>
+		DB_FileExists;
+
 	extern Function<void(const char *localName, const char *remoteName)>
 		DL_BeginDownload;
 
@@ -125,6 +131,25 @@ namespace IW3SR
 	extern Function<void(GfxCmdBufSourceState* source, float gameTime)>
 		R_SetGameTime;
 
+	API extern Function<void()>
+		R_EndFrame;
+
+	API extern Function<void()>
+		R_SyncRenderThread;
+
+	// drawType: bit 0 renders, bit 1 presents. Pass 1 for an offscreen pass.
+	API extern Function<void(uint32_t drawType)>
+		R_IssueRenderCommands;
+
+	API extern Function<void(uint32_t localClientNum)>
+		R_ClearScene;
+
+	API extern Function<void(const refdef_s* refdef)>
+		R_SetLodOrigin;
+
+	API extern Function<void(const refdef_s* refdef)>
+		R_RenderScene;
+
 	extern Function<int(const char* text, int maxChars, Font_s* font)>
 		R_TextWidth;
 
@@ -135,6 +160,7 @@ namespace IW3SR
 namespace IW3SR
 {
 	ASM_FUNCTION(BG_EvaluateTrajectory);
+	ASM_FUNCTION(DB_FileExists);
 	ASM_FUNCTION(Dvar_FindVar);
 	ASM_FUNCTION(Dvar_RegisterVariant);
 	ASM_FUNCTION(G_MissileTrace);
@@ -150,5 +176,8 @@ namespace IW3SR
 	ASM_FUNCTION(R_AddCmdDrawText);
 	ASM_FUNCTION(R_AddCmdDrawStretchPic);
 	ASM_FUNCTION(R_SetGameTime);
+	ASM_FUNCTION(R_ClearScene);
+	ASM_FUNCTION(R_SetLodOrigin);
+	ASM_FUNCTION(R_RenderScene);
 	ASM_FUNCTION(R_TextWidth);
 }

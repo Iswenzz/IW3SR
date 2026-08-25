@@ -407,16 +407,17 @@ namespace IW3SR
 
 	enum DvarFlags : uint16_t
 	{
-		DVAR_NONE = BIT(0),
-		DVAR_SAVED = BIT(1),
-		DVAR_USERINFO = BIT(2),	  // Sent to server on connect or change
-		DVAR_SERVERINFO = BIT(3), // Sent in response to front end requests
-		DVAR_REPLICATED = BIT(4),
-		DVAR_WRITEPROTECTED = BIT(5),
-		DVAR_LATCHED = BIT(6),
-		DVAR_READONLY = BIT(7),
-		DVAR_CHEATPROTECTED = BIT(8),
-		DVAR_TEMP = BIT(9),
+		DVAR_NONE = 0,
+		DVAR_SAVED = BIT(0),		  // Written to config_mp.cfg
+		DVAR_USERINFO = BIT(1),		  // Sent to server on connect or change
+		DVAR_SERVERINFO = BIT(2),	  // Sent in response to front end requests
+		DVAR_REPLICATED = BIT(3),	  // Sent to every client while hosting
+		DVAR_WRITEPROTECTED = BIT(4), // Cannot be set from the console
+		DVAR_LATCHED = BIT(5),		  // Takes effect the next time the code reads it
+		DVAR_READONLY = BIT(6),		  // Display only, the code can still set it
+		DVAR_CHEATPROTECTED = BIT(7),
+		DVAR_TEMP = BIT(8),
+		DVAR_AUTOEXEC = BIT(9),
 		DVAR_NORESTART = BIT(10),	// Do not clear when a cvar_restart is issued
 		DVAR_USERCREATED = BIT(14), // Created by a set command
 	};

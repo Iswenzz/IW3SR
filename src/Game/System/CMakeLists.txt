@@ -1,4 +1,8 @@
 target_sources(IW3SR PRIVATE
+	Assets.hpp
+	Assets.cpp
+	Capture.hpp
+	Capture.cpp
 	Client.hpp
 	Client.cpp
 	Console.hpp
@@ -12,4 +16,6 @@ target_sources(IW3SR PRIVATE
 	Server.hpp
 	Server.cpp
 	System.hpp
-	System.cpp)
+	System.cpp
+	Timestep.hpp
+	Timestep.cpp)

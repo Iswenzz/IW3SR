@@ -30,6 +30,9 @@ namespace IW3SR
 	extern Hook<void(int localClientNum)>
 		CL_InitCGame_h;
 
+	extern Hook<void(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync)>
+		DB_LoadXAssets_h;
+
 	extern Hook<void(int localClientNum)>
 		CL_Shutdown_h;
 
@@ -38,6 +41,9 @@ namespace IW3SR
 
 	extern Hook<void(int localClientNum)>
 		CL_Disconnect_h;
+
+	extern Hook<void FASTCALL(int localClientNum)>
+		CL_CreateNewCommands_h;
 
 	extern Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h;
@@ -98,6 +104,9 @@ namespace IW3SR
 
 	extern Hook<void(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)>
 		RB_EndSceneRendering_h;
+
+	API extern Hook<void()>
+		R_BeginFrame_h;
 
 	extern Hook<void(int localClientNum, itemDef_s *item, const char **args)>
 		Script_ScriptMenuResponse_h;

@@ -3,10 +3,14 @@
 #include "Game/Renderer/Drawing/Draw2D.hpp"
 #include "Game/Renderer/Drawing/Draw3D.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
+#include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/UI/About.hpp"
 #include "Game/Renderer/UI/UI.hpp"
+#include "Game/System/Assets.hpp"
+#include "Game/System/Capture.hpp"
 #include "Game/System/Mouse.hpp"
 #include "Game/System/System.hpp"
+#include "Game/System/Timestep.hpp"
 
 namespace IW3SR
 {
@@ -18,7 +22,11 @@ namespace IW3SR
 		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
 
 		Dvar::Initialize();
+		Timestep::Initialize();
+		Assets::Initialize();
+		Capture::Initialize();
 		GMouse::Initialize();
+		GPortal::Initialize();
 		Modules::Deserialize();
 
 		DX9GraphicsContext::Swap(dx->d3d9, dx->device);
@@ -29,6 +37,7 @@ namespace IW3SR
 	void GRenderer::Shutdown(int window)
 	{
 		Swaps.Clear();
+		GPortal::Shutdown();
 
 		Browser::Lock();
 		Renderer::Shutdown();
@@ -41,6 +50,7 @@ namespace IW3SR
 	void GRenderer::Draw2D(int localClientNum)
 	{
 		CG_DrawCrosshair_h(localClientNum);
+		GPortal::DrawDebug();
 
 		EventRenderer2D event;
 		Application::Dispatch(event);
@@ -49,6 +59,9 @@ namespace IW3SR
 	void GRenderer::Draw3D(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)
 	{
 		RB_EndSceneRendering_h(cmd, viewInfo, src, buf);
+		if (GPortal::Rendering)
+			return;
+
 		GDraw3D::Render();
 
 		EventRenderer3D event;
@@ -104,15 +117,26 @@ namespace IW3SR
 
 	void GRenderer::Frame(IDirect3DDevice9* device)
 	{
+		// An offscreen portal pass ends its own scene; the overlay belongs to the visible frame only.
+		if (GPortal::Rendering)
+		{
+			IDirect3DDevice9_EndScene_h(device);
+			return;
+		}
 		if (PendingMaterialUpdate)
 		{
 			PendingMaterialUpdate = false;
 			UpdateMaterials();
 		}
-		Renderer::Frame();
+		if (!Capture::Recording || Capture::DrawOverlay())
+			Renderer::Frame();
+
 		Console::Frame();
 
 		IDirect3DDevice9_EndScene_h(device);
+
+		// The backbuffer can only be resolved outside of a begin/end scene block.
+		Capture::Frame(device);
 	}
 
 	HRESULT GRenderer::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)
@@ -125,6 +149,7 @@ namespace IW3SR
 
 		Browser::Lock();
 		Swaps.Clear();
+		GPortal::Shutdown(); // hand the colour maps back before the render targets are released
 
 		GPUResource::NotifyBeforeReset();
 		ImGui_ImplAPI_InvalidateDeviceObjects();

@@ -12,7 +12,10 @@ A client modification for Call of Duty 4, powered by [IzEngine](https://github.c
 - CGAZ HUD and velocity meter.
 - Offline shader playback.
 - Built-in browser for video playback.
+- Demo playback with missing fastfiles.
+- Demo rendering to MP4.
 - Bunny hop script.
+- Movement rate decoupled from the frame rate.
 - Emoji support.
 
 ## Movement

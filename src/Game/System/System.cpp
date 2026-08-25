@@ -1,6 +1,8 @@
 #include "System.hpp"
+#include "Capture.hpp"
 #include "Mouse.hpp"
 #include "Patch.hpp"
+#include "Timestep.hpp"
 
 namespace IW3SR
 {
@@ -10,6 +12,7 @@ namespace IW3SR
 			return;
 		IsShutdown = true;
 
+		Capture::Shutdown();
 		GMouse::Shutdown();
 		Browser::Shutdown();
 		Application::Shutdown();
@@ -19,6 +22,8 @@ namespace IW3SR
 	{
 		PbServerProcessEvents_h(tickRate);
 		GMouse::Frame();
+		Timestep::Frame();
+		Capture::Tick();
 
 		if (ExitRequested)
 			Cmd_ExecuteSingleCommand(0, 0, "quit\n");
@@ -87,6 +92,10 @@ namespace IW3SR
 	void GSystem::ExecuteSingleCommand(int localClientNum, int controllerIndex, char* cmd)
 	{
 		std::string command = cmd;
+
+		if (Capture::Command(command))
+			return;
+
 		Cmd_ExecuteSingleCommand_h(localClientNum, controllerIndex, cmd);
 
 		if (command == "openscriptmenu cj load")

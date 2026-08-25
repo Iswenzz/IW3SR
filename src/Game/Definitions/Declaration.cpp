@@ -51,6 +51,7 @@ namespace IW3SR
 	GfxCmdBufSourceState* gfx_cmdBufSourceState = Signature(0xD53F5F0);
 	GfxCmdBufState* gfx_cmdBufState = Signature(0xD5404F0);
 	GfxBackEndData* gfx_frontEndDataOut = Signature(0xCC9827C);
+	GfxCmdArray** gfx_cmdList = Signature(0xCC9F4A4);
 	GfxBackEndData* gfx_backEndData = Signature(0xD0704BC);
 	GfxBuffers* gfx_buf = Signature(0xD2B0840);
 	GfxWorld* gfx_world = Signature(0xD0701E0);

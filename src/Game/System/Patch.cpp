@@ -53,7 +53,9 @@ namespace IW3SR
 		CL_Shutdown_h.Install();
 		CL_Connect_h.Install();
 		CL_Disconnect_h.Install();
+		CL_CreateNewCommands_h.Install();
 		CL_FinishMove_h.Install();
+		DB_LoadXAssets_h.Install();
 		G_GetFreeCorpseSlot_h.Install();
 		MainWndProc_h.Install();
 		PbServerProcessEvents_h.Install();
@@ -63,6 +65,7 @@ namespace IW3SR
 		PM_CrashLand_h.Install();
 		R_AddCmdDrawText_h.Install();
 		R_AddCmdDrawTextWithEffects_h.Install();
+		R_BeginFrame_h.Install();
 		R_Init_h.Install();
 		R_Shutdown_h.Install();
 		RB_ExecuteRenderCommandsLoop_h.Install();

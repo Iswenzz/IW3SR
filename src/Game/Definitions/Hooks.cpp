@@ -1,13 +1,17 @@
 #include "Hooks.hpp"
 
 #include "Game/Renderer/Modules/Modules.hpp"
+#include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/Renderer.hpp"
 
+#include "Game/System/Assets.hpp"
+#include "Game/System/Capture.hpp"
 #include "Game/System/Client.hpp"
 #include "Game/System/Console.hpp"
 #include "Game/System/Patch.hpp"
 #include "Game/System/Server.hpp"
 #include "Game/System/System.hpp"
+#include "Game/System/Timestep.hpp"
 
 // clang-format off
 namespace IW3SR
@@ -35,6 +39,9 @@ namespace IW3SR
 	Hook<void(int localClientNum)>
 		CL_InitCGame_h(0x45BEF0, Client::Initialize);
 
+	Hook<void(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync)>
+		DB_LoadXAssets_h(0x48A2B0, Assets::LoadXAssets);
+
 	Hook<void(int localClientNum)>
 		CL_Shutdown_h(0x46FDF0, ASM_LOAD(CL_Shutdown_h));
 
@@ -43,6 +50,9 @@ namespace IW3SR
 
 	Hook<void(int localClientNum)>
 		CL_Disconnect_h(0x4696B0, Client::Disconnect);
+
+	Hook<void FASTCALL(int localClientNum)>
+		CL_CreateNewCommands_h(0x463E00, Timestep::CreateNewCommands);
 
 	Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h(0x463A60, PMove::FinishMove);
@@ -103,6 +113,9 @@ namespace IW3SR
 
 	Hook<void(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)>
 		RB_EndSceneRendering_h(0x6496EC, GRenderer::Draw3D);
+
+	Hook<void()>
+		R_BeginFrame_h(0x5F75A0, GPortal::BeginFrame);
 
 	Hook<void(int localClientNum, itemDef_s *item, const char **args)>
 		Script_ScriptMenuResponse_h(0x54DD90, GSystem::ScriptMenuResponse);
