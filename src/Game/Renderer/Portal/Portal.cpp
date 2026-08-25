@@ -287,6 +287,17 @@ namespace IW3SR
 		for (int i = 0; i < 3; i++)
 			view.viewaxis[i] = Through(into, out, cgs->refdef.viewaxis[i], false);
 
+		// The camera ends up as far behind the exit portal as the player is in front of the entry one,
+		// and the wall it is mounted on is solid geometry with no hole cut in it. Left alone the pass
+		// renders the back of that wall, filling the opening with brickwork -- more of it the further
+		// away the player stands, which is why it only looked right up close.
+		//
+		// Pushing the near plane out to the exit portal clips the wall away. It sits exactly on the
+		// portal only while looking straight through; at a glancing angle some wall survives, which
+		// wants an oblique frustum rather than a symmetric one.
+		const float toPortal = glm::dot(out.Origin - view.vieworg, vec3(view.viewaxis[0]));
+		view.zNear = std::max(toPortal, 1.0f);
+
 		Rendering = true;
 		R_SyncRenderThread();
 		R_BeginFrame_h();
