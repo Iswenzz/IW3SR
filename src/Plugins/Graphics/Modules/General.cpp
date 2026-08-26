@@ -54,6 +54,17 @@ namespace IW3SR::Addons
 	void General::Menu()
 	{
 		ImGui::Checkbox("Show Emojis", &UseEmojis);
+
+		// Bound straight to the dvar rather than mirrored into a member, so the console and the
+		// checkbox stay in step and the setting keeps saving through the dvar's own DVAR_SAVED.
+		static const auto sr_portal_view = Dvar::Find("sr_portal_view");
+		if (sr_portal_view)
+		{
+			if (ImGui::Checkbox("Portal View", &sr_portal_view->current.enabled))
+				sr_portal_view->latched.enabled = sr_portal_view->current.enabled;
+			ImGui::Tooltip("Draw the far side of a linked portal pair into their surfaces.\n"
+				"Each portal on screen costs a second scene render.");
+		}
 	}
 
 	void General::ProcessText(std::string& text, Font_s* font, vec2 position, vec2 scale, const vec4& color)

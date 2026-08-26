@@ -2738,14 +2738,12 @@ namespace IW3SR
 		char* baseAdjacentSide;
 		short firstAdjacentSideOffsets[2][3];
 		char edgeCount[2][3];
-		short colorCounter;
-		short cmBrushIndex;
-		float distFromCam;
-		short cmSubmodelIndex;
-		bool isSubmodel;
-		bool pad;
+		char pad[8];
 	};
 #pragma pack(pop)
+
+	// cm->brushes is walked by index, so the trailing padding has to stay the width the game gave it.
+	static_assert(sizeof(cbrush_t) == 80);
 
 	struct Bounds
 	{

@@ -132,6 +132,9 @@ namespace IW3SR
 		R_SetGameTime;
 
 	API extern Function<void()>
+		R_BeginFrame;
+
+	API extern Function<void()>
 		R_EndFrame;
 
 	API extern Function<void()>
@@ -153,8 +156,14 @@ namespace IW3SR
 	extern Function<int(const char* text, int maxChars, Font_s* font)>
 		R_TextWidth;
 
+	API extern Function<MaterialTechnique*(MaterialTechniqueType techType, Material* material)>
+		RB_BeginSurface;
+
 	extern Function<void(int count, int width, GfxPointVertex* verts, bool depthTest)>
 		RB_DrawLines3D;
+
+	API extern Function<void()>
+		RB_EndTessSurface;
 }
 // clang-format on
 namespace IW3SR
@@ -173,6 +182,7 @@ namespace IW3SR
 	ASM_FUNCTION(PM_GroundTraceMissed);
 	ASM_FUNCTION(PM_PlayerTrace);
 	ASM_FUNCTION(PM_ProjectVelocity);
+	ASM_FUNCTION(RB_BeginSurface);
 	ASM_FUNCTION(R_AddCmdDrawText);
 	ASM_FUNCTION(R_AddCmdDrawStretchPic);
 	ASM_FUNCTION(R_SetGameTime);

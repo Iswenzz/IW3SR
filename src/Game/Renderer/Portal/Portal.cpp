@@ -62,6 +62,19 @@ namespace IW3SR
 		{
 			Discover();
 
+			// Switched off, the opening reads as an unlinked portal: black behind the ring, which the
+			// shader draws from colorTint either way. The colour map has to be blanked to get there,
+			// because the one the material ships with is itself a ring, and the shader samples it by
+			// screen position -- left alone it paints a second ring across the view. Discover still
+			// runs above, so this holds from a cold start and not only after the pass has been on.
+			if (!Enabled || !Enabled->current.enabled)
+			{
+				DebugStage = "disabled";
+				Blank();
+				R_BeginFrame_h();
+				return;
+			}
+
 			PortalEndpoint pair[2];
 			if (Collect(pair))
 			{
@@ -98,8 +111,6 @@ namespace IW3SR
 	{
 		DebugStage = "ok";
 
-		if (!Enabled || !Enabled->current.enabled)
-			return DebugStage = "disabled", false;
 		if (!dx || !dx->device || dx->deviceLost || dx->inScene)
 			return DebugStage = "device busy", false;
 		if (!rgp || !rgp->world)
@@ -235,13 +246,13 @@ namespace IW3SR
 		static_assert(offsetof(GfxBackEndData, cmds) == 0x11E6CC, "GfxBackEndData layout moved");
 
 		const GfxCmdArray* commands = gfx_cmdList ? *gfx_cmdList : nullptr;
-		if (!commands || !gfx_frontEndDataOut || !gfx_frontEndDataOut->viewInfo)
+		GfxBackEndData* data = gfx_frontEndDataOut ? *gfx_frontEndDataOut : nullptr;
+		if (!commands || !data || !data->viewInfo)
 			return;
 
-		gfx_frontEndDataOut->cmds = &commands->cmds[commands->usedTotal];
+		data->cmds = &commands->cmds[commands->usedTotal];
 
-		auto* view = reinterpret_cast<uint8_t*>(gfx_frontEndDataOut->viewInfo)
-			+ gfx_frontEndDataOut->viewInfoCount * VIEW_INFO_STRIDE;
+		auto* view = reinterpret_cast<uint8_t*>(data->viewInfo) + data->viewInfoCount * VIEW_INFO_STRIDE;
 		*reinterpret_cast<const void**>(view + VIEW_INFO_CMDS) = nullptr;
 	}
 

@@ -93,6 +93,18 @@ namespace IW3SR
 	{
 		std::string command = cmd;
 
+		if (Timestep::Defer(localClientNum, controllerIndex, command))
+			return;
+		if (command == "sr_timestep_test")
+		{
+			Timestep::StartTest();
+			return;
+		}
+		if (command == "sr_timestep_status")
+		{
+			Timestep::Status();
+			return;
+		}
 		if (Capture::Command(command))
 			return;
 

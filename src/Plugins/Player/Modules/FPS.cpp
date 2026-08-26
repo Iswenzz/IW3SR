@@ -52,8 +52,13 @@ namespace IW3SR::Addons
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(-1);
 
-		if (ImGui::SliderInt("##sr_maxfps", &maxfps->current.integer, 10, 1000, "%d fps"))
+		// Typing a cap applies it a digit at a time, so the floor has to be a frame rate the game is
+		// still usable at. Clamped, or the first digit of 144 caps the game at 1 while you finish it.
+		if (ImGui::SliderInt("##sr_maxfps", &maxfps->current.integer, 60, 1000, "%d fps",
+				ImGuiSliderFlags_AlwaysClamp))
+		{
 			maxfps->latched.integer = maxfps->current.integer;
+		}
 		ImGui::Tooltip("Frame rate cap, separate from the movement rate.");
 	}
 

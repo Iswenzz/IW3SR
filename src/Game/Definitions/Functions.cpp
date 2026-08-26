@@ -128,6 +128,9 @@ namespace IW3SR
 		R_SetGameTime = ASM_LOAD(R_SetGameTime);
 
 	Function<void()>
+		R_BeginFrame = 0x5F75A0;
+
+	Function<void()>
 		R_EndFrame = 0x5F7680;
 
 	Function<void()>
@@ -148,8 +151,14 @@ namespace IW3SR
 	Function<int(const char* text, int maxChars, Font_s* font)>
 		R_TextWidth = ASM_LOAD(R_TextWidth);
 
+	Function<MaterialTechnique*(MaterialTechniqueType techType, Material* material)>
+		RB_BeginSurface = ASM_LOAD(RB_BeginSurface);
+
 	Function<void(int count, int width, GfxPointVertex* verts, bool depthTest)>
 		RB_DrawLines3D = 0x613040;
+
+	Function<void()>
+		RB_EndTessSurface = 0x61A2F0;
 }
 // clang-format on
 namespace IW3SR
@@ -397,6 +406,22 @@ namespace IW3SR
 		a.push(x86::dword_ptr(x86::ebp, 0x08));			 // velOut
 		a.call(0x40E330);
 		a.add(x86::esp, 0x04);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(RB_BeginSurface)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::edi, x86::dword_ptr(x86::ebp, 0x08)); // techType
+		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x0C)); // material
+		a.call(0x61A220);
+		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
 
 		a.popad();
 		a.pop(x86::ebp);

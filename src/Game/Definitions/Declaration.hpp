@@ -27,6 +27,7 @@ namespace IW3SR
 	API extern cg_s* cgs;
 	API extern centity_s* cg_entities;
 	API extern int& com_frameTime;
+	API extern int& frame_msec;
 	API extern float& com_timescaleValue;
 	API extern int* g_entities;
 	API extern int* g_clients;
@@ -51,17 +52,17 @@ namespace IW3SR
 	extern float& v_postProcessAspect;
 	extern Material* floatz_display;
 	extern GfxCmdBufSourceState* gfx_cmdBufSourceState;
-	extern GfxCmdBufState* gfx_cmdBufState;
-	extern GfxBackEndData* gfx_frontEndDataOut;
+	API extern GfxCmdBufState* gfx_cmdBufState;
+	extern GfxBackEndData** gfx_frontEndDataOut;
 	extern GfxCmdArray** gfx_cmdList;
-	extern GfxBackEndData* gfx_backEndData;
+	extern GfxBackEndData** gfx_backEndData;
 	extern GfxBuffers* gfx_buf;
 	extern GfxWorld* gfx_world;
 	extern GfxScene* scene;
 	extern GfxViewParms* viewParms;
-	extern clipMap_t* cm;
+	API extern clipMap_t* cm;
 	extern ComWorld* com;
-	extern materialCommands_t* tess;
+	API extern materialCommands_t* tess;
 	API extern r_global_permanent_t* rgp;
 
 	// UI

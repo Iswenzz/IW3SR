@@ -24,6 +24,7 @@ namespace IW3SR
 	cg_s* cgs = Signature(0x74E338);
 	centity_s* cg_entities = Signature(0x84F2D8);
 	int& com_frameTime = Signature(0x1476EFC);
+	int& frame_msec = Signature(0xC5F8D0);
 	float& com_timescaleValue = Signature(0x1435D68);
 	int* g_entities = Signature(0x12885C4);
 	int* g_clients = Signature(0x13255A8);
@@ -50,9 +51,9 @@ namespace IW3SR
 	Material* floatz_display = Signature(0xFA5378);
 	GfxCmdBufSourceState* gfx_cmdBufSourceState = Signature(0xD53F5F0);
 	GfxCmdBufState* gfx_cmdBufState = Signature(0xD5404F0);
-	GfxBackEndData* gfx_frontEndDataOut = Signature(0xCC9827C);
+	GfxBackEndData** gfx_frontEndDataOut = Signature(0xCC9827C);
 	GfxCmdArray** gfx_cmdList = Signature(0xCC9F4A4);
-	GfxBackEndData* gfx_backEndData = Signature(0xD0704BC);
+	GfxBackEndData** gfx_backEndData = Signature(0xD0704BC);
 	GfxBuffers* gfx_buf = Signature(0xD2B0840);
 	GfxWorld* gfx_world = Signature(0xD0701E0);
 	GfxScene* scene = Signature(0xCF10280);

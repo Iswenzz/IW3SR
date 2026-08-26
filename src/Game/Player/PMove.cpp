@@ -5,6 +5,22 @@
 
 namespace IW3SR
 {
+	// The call taken out of PmoveSingle for as long as a move is only being predicted.
+	constexpr uintptr_t PredictionPatch = 0x537D10;
+	static int PredictionDepth = 0;
+
+	PMove::Prediction::Prediction()
+	{
+		if (!PredictionDepth++)
+			Memory::Write(PredictionPatch, "\xC3");
+	}
+
+	PMove::Prediction::~Prediction()
+	{
+		if (!--PredictionDepth)
+			Memory::Write(PredictionPatch, "\x81");
+	}
+
 	void PMove::FinishMove(usercmd_s* cmd)
 	{
 		if (cgs->predictedPlayerState.pm_type != PM_NORMAL)
@@ -157,10 +173,10 @@ namespace IW3SR
 
 	void PMove::PredictPmoveSingle(pmove_t* pm, int amount)
 	{
-		Memory::Write(0x537D10, "\xC3");
+		Prediction prediction;
+
 		for (int i = 0; i < amount; i++)
 			PmoveSingle(pm);
-		Memory::Write(0x537D10, "\x81");
 	}
 
 	usercmd_s* PMove::GetUserCommand(int cmdNumber)

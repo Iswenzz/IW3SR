@@ -14,6 +14,15 @@ namespace IW3SR
 	class API PMove
 	{
 	public:
+		// Holds the patch a prediction runs under for as long as it lives, so a run of any length
+		// pays for it once instead of once a step. Nesting one inside another is safe.
+		class API Prediction
+		{
+		public:
+			Prediction();
+			~Prediction();
+		};
+
 		static void FinishMove(usercmd_s* cmd);
 		static void WalkMove(pmove_t* pm, pml_t* pml);
 		static void AirMove(pmove_t* pm, pml_t* pml);

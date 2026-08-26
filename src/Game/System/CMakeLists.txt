@@ -11,6 +11,8 @@ target_sources(IW3SR PRIVATE
 	Dvar.cpp
 	Mouse.hpp
 	Mouse.cpp
+	Schedule.hpp
+	Schedule.cpp
 	Patch.hpp
 	Patch.cpp
 	Server.hpp
