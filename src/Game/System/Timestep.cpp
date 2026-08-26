@@ -32,6 +32,11 @@ namespace IW3SR
 
 	void Timestep::Initialize()
 	{
+		// Movement here is not proven identical to a client actually running at com_maxfps, so it stays
+		// out of a release build entirely rather than sitting behind a dvar someone could turn on.
+		if (!System::IsDebug())
+			return;
+
 		Enabled = Dvar::RegisterBool("sr_timestep", DVAR_SAVED,
 			"Run movement on a fixed timestep taken from com_maxfps, whatever the frame rate is", true);
 		MaxFps = Dvar::RegisterInt("sr_maxfps", DVAR_SAVED, "Frame rate cap, 0 to follow com_maxfps",
