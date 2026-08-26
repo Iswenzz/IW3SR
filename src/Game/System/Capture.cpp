@@ -7,11 +7,27 @@ namespace IW3SR
 {
 	// Frames buffered ahead of the encoder. Deep enough to ride out an ffmpeg hiccup,
 	// shallow enough that a 4K capture does not eat hundreds of megabytes.
-	constexpr size_t MaxPendingFrames = 4;
+	constexpr size_t MaxPendingFrames = 8;
 
 	constexpr DWORD EncoderTimeout = 30000;
 
 	constexpr std::array<std::string_view, 5> Containers = { ".mp4", ".mkv", ".mov", ".avi", ".webm" };
+
+	// How long a demo gets to start playing before we give up on the render.
+	constexpr uint64_t LoadTimeout = 300000;
+
+	// std::quoted treats a backslash as an escape, which eats every separator in a Windows
+	// path. Nothing in a console argument is escaped, so read the quotes and leave the rest.
+	auto Quoted(std::string& value)
+	{
+		return std::quoted(value, '"', '\0');
+	}
+
+	bool IsAbsolute(const std::string& path)
+	{
+		return path.starts_with('/') || path.starts_with('\\')
+			|| (path.size() > 2 && path[1] == ':' && (path[2] == '\\' || path[2] == '/'));
+	}
 
 	void Capture::Initialize()
 	{
@@ -19,10 +35,12 @@ namespace IW3SR
 		Quality = Dvar::RegisterInt("sr_capture_quality", DVAR_SAVED,
 			"Constant rate factor handed to the encoder, lower is better", 18, 0, 51);
 		Encoder = Dvar::RegisterString("sr_capture_encoder", DVAR_SAVED, "Video encoder used by ffmpeg", "libx264");
-		Preset = Dvar::RegisterString("sr_capture_preset", DVAR_SAVED, "Encoder preset used by ffmpeg", "veryfast");
+		Preset = Dvar::RegisterString("sr_capture_preset", DVAR_SAVED, "Encoder preset used by ffmpeg", "ultrafast");
 		Binary = Dvar::RegisterString("sr_capture_ffmpeg", DVAR_SAVED, "Path to ffmpeg, empty to search for it", "");
 		Overlay = Dvar::RegisterBool("sr_capture_overlay", DVAR_SAVED,
 			"Record the client overlay, huds included. The menu itself is only drawn while it is open", true);
+		Hidden = Dvar::RegisterBool("sr_render_hidden", DVAR_SAVED,
+			"Hide the game window while sr_render runs. The frames still come off the backbuffer", true);
 	}
 
 	void Capture::Shutdown()
@@ -63,7 +81,11 @@ namespace IW3SR
 		Dvar::Set<int>("cl_avidemo", Fps->current.integer);
 
 		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
-			std::format("Recording {}x{} at {} fps to {}\n", Width, Height, Fps->current.integer, path).c_str(), 0);
+			std::format("Recording {}x{} at {} fps to {}\nThe game runs slower than real time while recording, the "
+						"recorded video does not.\n",
+				Width, Height, Fps->current.integer, path)
+				.c_str(),
+			0);
 		return true;
 	}
 
@@ -74,6 +96,9 @@ namespace IW3SR
 		Recording = false;
 
 		Dvar::Set<int>("cl_avidemo", 0);
+
+		if (!Aborted)
+			Flush();
 
 		{
 			std::lock_guard lock(Mutex);
@@ -97,23 +122,20 @@ namespace IW3SR
 			Stop();
 			return;
 		}
-		if (!Recording || !device || !Resolve || !Staging)
+		if (!Recording || !device || !Resolve || !Staging[Slot])
 			return;
 
-		CaptureFrame frame;
-		{
-			std::lock_guard lock(Mutex);
-			if (!Recycled.empty())
-			{
-				frame = std::move(Recycled.back());
-				Recycled.pop_back();
-			}
-		}
-		if (!Read(device, frame))
+		if (!Copy(device, (Slot + Queued) % StagingCount))
 			return;
 
-		Frames++;
-		Submit(std::move(frame));
+		// Give the copy a few frames to land before touching it. Until the ring is full
+		// there is nothing old enough to read without waiting on the GPU.
+		if (++Queued < StagingCount)
+			return;
+
+		Read(Slot);
+		Slot = (Slot + 1) % StagingCount;
+		Queued--;
 	}
 
 	bool Capture::Command(const std::string& command)
@@ -125,7 +147,7 @@ namespace IW3SR
 		if (name == "sr_capture")
 		{
 			std::string argument;
-			stream >> std::quoted(argument);
+			stream >> Quoted(argument);
 
 			if (argument == "stop")
 			{
@@ -143,18 +165,17 @@ namespace IW3SR
 		if (name == "sr_render")
 		{
 			std::string demo, output;
-			stream >> std::quoted(demo) >> std::quoted(output);
+			stream >> Quoted(demo) >> Quoted(output);
 
-			if (demo.empty())
-			{
-				Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, "Usage: sr_render <demo> [output]\n", 0);
-				return true;
-			}
-			if (output.empty())
+			if (output.empty() && !demo.empty())
 				output = std::filesystem::path(demo).stem().string();
 
 			Request = { demo, output, true };
-			State = RenderState::Requested;
+			Deadline = GetTickCount64() + LoadTimeout;
+
+			// Without a demo the caller already asked for one, which is what happens when this
+			// sits next to CoD4X's own demo arguments. Record whatever ends up playing.
+			State = demo.empty() ? RenderState::Waiting : RenderState::Requested;
 			return true;
 		}
 
@@ -165,6 +186,19 @@ namespace IW3SR
 	bool Capture::DrawOverlay()
 	{
 		return Overlay && Overlay->current.enabled;
+	}
+
+	// CoD4X restarts the game to line its protocol up with the demo, and it builds the new
+	// command line itself, so a render request never survives the handover. Returning 0 is the
+	// path it already takes when the protocol matches: stay in this process.
+	int Capture::RestartForDemo(int protocol)
+	{
+		if (State == RenderState::Idle)
+			return CL_RestartForDemo_h(protocol);
+
+		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
+			std::format("Playing the demo here instead of restarting for protocol {}.\n", protocol).c_str(), 0);
+		return 0;
 	}
 
 	void Capture::Disconnected()
@@ -192,14 +226,19 @@ namespace IW3SR
 				&Resolve, nullptr)))
 			return false;
 
-		if (FAILED(device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM,
-				&Staging, nullptr)))
+		for (auto& staging : Staging)
 		{
-			ReleaseSurfaces();
-			return false;
+			if (FAILED(device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM,
+					&staging, nullptr)))
+			{
+				ReleaseSurfaces();
+				return false;
+			}
 		}
 		Width = static_cast<int>(desc.Width);
 		Height = static_cast<int>(desc.Height);
+		Slot = 0;
+		Queued = 0;
 		return true;
 	}
 
@@ -210,14 +249,17 @@ namespace IW3SR
 			Resolve->Release();
 			Resolve = nullptr;
 		}
-		if (Staging)
+		for (auto& staging : Staging)
 		{
-			Staging->Release();
-			Staging = nullptr;
+			if (!staging)
+				continue;
+
+			staging->Release();
+			staging = nullptr;
 		}
 	}
 
-	bool Capture::Read(IDirect3DDevice9* device, CaptureFrame& frame)
+	bool Capture::Copy(IDirect3DDevice9* device, size_t slot)
 	{
 		IDirect3DSurface9* back = nullptr;
 		if (FAILED(device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &back)) || !back)
@@ -227,22 +269,53 @@ namespace IW3SR
 		const HRESULT resolved = device->StretchRect(back, nullptr, Resolve, nullptr, D3DTEXF_NONE);
 		back->Release();
 
-		if (FAILED(resolved) || FAILED(device->GetRenderTargetData(Resolve, Staging)))
-			return false;
+		return SUCCEEDED(resolved) && SUCCEEDED(device->GetRenderTargetData(Resolve, Staging[slot]));
+	}
 
+	bool Capture::Read(size_t slot)
+	{
 		D3DLOCKED_RECT locked = {};
-		if (FAILED(Staging->LockRect(&locked, nullptr, D3DLOCK_READONLY)))
+		if (FAILED(Staging[slot]->LockRect(&locked, nullptr, D3DLOCK_READONLY | D3DLOCK_NOSYSLOCK)))
 			return false;
 
+		CaptureFrame frame;
+		{
+			std::lock_guard lock(Mutex);
+			if (!Recycled.empty())
+			{
+				frame = std::move(Recycled.back());
+				Recycled.pop_back();
+			}
+		}
 		const size_t stride = static_cast<size_t>(Width) * 4;
 		frame.pixels.resize(stride * Height);
 
 		const auto* source = static_cast<const uint8_t*>(locked.pBits);
-		for (int y = 0; y < Height; y++)
-			std::memcpy(frame.pixels.data() + stride * y, source + static_cast<size_t>(locked.Pitch) * y, stride);
+		if (static_cast<size_t>(locked.Pitch) == stride)
+		{
+			std::memcpy(frame.pixels.data(), source, stride * Height);
+		}
+		else
+		{
+			for (int y = 0; y < Height; y++)
+				std::memcpy(frame.pixels.data() + stride * y, source + static_cast<size_t>(locked.Pitch) * y, stride);
+		}
+		Staging[slot]->UnlockRect();
 
-		Staging->UnlockRect();
+		Frames++;
+		Submit(std::move(frame));
 		return true;
+	}
+
+	void Capture::Flush()
+	{
+		// Drain the copies still sitting in the ring when recording stops.
+		while (Queued)
+		{
+			Queued--;
+			Read(Slot);
+			Slot = (Slot + 1) % StagingCount;
+		}
 	}
 
 	void Capture::Submit(CaptureFrame&& frame)
@@ -296,6 +369,24 @@ namespace IW3SR
 			std::lock_guard lock(Mutex);
 			Recycled.push_back(std::move(frame));
 		}
+	}
+
+	void Capture::Hide(bool state)
+	{
+		const auto window = static_cast<HWND>(Window::Handle);
+		if (!window || !Hidden || !Hidden->current.enabled)
+			return;
+
+		// Rendering does not depend on the window being visible, we read the backbuffer
+		// before the frame is ever presented.
+		if (IsWindowVisible(window) != state)
+			return;
+
+		ShowWindow(window, state ? SW_HIDE : SW_SHOW);
+
+		if (state)
+			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
+				"Window hidden for the render, set sr_render_hidden 0 to watch it.\n", 0);
 	}
 
 	bool Capture::Spawn(const std::string& output)
@@ -434,30 +525,46 @@ namespace IW3SR
 		{
 		case RenderState::Requested:
 			State = RenderState::Waiting;
+			Deadline = GetTickCount64() + LoadTimeout;
+			Hide(true);
 
 			// Already watching the demo the user asked for, just start recording it.
 			if (clc.demoplaying)
 				break;
 
 			{
-				// CoD4X needs the fullpath keyword for demos that live outside the demo folder.
-				const bool fullpath = std::filesystem::exists(Request.demo);
-				const std::string command = fullpath ? std::format("demo \"{}\" fullpath\n", Request.demo)
-													 : std::format("demo \"{}\"\n", Request.demo);
+				// CoD4X needs the fullpath keyword for demos outside the mod's demo folder.
+				const std::string command = IsAbsolute(Request.demo)
+					? std::format("demo \"{}\" fullpath\n", Request.demo)
+					: std::format("demo \"{}\"\n", Request.demo);
 
 				Cmd_ExecuteSingleCommand(0, 0, command.c_str());
 			}
 			break;
 
 		case RenderState::Waiting:
-			if (!clc.demoplaying || client_ui->connectionState != CA_ACTIVE)
-				break;
+			Hide(true);
 
-			State = Start(Request.output) ? RenderState::Recording : RenderState::Finished;
+			if (clc.demoplaying && client_ui->connectionState == CA_ACTIVE)
+			{
+				const std::string output = Request.output.empty() ? clc.demoName : Request.output;
+				State = Start(output) ? RenderState::Recording : RenderState::Finished;
+				break;
+			}
+
+			// No demo started, most likely it failed to load. Do not sit here forever, an
+			// unattended render has nobody around to close the window.
+			if (GetTickCount64() > Deadline)
+			{
+				Com_PrintMessage(CON_CHANNEL_ERROR, "^1No demo started playing, giving up on the render.\n", 0);
+				State = RenderState::Finished;
+			}
 			break;
 
 		case RenderState::Finished:
 			State = RenderState::Idle;
+			Hide(false);
+
 			if (Request.quitWhenDone)
 				GSystem::ExitRequested = true;
 			break;

@@ -36,6 +36,7 @@ namespace IW3SR
 	int* client_activeNumber = Signature(0xCC5FF8);
 	infoParm_t* info_params = Signature(0x71FBD0);
 	WeaponDef** bg_weaponNames = Signature(0x736DB8);
+	int& bg_weaponCount = Signature(0xD5EC418);
 	dvar_s** dvars = Signature(0xCBA7408);
 	int& dvarCount = Signature(0xCBA73F8);
 	int* server_fps = Signature(0xCBAB908);

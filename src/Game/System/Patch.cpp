@@ -48,6 +48,7 @@ namespace IW3SR
 		Com_PrintMessage_h.Install();
 		CG_DrawCrosshair_h.Install();
 		CG_PredictPlayerState_Internal_h.Install();
+		CG_RegisterWeapons_h.Install();
 		CG_Respawn_h.Install();
 		CL_InitCGame_h.Install();
 		CL_Shutdown_h.Install();
@@ -77,7 +78,9 @@ namespace IW3SR
 
 	void Patch::CoD4X(HMODULE mod)
 	{
-		if (UseCoD4X)
+		// The launcher probes for modules that are not always there, and a failed load still
+		// reaches us. There is no image to read a version out of in that case.
+		if (UseCoD4X || !mod)
 			return;
 		UseCoD4X = true;
 
@@ -102,6 +105,7 @@ namespace IW3SR
 		XAssetStdCount = Signature(COD4X_BASE + 0x4482BA0);
 
 		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 24 04 00 00 E8"));
+		CL_RestartForDemo_h.Update(Signature(COD4X_BIN, "55 89 E5 81 EC 48 09 00 00 C7 04 24"));
 		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 18 B8 ?? ?? ?? ?? 8B 50 20"));
 		MainWndProc_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 84 00 00 00 C7 04 24 02"));
 		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 38 89 45 E4 8B 45 E4 89 45 F4"));
@@ -124,6 +128,7 @@ namespace IW3SR
 
 		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 60 E8 ?? ?? ?? ?? 83 F8 02 74 ?? C7 44 24 04"));
 		CL_FinishMove_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 15 ?? ?? ?? ?? 8B 44 24 10 88 50 14 8B 15"));
+		CL_RestartForDemo_h.Update(Signature(COD4X_BIN, "55 89 E5 81 EC 48 09 00 00 C7 04 24"));
 		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? ?? ?? ?? ?? C7 44 24 08 64 2F 00 00 83 C0 0C C7"));
 		MainWndProc_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 7C C7 04 24 02 00 00 00"));
 		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 44 24 1C 0F B7 00 8D 5C 24 1C"));

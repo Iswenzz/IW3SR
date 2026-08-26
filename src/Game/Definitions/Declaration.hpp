@@ -39,6 +39,7 @@ namespace IW3SR
 	API extern int* clientActiveCmdNumber;
 	extern infoParm_t* info_params;
 	API extern WeaponDef** bg_weaponNames;
+	API extern int& bg_weaponCount;
 	extern dvar_s** dvars;
 	extern int& dvarCount;
 	extern animScriptData_t* globalScriptData;

@@ -24,6 +24,9 @@ namespace IW3SR
 	extern Hook<void(int localClientNum)>
 		CG_PredictPlayerState_Internal_h;
 
+	extern Hook<void(const char** weapons, int weaponCount)>
+		CG_RegisterWeapons_h;
+
 	extern Hook<void(int localClientNum)>
 		CG_Respawn_h;
 
@@ -41,6 +44,9 @@ namespace IW3SR
 
 	extern Hook<void(int localClientNum)>
 		CL_Disconnect_h;
+
+	extern Hook<int(int protocol)>
+		CL_RestartForDemo_h;
 
 	extern Hook<void FASTCALL(int localClientNum)>
 		CL_CreateNewCommands_h;

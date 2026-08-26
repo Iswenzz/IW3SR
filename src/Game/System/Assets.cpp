@@ -9,6 +9,8 @@ namespace IW3SR
 	constexpr std::array<std::string_view, 7> ReservedZones = { "code_post_gfx_mp", "localized_code_post_gfx_mp",
 		"ui_mp", "common_mp", "localized_common_mp", "mp_patch", "cod4x_patchv2" };
 
+	constexpr const char* DefaultWeapon = "defaultweapon_mp";
+
 	void Assets::Initialize()
 	{
 		IgnoreMissingZones = Dvar::RegisterBool("sr_ignore_missing_zones", DVAR_SAVED,
@@ -37,9 +39,6 @@ namespace IW3SR
 			const std::string name = zone.name;
 			zone.name = nullptr;
 
-			if (std::ranges::find(Skipped, name) == Skipped.end())
-				Skipped.push_back(name);
-
 			Com_PrintMessage(CON_CHANNEL_FILES,
 				std::format("^3Fastfile '{}' is not installed, skipping it. What it provides falls back to the "
 							"default assets.\n",
@@ -48,6 +47,33 @@ namespace IW3SR
 				0);
 		}
 		DB_LoadXAssets_h(zones.data(), zoneCount, sync);
+	}
+
+	// The client registers the weapons a demo names in order and the engine insists each one
+	// lands on the index the recording used. A weapon the mod no longer ships registers
+	// nothing, every later weapon shifts down one, and the engine drops the demo. Parking the
+	// default weapon in the slot that was owed keeps the rest of the table lined up.
+	void Assets::RegisterWeapons(const char** weapons, int weaponCount)
+	{
+		for (int i = 0; i < weaponCount; i++)
+		{
+			const int expected = i + 1;
+			if (BG_RegisterWeapon(weapons[i], nullptr) == expected)
+				continue;
+
+			WeaponDef* fallback = BG_LoadWeaponDef(DefaultWeapon);
+			if (!fallback)
+				continue;
+
+			while (bg_weaponCount < expected)
+				BG_AddWeapon(fallback, nullptr);
+
+			Com_PrintMessage(CON_CHANNEL_FILES,
+				std::format("^3Weapon '{}' is not the one this demo was recorded with, using the default weapon.\n",
+					weapons[i])
+					.c_str(),
+				0);
+		}
 	}
 
 	bool Assets::ZoneExists(const std::string& name)
@@ -67,11 +93,6 @@ namespace IW3SR
 	bool Assets::IsReserved(const std::string& name)
 	{
 		return std::ranges::find(ReservedZones, name) != ReservedZones.end();
-	}
-
-	void Assets::Reset()
-	{
-		Skipped.clear();
 	}
 
 	std::string Assets::ModZonePath()

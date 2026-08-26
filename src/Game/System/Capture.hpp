@@ -26,6 +26,10 @@ namespace IW3SR
 		std::vector<uint8_t> pixels;
 	};
 
+	// Surfaces the readback cycles through. Locking the one the GPU was asked to fill this
+	// frame stalls the pipeline, so we always read the oldest instead.
+	constexpr size_t StagingCount = 3;
+
 	class API Capture
 	{
 	public:
@@ -42,6 +46,7 @@ namespace IW3SR
 		static bool DrawOverlay();
 		static void Tick();
 
+		static int RestartForDemo(int protocol);
 		static void Disconnected();
 
 	private:
@@ -51,12 +56,16 @@ namespace IW3SR
 		static inline dvar_s* Preset = nullptr;
 		static inline dvar_s* Binary = nullptr;
 		static inline dvar_s* Overlay = nullptr;
+		static inline dvar_s* Hidden = nullptr;
 
 		static inline RenderState State = RenderState::Idle;
 		static inline RenderRequest Request;
+		static inline uint64_t Deadline = 0;
 
 		static inline IDirect3DSurface9* Resolve = nullptr;
-		static inline IDirect3DSurface9* Staging = nullptr;
+		static inline std::array<IDirect3DSurface9*, StagingCount> Staging = {};
+		static inline size_t Slot = 0;
+		static inline size_t Queued = 0;
 		static inline int Width = 0;
 		static inline int Height = 0;
 
@@ -75,10 +84,13 @@ namespace IW3SR
 
 		static bool CreateSurfaces(IDirect3DDevice9* device);
 		static void ReleaseSurfaces();
-		static bool Read(IDirect3DDevice9* device, CaptureFrame& frame);
+		static bool Copy(IDirect3DDevice9* device, size_t slot);
+		static bool Read(size_t slot);
+		static void Flush();
 		static void Submit(CaptureFrame&& frame);
 		static void Encode();
 
+		static void Hide(bool state);
 		static bool Spawn(const std::string& output);
 		static void Terminate();
 		static std::string Executable();

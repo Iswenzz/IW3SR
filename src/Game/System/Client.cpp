@@ -1,7 +1,6 @@
 #include "Client.hpp"
 
 #include "Game/Renderer/Renderer.hpp"
-#include "Game/System/Assets.hpp"
 #include "Game/System/Capture.hpp"
 #include "Game/System/Timestep.hpp"
 
@@ -24,7 +23,6 @@ namespace IW3SR
 	void Client::Connect()
 	{
 		CL_Connect_h();
-		Assets::Reset();
 		Timestep::Reset();
 
 		EventClientConnect event;

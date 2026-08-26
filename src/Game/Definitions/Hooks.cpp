@@ -33,6 +33,9 @@ namespace IW3SR
 	Hook<void(int localClientNum)>
 		CG_PredictPlayerState_Internal_h(0x447260, Client::Predict);
 
+	Hook<void(const char** weapons, int weaponCount)>
+		CG_RegisterWeapons_h(0x458E20, Assets::RegisterWeapons);
+
 	Hook<void(int localClientNum)>
 		CG_Respawn_h(0x445FA0, ASM_LOAD(CG_Respawn_h));
 
@@ -50,6 +53,10 @@ namespace IW3SR
 
 	Hook<void(int localClientNum)>
 		CL_Disconnect_h(0x4696B0, Client::Disconnect);
+
+	// Lives in CoD4X, the address is resolved per version in Patch.
+	Hook<int(int protocol)>
+		CL_RestartForDemo_h(Capture::RestartForDemo);
 
 	Hook<void FASTCALL(int localClientNum)>
 		CL_CreateNewCommands_h(0x463E00, Timestep::CreateNewCommands);

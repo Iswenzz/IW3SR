@@ -7,11 +7,20 @@
 // clang-format off
 namespace IW3SR
 {
+	API extern Function<int(WeaponDef* def, void* callback)>
+		BG_AddWeapon;
+
 	API extern Function<void(const trajectory_t* tr, int atTime, vec3& out)>
 		BG_EvaluateTrajectory;
 
 	API extern Function<int(const char* name)>
 		BG_FindWeaponIndexForName;
+
+	API extern Function<WeaponDef*(const char* name)>
+		BG_LoadWeaponDef;
+
+	API extern Function<int(const char* name, void* callback)>
+		BG_RegisterWeapon;
 
 	API extern Function<void(trace_t* result, const vec3& start, const vec3& mins, const vec3& maxs,
 		const vec3& end, int skipEntity, int tracemask)>
@@ -168,6 +177,7 @@ namespace IW3SR
 // clang-format on
 namespace IW3SR
 {
+	ASM_FUNCTION(BG_AddWeapon);
 	ASM_FUNCTION(BG_EvaluateTrajectory);
 	ASM_FUNCTION(DB_FileExists);
 	ASM_FUNCTION(Dvar_FindVar);

@@ -3,11 +3,20 @@
 // clang-format off
 namespace IW3SR
 {
+	Function<int(WeaponDef* def, void* callback)>
+		BG_AddWeapon = ASM_LOAD(BG_AddWeapon);
+
 	Function<void(const trajectory_t* tr, int atTime, vec3& out)>
 		BG_EvaluateTrajectory = ASM_LOAD(BG_EvaluateTrajectory);
 
 	Function<int(const char* name)>
 		BG_FindWeaponIndexForName = 0x416610;
+
+	Function<WeaponDef*(const char* name)>
+		BG_LoadWeaponDef = 0x41C310;
+
+	Function<int(const char* name, void* callback)>
+		BG_RegisterWeapon = 0x416660;
 
 	Function<void(trace_t* result, const vec3& start, const vec3& mins, const vec3& maxs,
 		const vec3& end, int skipEntity, int tracemask)>
@@ -164,6 +173,22 @@ namespace IW3SR
 namespace IW3SR
 {
 	using namespace asmjit;
+
+	ASM_FUNCTION(BG_AddWeapon)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::edi, x86::dword_ptr(x86::ebp, 0x0C)); // callback
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // def
+		a.call(0x4164F0);
+		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
 
 	ASM_FUNCTION(BG_EvaluateTrajectory)
 	{
