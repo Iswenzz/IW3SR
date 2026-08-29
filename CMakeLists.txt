@@ -21,9 +21,17 @@ find_package(PolyHook_2 CONFIG REQUIRED)
 
 # Tests
 if(BUILD_TESTING)
+	include(CTest)
+	find_package(GTest CONFIG REQUIRED)
 	add_executable(IW3SR.Tests)
 	add_test(NAME IW3SR COMMAND IW3SR.Tests)
-	target_link_libraries(IW3SR.Tests PRIVATE IzEngine.Tests IW3SR)
+
+	# What is under test is compiled in rather than linked out of the game library, which cannot
+	# load outside the game: it installs its hooks the moment it does.
+	target_include_directories(IW3SR.Tests PRIVATE src)
+	target_link_libraries(IW3SR.Tests PRIVATE
+		GTest::gtest
+		GTest::gtest_main)
 endif()
 
 # Path
