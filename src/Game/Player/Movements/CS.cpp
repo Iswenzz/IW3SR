@@ -90,7 +90,7 @@ namespace IW3SR
 		}
 		// Fixed tick rate for air accel
 		const int tick = static_cast<int>(pm->cmd.serverTime / sv_air_tick_ms);
-		const int oldtick = static_cast<int>(pm->oldcmd.serverTime / sv_air_tick_ms);
+		const int oldtick = static_cast<int>((pm->cmd.serverTime - pml->msec) / sv_air_tick_ms);
 
 		if (tick != oldtick)
 		{
@@ -195,7 +195,7 @@ namespace IW3SR
 
 		if (pm->ps->pm_flags & PMF_NO_JUMP)
 			return false;
-		if (pm->ps->pm_flags & PMF_JUMP_HELD)
+		if (pm->ps->pm_flags & PMF_RESPAWNED)
 			return false;
 		if (pm->ps->pm_flags & PMF_MANTLE)
 			return false;
@@ -203,7 +203,7 @@ namespace IW3SR
 			return false;
 		if (pm->ps->viewHeightTarget == 11 || pm->ps->viewHeightTarget == 40)
 			return false;
-		if (!(pm->cmd.buttons & PMF_JUMP_HELD))
+		if (!(pm->cmd.buttons & BUTTON_JUMP))
 			return false;
 
 		float jump_velocity = sqrt(2.0f * static_cast<float>(pm->ps->gravity) * jump_height->current.value);

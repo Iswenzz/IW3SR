@@ -4,6 +4,11 @@
 
 void BG_AddPredictableEventToPlayerstate(int event, int parms, playerState_s* ps)
 {
+	// The engine drops event 0 rather than queueing it. Without this the sequence advances on
+	// every landing that reports no surface type, which is all of them on a plain world brush.
+	if (!event)
+		return;
+
 	ps->events[ps->eventSequence & 3] = static_cast<uint8_t>(event);
 	ps->eventParms[ps->eventSequence & 3] = static_cast<uint8_t>(parms);
 	ps->eventSequence = static_cast<uint8_t>(ps->eventSequence + 1);
