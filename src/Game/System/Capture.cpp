@@ -191,10 +191,12 @@ namespace IW3SR
 	// CoD4X restarts the game to line its protocol up with the demo, and it builds the new
 	// command line itself, so a render request never survives the handover. Returning 0 is the
 	// path it already takes when the protocol matches: stay in this process.
+	// Zero keeps the process, anything else lets CoD4X restart. The thunk owns the handover, so
+	// this must not call the original itself.
 	int Capture::RestartForDemo(int protocol)
 	{
 		if (State == RenderState::Idle)
-			return CL_RestartForDemo_h(protocol);
+			return 1;
 
 		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
 			std::format("Playing the demo here instead of restarting for protocol {}.\n", protocol).c_str(), 0);
