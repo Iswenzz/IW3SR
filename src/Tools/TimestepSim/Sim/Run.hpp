@@ -43,7 +43,8 @@ namespace Sim
 		int durationMs = 3000;
 		HandConfig hand;
 		float sensitivity = 5.0f;
-		SplitMode split = SplitMode::Grid;
+		// What the game does. Grid is the even division it used to do, kept only for contrast.
+		SplitMode split = SplitMode::Limiter;
 		// g_speed. 190 is stock CoD4, 210 is what most speedrun servers run.
 		int gSpeed = 190;
 		Pacing pacing;

@@ -41,7 +41,7 @@ nothing to split, so it must produce identical movement to vanilla. It covers ev
 `g_speed` values, every key combination and a set of `com_maxfps` schedules that change mid run:
 
 ```bash
-./TimestepSim --self-test --split limiter
+./TimestepSim --self-test
 ```
 
 Compare one configuration head to head:
@@ -73,8 +73,9 @@ frames land above the target and the achieved rate fall below `com_maxfps`. At `
 vanilla client hits 333 exactly and the split has no advantage; at 1200 it manages 285 while an even
 grid still delivers 333. The mod measures it on the real machine at startup and reports it in the timestep status.
 
-`--split limiter` is what the game does. `--split grid` is the even division the mod used to do; it
-exists only here, so the regression can still show what it cost, and is not reachable in game.
+`--split limiter` is what the game does and the default. `--split grid` is the even division the
+mod used to do; it exists only here, so the regression can still show what it cost, and is not
+reachable in game.
 
 ## The hand
 

@@ -68,3 +68,9 @@ get_target_property(SOURCES TimestepSim SOURCES)
 list(REMOVE_ITEM SOURCES ${SHIPPING})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 source_group("Under Test" FILES ${SHIPPING})
+
+# The simulator is the integration half of the timestep's tests, so it runs under ctest beside
+# the unit tests rather than only by hand.
+if(BUILD_TESTING)
+	add_test(NAME TimestepSim COMMAND TimestepSim --self-test)
+endif()

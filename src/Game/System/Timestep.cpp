@@ -18,17 +18,21 @@ namespace IW3SR
 	// One clamped frame is a hitch. This many in a row is a configuration that cannot carry the rate.
 	constexpr int StarvedLimit = 30;
 
-	// Length of the self test, and the beat it swaps strafe keys on. 37ms is deliberately not a
-	// multiple of any step size, so every swap lands part way through a movement step.
+	// Length of the self test.
 	constexpr int TestLength = 3000;
 	// Gap between the three keys going down, so the hop starts the way a player starts one.
 	constexpr int TestStagger = 200;
 
+	// What a frame at com_maxfps would spend on its own work, before the limiter is consulted.
+	// Not measurable from a client rendering at sr_maxfps, so it is a constant rather than a knob:
+	// a knob here would let someone dial the movement rate back up to one no vanilla client reaches.
+	constexpr int FrameWork = 500;
+
+	// How many times a one millisecond sleep is timed at startup to find what it really costs.
+	constexpr int SleepSamples = 33;
+
 	// Past this the movement clock is stale, from a map change or a server time correction.
 	constexpr int MaxDrift = 500;
-
-	// Enough for any human hand; a queue growing past it means the steps stopped draining it.
-	constexpr size_t MaxEvents = 64;
 
 	void Timestep::Initialize()
 	{
@@ -41,8 +45,13 @@ namespace IW3SR
 			"Run movement on a fixed timestep taken from com_maxfps, whatever the frame rate is", true);
 		MaxFps = Dvar::RegisterInt("sr_maxfps", DVAR_SAVED, "Frame rate cap, 0 to follow com_maxfps",
 			DisplayFps(), 0, 1000);
+		Smooth = Dvar::RegisterBool("sr_timestep_smooth", DVAR_SAVED,
+			"Draw the view at the frame time instead of at the last movement step", true);
 		Log = Dvar::RegisterBool("sr_timestep_log", DVAR_TEMP,
 			"Write every movement command to iw3sr/Logs/timestep.csv", false);
+
+		Pace.Sleep = MeasureSleep();
+		Pace.Work = FrameWork;
 
 		ComMaxFps = Dvar::Find("com_maxfps");
 		const auto limiter = reinterpret_cast<dvar_s**>(ComMaxFpsRef);
@@ -69,78 +78,11 @@ namespace IW3SR
 	void Timestep::Reset()
 	{
 		Time = 0;
-		Flush();
+		Vanilla = {};
 	}
 
-	// Holds back the key events the engine would otherwise apply to the whole frame at once. Their
-	// timestamps are what a client running at com_maxfps sorts them into commands by, so replaying
-	// them per step is what keeps forwardmove and rightmove identical to that client.
-	bool Timestep::Defer(int localClientNum, int controllerIndex, const std::string& command)
-	{
-		if (Replaying || Events.size() >= MaxEvents || !Active())
-			return false;
-		if (command.empty() || (command.front() != '+' && command.front() != '-'))
-			return false;
-
-		// Only a bind carries the key and the millisecond it happened. Anything else is a console
-		// command with no place on the movement clock.
-		const size_t key = command.find(' ');
-		if (key == std::string::npos)
-			return false;
-
-		const size_t stamp = command.find(' ', key + 1);
-		if (stamp == std::string::npos)
-			return false;
-
-		int time = 0;
-		const char* first = command.data() + stamp + 1;
-		const auto [ptr, ec] = std::from_chars(first, command.data() + command.size(), time);
-
-		if (ec != std::errc{} || time <= 0)
-			return false;
-
-		// The engine stamps key events off the window message clock, which counts from when Windows
-		// booted, while com_frameTime counts from when the game started. Left alone the two never
-		// compare, and an event days ahead of every step parks itself at the head of the queue.
-		Events.push_back({ command, localClientNum, controllerIndex, time - Offset });
-		return true;
-	}
-
-	// A key event belongs to the step its timestamp falls in. One that cannot be placed there lands
-	// on the wrong side of a movement step, which is exactly the difference between matching vanilla
-	// and not, so the two cases are counted rather than both quietly working.
-	void Timestep::Replay(int time, bool placed)
-	{
-		while (!Events.empty() && Events.front().Time <= time)
-		{
-			KeyEvent event = std::move(Events.front());
-			Events.pop_front();
-
-			placed ? Placed++ : Late++;
-
-			Replaying = true;
-			GSystem::ExecuteSingleCommand(event.LocalClientNum, event.ControllerIndex, event.Command.data());
-			Replaying = false;
-		}
-	}
-
-	void Timestep::Flush()
-	{
-		Replay(std::numeric_limits<int>::max(), false);
-
-		// The odd one at a frame edge is normal. Mostly late means the timestamps no longer compare
-		// with the step clock, and movement has quietly stopped matching a client running at com_maxfps.
-		if (Warned || Late < 16 || Late <= Placed)
-			return;
-
-		Warned = true;
-		Com_PrintMessage(CON_CHANNEL_ERROR,
-			"^1Timestep: key input is not landing on its movement step, movement will not match "
-			"com_maxfps. Please report this.\n", 0);
-	}
-
-	// What the two checks have seen so far, so the absence of a warning can be read as evidence
-	// rather than taken on trust.
+	// What the audit has seen so far, so the absence of a warning can be read as evidence rather
+	// than taken on trust.
 	void Timestep::Status()
 	{
 		if (!Active())
@@ -149,11 +91,18 @@ namespace IW3SR
 			return;
 		}
 		const int movement = MovementFps();
+		const int step = 1000 / movement;
+
+		// The achieved rate, not com_maxfps. A vanilla client's limiter overshoots its target by
+		// whatever a sleep costs, and the steps here carry the same overshoot, so the two differ.
+		const int emitted = Steady + Wobble;
+		const int reached = emitted ? 1000 * emitted / std::max(1, Emitted - First) : 0;
+
 		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
-			std::format("Timestep: {} steps a second of {} ms, drawing at {} fps.\n"
-						"Key input on its own step: {}, late: {}.\n"
-						"Steps com_maxfps could produce: {}, wider: {}.\n",
-				movement, 1000 / movement, RenderFps(), Placed, Late, Steady, Wobble)
+			std::format("Timestep: com_maxfps {} is a {} ms step, drawing at {} fps.\n"
+						"Reaching {} steps a second, which is what a vanilla client here would.\n"
+						"A one millisecond sleep costs {} us. Steps on cadence: {}, off: {}.\n",
+				movement, step, RenderFps(), reached, Pace.Sleep, Steady, Wobble)
 				.c_str(),
 			0);
 	}
@@ -203,13 +152,12 @@ namespace IW3SR
 			if (!Journal.is_open())
 				return;
 
-			Journal << "serverTime,msec,forwardmove,rightmove,buttons,yaw,frameTime,queued,head,sysMsgTime,speed,ground\n";
+			Journal << "serverTime,msec,forwardmove,rightmove,buttons,yaw,frameTime,sysMsgTime,speed,ground\n";
 			Logged = 0;
 			Previous = cmd.serverTime;
 		}
 		Journal << cmd.serverTime << ',' << cmd.serverTime - Previous << ',' << int(cmd.forwardmove) << ','
 				<< int(cmd.rightmove) << ',' << cmd.buttons << ',' << cmd.angles[1] << ',' << com_frameTime << ','
-				<< Events.size() << ',' << (Events.empty() ? 0 : Events.front().Time) << ','
 				<< (g_wv ? g_wv->sysMsgTime : 0) << ','
 				<< static_cast<int>(glm::length(vec2(cgs->predictedPlayerState.velocity))) << ','
 				<< (cgs->predictedPlayerState.groundEntityNum != ENTITYNUM_NONE ? 1 : 0) << '\n';
@@ -279,21 +227,25 @@ namespace IW3SR
 
 	void Timestep::Send(const char* command, int key, int time)
 	{
-		// Stamped the way the engine stamps a real key event, so the test goes down the same path.
-		std::string text = std::format("{} {} {}", command, key, time + Offset);
+		// Stamped on the window message clock the way the engine stamps a real key event, so the
+		// test goes down the same path with the same degenerate key timing as a real press.
+		const int offset = static_cast<int>(GetTickCount()) - cls->realtime;
+		std::string text = std::format("{} {} {}", command, key, time + offset);
 		GSystem::ExecuteSingleCommand(0, 0, text.data());
 	}
 
+	// Key binds have already run by the time this is called, in the event pump at the top of the
+	// frame, so a key latches at the start of the frame it arrived in, which is where vanilla
+	// latches it. Placing events inside the frame by their timestamps was tried and reverted: the
+	// window message clock they carry ticks at 15.6ms on modern Windows, wider than a whole frame,
+	// and the placement jitter it caused was worse than latching up to a frame early.
 	void Timestep::CreateNewCommands(int localClientNum)
 	{
-		Offset = static_cast<int>(GetTickCount()) - cls->realtime;
-
 		TestFrame();
 
 		if (!Active())
 		{
 			Time = 0;
-			Flush();
 
 			const int slot = clients->cmdNumber;
 			CL_CreateNewCommands_h(localClientNum);
@@ -305,11 +257,74 @@ namespace IW3SR
 		Split(localClientNum);
 	}
 
+	// The last movement step sits up to a step short of the frame being drawn, by a gap that
+	// changes frame to frame, which reads as judder no client stepping at its frame rate shows.
+	// Carrying the view along the velocity for the remainder draws it at the frame time. The gun
+	// was anchored to the view before the carry, so it moves by the same amount, or it would
+	// judder against the camera instead of against the world. The refdef is rebuilt every frame
+	// and movement never reads it; of the engine, only the sound listener and the melee assist
+	// see the carried eye, each by under a step of travel.
+	void Timestep::CalcViewValues(int localClientNum)
+	{
+		CG_CalcViewValues_h(localClientNum);
+
+		if (!Active() || !Smooth || !Smooth->current.enabled)
+			return;
+
+		const playerState_s& ps = cgs->predictedPlayerState;
+
+		// Only a state predicted up to the newest command may be carried further. One that was
+		// interpolated instead, following another player or after death, sits a snapshot behind,
+		// and carrying it would throw the view around rather than settle it.
+		if (ps.commandTime != clients->cmds[clients->cmdNumber & 0x7F].serverTime)
+			return;
+		if (ps.pm_type != PM_NORMAL && ps.pm_type != PM_NOCLIP && ps.pm_type != PM_UFO
+			&& ps.pm_type != PM_SPECTATOR)
+			return;
+
+		const int lag = clients->serverTime - ps.commandTime;
+		if (lag <= 0 || lag > 1000 / MovementFps() + 1)
+			return;
+
+		const vec3 carry = ps.velocity * (static_cast<float>(lag) * 0.001f);
+
+		cgs->refdef.vieworg += carry;
+		for (int i = 0; i < 3; i++)
+			cgs->viewModelAxis[3][i] += carry[i];
+	}
+
 	// Builds one command per movement step by running the engine's own builder that many times, each
 	// with the clocks it reads pointed at that step. Sampling input per step rather than per frame is
 	// what a client really running at com_maxfps does, and it has to be done this way round rather
 	// than by copying one command: CL_KeyState divides a key's held time by frame_msec, so a long
 	// frame yields a weaker forwardmove and rightmove than the same keys held at com_maxfps would.
+	// What a one millisecond sleep really costs here. Vanilla's limiter overshoot is entirely this
+	// number, so it is measured once rather than assumed. Sleep stands in for the engine's
+	// NET_Sleep(1): both are bounded by the same timer granularity.
+	int Timestep::MeasureSleep()
+	{
+		LARGE_INTEGER frequency = {};
+		if (!QueryPerformanceFrequency(&frequency) || !frequency.QuadPart)
+			return 1000;
+
+		int samples[SleepSamples] = {};
+		for (int i = 0; i < SleepSamples; i++)
+		{
+			LARGE_INTEGER before = {};
+			LARGE_INTEGER after = {};
+
+			QueryPerformanceCounter(&before);
+			::Sleep(1);
+			QueryPerformanceCounter(&after);
+
+			samples[i] = static_cast<int>((after.QuadPart - before.QuadPart) * 1000000 / frequency.QuadPart);
+		}
+		std::sort(std::begin(samples), std::end(samples));
+
+		// The median, so one descheduled sample cannot decide the movement rate.
+		return std::clamp(samples[SleepSamples / 2], 1000, 8000);
+	}
+
 	void Timestep::Split(int localClientNum)
 	{
 		const int step = 1000 / MovementFps();
@@ -320,7 +335,10 @@ namespace IW3SR
 		// own whenever 1000/fps is not whole, and hand pmove a step vanilla never sends.
 		const int target = cls->realtime;
 		const int delta = clients->serverTime - target;
-		const Steps plan = PlanSteps(Time, target, step, MaxSteps, MaxDrift);
+
+		int widths[MaxSteps] = {};
+		const Steps plan = PlanSteps(Vanilla, widths, MaxSteps, step, target, cls->frametime, MaxDrift, Pace);
+		const int count = plan.Count;
 
 		Time = plan.Clock;
 
@@ -342,7 +360,7 @@ namespace IW3SR
 			Starved = 0;
 		}
 		// Frames are outrunning the movement rate, so this one owes no command at all.
-		if (!plan.Count)
+		if (!count)
 			return;
 
 		const int serverTime = clients->serverTime;
@@ -353,22 +371,22 @@ namespace IW3SR
 		const int dx = clients->mouseDx[clients->mouseIndex];
 		const int dy = clients->mouseDy[clients->mouseIndex];
 
-		for (int i = 1; i <= plan.Count; i++)
+		int time = Time;
+		for (int i = 1; i <= count; i++)
 		{
-			const int time = Time + i * step;
+			const int width = widths[i - 1];
+			time += width;
 
 			// Key timing lives on this clock, so a step placed on it measures a held key over the
 			// step rather than over the whole frame.
 			com_frameTime = time;
 			clients->serverTime = time + delta;
-			cls->frametime = step;
-			frame_msec = step;
-
-			Replay(com_frameTime, true);
+			cls->frametime = width;
+			frame_msec = width;
 
 			// The frame's mouse travel belongs to the frame, so hand each step its own share of it.
-			clients->mouseDx[clients->mouseIndex] = dx * i / plan.Count - dx * (i - 1) / plan.Count;
-			clients->mouseDy[clients->mouseIndex] = dy * i / plan.Count - dy * (i - 1) / plan.Count;
+			clients->mouseDx[clients->mouseIndex] = dx * i / count - dx * (i - 1) / count;
+			clients->mouseDy[clients->mouseIndex] = dy * i / count - dy * (i - 1) / count;
 
 			CL_CreateNewCommands_h(localClientNum);
 			Record(clients->cmds[clients->cmdNumber & 0x7F]);
@@ -376,18 +394,14 @@ namespace IW3SR
 			// Vanilla steps wander by the millisecond the engine walks the clock. Wider than that is
 			// jitter of our own making, and a step com_maxfps never produces.
 			const int stamp = time + delta;
+			if (!First)
+				First = stamp;
 			if (Emitted)
-				std::abs(stamp - Emitted - step) > 1 ? Wobble++ : Steady++;
+				std::abs(stamp - Emitted - width) > 1 ? Wobble++ : Steady++;
 			Emitted = stamp;
 		}
 
-		// Whatever is left belongs to this frame and the engine would have applied all of it at the
-		// start of it, so none may survive. Draining by timestamp alone is not enough: an event
-		// stamped from another time base is never late enough to release, and parks itself at the
-		// head where it holds back everything queued behind it.
-		Flush();
-
-		Time += plan.Count * step;
+		Time = time;
 		Audit();
 
 		clients->serverTime = serverTime;
