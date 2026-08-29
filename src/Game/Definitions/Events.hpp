@@ -105,7 +105,7 @@ namespace IW3SR
 	class EventPMoveCrashLand : public Event
 	{
 		EVENT_CLASS("pmove.crashland")
-		EventPMoveCrashLand(playerState_s* pm, pml_t* pml) : ps(ps), pml(pml) { }
+		EventPMoveCrashLand(playerState_s* ps, pml_t* pml) : ps(ps), pml(pml) { }
 		playerState_s* ps;
 		pml_t* pml;
 	};
