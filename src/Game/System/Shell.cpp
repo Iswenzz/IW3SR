@@ -373,7 +373,7 @@ namespace IW3SR
 		const auto game = Dvar::Find("fs_game");
 		const std::string mod = game && game->current.string ? game->current.string : "";
 
-		for (const char* name : { "fs_homepath", "fs_basepath" })
+		for (const char* name : { "fs_homepath", "fs_basepath", "fs_savepath" })
 		{
 			const auto root = Dvar::Find(name);
 			if (!root || !root->current.string || !root->current.string[0])

@@ -130,7 +130,7 @@ namespace IW3SR
 			return !ec && bytes <= INT_MAX ? static_cast<int>(bytes) : 0;
 		};
 
-		for (const char* name : { "fs_homepath", "fs_basepath" })
+		for (const char* name : { "fs_savepath", "fs_homepath", "fs_basepath" })
 		{
 			const dvar_s* path = Dvar::Find(name);
 			if (!path || !path->current.string)
@@ -140,7 +140,7 @@ namespace IW3SR
 				return bytes;
 		}
 
-		// CoD4x's updater writes to the save path, which is not always fs_homepath.
+		// Where the updater writes, for the case where neither client registered fs_savepath.
 		char local[MAX_PATH] = {};
 		if (GetEnvironmentVariableA("LOCALAPPDATA", local, MAX_PATH))
 			return measure(std::filesystem::path(local) / CoD4XZonePath / file);

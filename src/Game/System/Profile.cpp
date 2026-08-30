@@ -1,12 +1,12 @@
 #include "Profile.hpp"
-#include "Patch.hpp"
 #include "Dvar.hpp"
+#include "Patch.hpp"
+
+using namespace asmjit;
 
 namespace IW3SR
 {
-	constexpr std::string_view ProfileFolder = "CallofDuty4MW";
-
-	constexpr uint32_t HomePathDvar = 0xCB1DCC0;
+	constexpr std::string_view SaveFolder = "CallofDuty4MW";
 
 	// CoD4X's stats format: plaintext and unsigned (cl_main.c:5115), unlike retail's sealed 'iwm0'.
 	constexpr uint32_t PlainMagic = 0x30656369; // 'ice0'
@@ -19,9 +19,67 @@ namespace IW3SR
 	constexpr int32_t DigestField = offsetof(saveStatData_t, digest);
 	constexpr int32_t DigestSize = sizeof(saveStatData_t::digest);
 
+	// Every patched site loads a dvar_s* and reads its current value from this offset.
+	constexpr int32_t DvarValueField = offsetof(dvar_s, current);
+	static_assert(DvarValueField == 0x0C, "The engine reads dvar->current at +0x0C.");
+
 	// stats+0x12F holds the stat_version the file was written under, and a mismatch wipes the block
 	// and opens MENU_RESETCUSTOMCLASSES. Nothing is migrated on the way, so a bump only ever destroys.
 	constexpr uintptr_t StatsVersionCheck = 0x579AD9;
+
+	// Sites where the engine builds a per-user path. CoD4X reaches this same set by forking the
+	// FS_SV family into *SavePath twins and switching individual callers (files.c:633 onward); these
+	// are those callers, reached instead by pointing each dvar load at our own slot.
+	constexpr uintptr_t SavePathOperands[] = {
+		0x4FB021,
+		0x4FB0BC, // the profile create and exists checks
+		0x55B2D2,
+		0x55B2FE, // FS_SV_Rename, reached only from LiveStorage_HandleCorruptStats
+		0x55C0E9, // FS_SV_Remove, the same
+		0x502D2E, // FS_SV_FOpenFileRead probes here before anywhere else, and
+		0x502DB3, // compares against fs_basepath, so the install is still searched second
+		0x55E882,
+		0x55E8B8, // FS_Startup's second game directory root, which is how the save path
+		0x55E946,
+		0x55E9FA, // contributes its main and mods iwds to the search path
+	};
+
+	// FS_FOpenFileWrite is shared: the config and stats writes below move, while the demo, sound and
+	// shock writes that also reach it stay in the install. Its callers decide, not the function.
+	constexpr uintptr_t FileWriteCallers[] = {
+		0x4FFAC3,
+		0x4FFB5A, // Com_WriteConfiguration
+		0x55C4EE,
+		0x55C55E, // FS_WriteFileToDir, whose only callers are active.txt and mpdata
+	};
+
+	// FS_SV_FOpenFileWrite is shared the same way, between servercache.dat and the download temp.
+	constexpr uintptr_t ServerCacheWrite = 0x476549;
+
+	// FS_Startup adds "players" from fs_basepath alone, and active.txt is read back through the
+	// search path rather than through FS_SV, so the save path has to be on it or no profile is ever
+	// found. CoD4X reaches the same place from the other side, replacing the read and the profile
+	// listing with FS_SV_FOpenFileRead and FS_SV_ListDirectories, which merge all three roots.
+	constexpr uintptr_t AddPlayersCall = 0x55E706;
+	constexpr uintptr_t AddGameDirectory = 0x55E020;
+	constexpr uintptr_t PlayersDir = 0x6E0D7C; // "players"
+
+	// Both write functions load fs_homepath in their prologue, so a twin only has to repeat that
+	// prologue with the save path and re-enter the body. Copying the bodies would mean relocating
+	// their relative branches for no gain.
+	constexpr uintptr_t FileWriteBody = 0x55B4D9;
+	constexpr uintptr_t SvFileWriteBody = 0x502BFD;
+
+	// Registered as a real dvar the way CoD4X registers fs_savepath, so fs_homepath and fs_basepath
+	// keep meaning the install directory and only the sites above look anywhere else.
+	static dvar_s* SavePathDvar = nullptr;
+	static std::string SavePath;
+
+	// Every call site below runs again on a filesystem restart or an fs_game change; their one-off
+	// work must not.
+	static bool Applied = false;
+	static bool Announced = false;
+	static bool FormatApplied = false;
 
 	// A real stats_t is sparse, so a block without many zeroes was never filled in.
 	static bool LooksLikeStats(const saveStatData_t& data)
@@ -53,15 +111,18 @@ namespace IW3SR
 		}
 	}
 
-	// The engine stores this pointer rather than copying, and all three dvar slots point at it so it
-	// never tries to free a buffer it did not allocate.
-	static std::string HomePath;
+	static bool Resolve(std::filesystem::path& path)
+	{
+		const char* local = std::getenv("LOCALAPPDATA");
+		if (!local || !local[0])
+			return false;
 
-	// Every call site below runs again on a filesystem restart or an fs_game change; their one-off
-	// work must not.
-	static bool Applied = false;
-	static bool Announced = false;
-	static bool FormatApplied = false;
+		path = std::filesystem::path(local) / SaveFolder;
+
+		std::error_code error;
+		std::filesystem::create_directories(path, error);
+		return !error;
+	}
 
 	// Retail seals the block with XXTEA and an HMAC keyed off the CD key at 0x724B84, which the two
 	// clients do not load from the same place: retail reads HKLM only (0x4FDE70), CoD4X prefers HKCU
@@ -70,8 +131,6 @@ namespace IW3SR
 	// in eax, hence a stub rather than a hook.
 	ASM_FUNCTION(LiveStorage_EncodeStatsData)
 	{
-		using namespace asmjit;
-
 		a.push(x86::esi);
 		a.mov(x86::esi, x86::eax);
 
@@ -88,27 +147,54 @@ namespace IW3SR
 		a.ret();
 	}
 
-	static bool Resolve(std::filesystem::path& path)
+	ASM_FUNCTION(FS_FOpenFileWriteSavePath)
 	{
-		const char* local = std::getenv("LOCALAPPDATA");
-		if (!local || !local[0])
-			return false;
-
-		path = std::filesystem::path(local) / ProfileFolder;
-
-		std::error_code error;
-		std::filesystem::create_directories(path, error);
-		return !error;
+		a.mov(x86::ecx, x86::dword_ptr(reinterpret_cast<uint64_t>(&SavePathDvar)));
+		a.mov(x86::edx, x86::dword_ptr(x86::ecx, DvarValueField));
+		a.jmp(FileWriteBody);
 	}
 
-	// Retail splits the profile directory between both roots: save file I/O goes through fs_homepath,
-	// but the "players" search path entry and the profile create/exists check are built from
-	// fs_basepath. A stock install has the two naming the same directory, so nothing ever noticed.
-	static void UseHomePathForProfiles()
+	// One instruction more than its sibling: the filename is a stack argument here.
+	ASM_FUNCTION(FS_SV_FOpenFileWriteSavePath)
 	{
-		Memory::Set<uint32_t>(0x4FB021, HomePathDvar);
-		Memory::Set<uint32_t>(0x4FB0BC, HomePathDvar);
-		Memory::Set<uint32_t>(0x55E6F9, HomePathDvar);
+		a.mov(x86::eax, x86::dword_ptr(x86::esp, 0x04));
+		a.mov(x86::ecx, x86::dword_ptr(reinterpret_cast<uint64_t>(&SavePathDvar)));
+		a.mov(x86::edx, x86::dword_ptr(x86::ecx, DvarValueField));
+		a.jmp(SvFileWriteBody);
+	}
+
+	// Called in place of the engine's single add, with the root it computed still on the stack. The
+	// save path goes on second because the search path is walked newest first, which is the order
+	// CoD4X reads these roots in.
+	ASM_FUNCTION(FS_AddPlayersDirectories)
+	{
+		a.push(x86::dword_ptr(x86::esp, 0x04));
+		a.mov(x86::edi, PlayersDir);
+		a.call(AddGameDirectory);
+		a.add(x86::esp, 0x04);
+
+		a.mov(x86::ecx, x86::dword_ptr(reinterpret_cast<uint64_t>(&SavePathDvar)));
+		a.mov(x86::eax, x86::dword_ptr(x86::ecx, DvarValueField));
+		a.push(x86::eax);
+		a.mov(x86::edi, PlayersDir);
+		a.call(AddGameDirectory);
+		a.add(x86::esp, 0x04);
+
+		a.ret();
+	}
+
+	static void UseSavePath()
+	{
+		const auto slot = reinterpret_cast<uint32_t>(&SavePathDvar);
+		for (uintptr_t operand : SavePathOperands)
+			Memory::Set<uint32_t>(operand, slot);
+
+		const uintptr_t fileWrite = ASM_LOAD(FS_FOpenFileWriteSavePath);
+		for (uintptr_t caller : FileWriteCallers)
+			Memory::CALL(caller, fileWrite);
+
+		Memory::CALL(ServerCacheWrite, ASM_LOAD(FS_SV_FOpenFileWriteSavePath));
+		Memory::CALL(AddPlayersCall, ASM_LOAD(FS_AddPlayersDirectories));
 	}
 
 	// FS_ReplaceSeparators runs over both sides first, so either separator matches.
@@ -156,38 +242,36 @@ namespace IW3SR
 		if (Patch::UseCoD4X)
 			return;
 
-		dvar_s* homepath = Dvar::Find("fs_homepath");
-		if (!homepath || homepath->type != DvarType::STRING)
-		{
-			Log::WriteLine(Channel::Error, "fs_homepath is not a string dvar; profiles stay in the install.");
-			return;
-		}
-		// Cvar_RegisterString has already applied any +set, so a current value differing from the
-		// default is a deliberate choice and outranks this.
-		if (homepath->current.string && homepath->reset.string
-			&& std::strcmp(homepath->current.string, homepath->reset.string) != 0)
-		{
-			Log::WriteLine(Channel::Game, "fs_homepath was set to {}; leaving profiles there.",
-				homepath->current.string);
-			return;
-		}
 		std::filesystem::path path;
 		if (!Resolve(path))
 		{
-			Log::WriteLine(Channel::Error, "Could not resolve %LOCALAPPDATA%; profiles stay in the install.");
+			Log::WriteLine(Channel::Error, "Could not resolve %LOCALAPPDATA%; per-user files stay in the install.");
 			return;
 		}
-		HomePath = path.string();
+		// Assigned once: a filesystem restart runs this again, and the engine may still be holding
+		// the pointer handed to it the first time.
+		if (SavePath.empty())
+			SavePath = path.string();
 
-		Dvar::OverrideString(homepath, HomePath.c_str());
+		// A +set on the command line has already been applied by the time this returns, so an
+		// explicit choice outranks the default without needing a check of its own.
+		// DVAR_WRITEPROTECTED is BIT(4), the CVAR_INIT CoD4X registers fs_savepath with.
+		SavePathDvar = Dvar::RegisterString("fs_savepath", DVAR_WRITEPROTECTED,
+			"Where per-user files live: profiles, config and stats", SavePath.c_str());
+
+		if (!SavePathDvar)
+		{
+			Log::WriteLine(Channel::Error, "fs_savepath could not be registered; per-user files stay in the install.");
+			return;
+		}
 
 		if (std::exchange(Applied, true))
 			return;
 
-		UseHomePathForProfiles();
+		UseSavePath();
 		Memory::Set<uint8_t>(StatsVersionCheck, 0xEB);
 		BackupStats(path / "players" / "profiles");
 
-		Log::WriteLine(Channel::Game, "Profiles are in {}.", (path / "players").string());
+		Log::WriteLine(Channel::Game, "fs_savepath is {}.", SavePathDvar->current.string);
 	}
 }
