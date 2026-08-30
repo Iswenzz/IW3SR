@@ -4,9 +4,48 @@
 namespace IW3SR
 {
 	std::vector<StringOverride> Dvar::Overrides;
+	cmd_function_s Dvar::UnsetCommand = {};
+
+	static const char* Argument(int index)
+	{
+		if (!cmd_args || cmd_args->nesting < 0 || cmd_args->nesting >= 8)
+			return "";
+
+		const int count = cmd_args->argc[cmd_args->nesting];
+		const char** argv = cmd_args->argv[cmd_args->nesting];
+
+		return index < count && argv ? argv[index] : "";
+	}
+
+	static void UnsetCommand_f()
+	{
+		Dvar::Unset(Argument(1));
+	}
+
+	static void SetColorDefault(const char* name, const vec4& color)
+	{
+		dvar_s* dvar = Dvar::Find(name);
+		if (!dvar || dvar->type != DvarType::VEC4)
+			return;
+
+		// Every console colour is DVAR_ARCHIVE, so a config written by a stock build already carries the
+		// retail defaults and the theme would never show. Moving current with reset while the two still
+		// agree covers that, and leaves anything the player picked themselves alone.
+		const bool untouched = dvar->current.vector == dvar->reset.vector;
+
+		dvar->reset.vector = color;
+		if (untouched)
+		{
+			dvar->current.vector = color;
+			dvar->latched.vector = color;
+		}
+	}
 
 	void Dvar::Initialize()
 	{
+		Register();
+		InitializeConsole();
+
 		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
 		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "about:blank");
 
@@ -15,6 +54,17 @@ namespace IW3SR
 
 		if (!Patch::UseCoD4X)
 			RegisterBool("debug_show_viewpos", DVAR_NONE, "Draw the view position and angles", false);
+	}
+
+	// Retail draws the console as olive boxes with a yellow prompt. The boxes are dvars and move here;
+	// the prompt, the version line and the matched dvar name are .rdata constants, recoloured in Patch.
+	void Dvar::InitializeConsole()
+	{
+		SetColorDefault("con_inputBoxColor", { 0.0f, 0.0f, 0.0f, 0.9f });
+		SetColorDefault("con_inputHintBoxColor", { 0.0f, 0.0f, 0.0f, 0.9f });
+		SetColorDefault("con_outputWindowColor", { 0.0f, 0.0f, 0.0f, 0.8f });
+		SetColorDefault("con_outputBarColor", { 0.0f, 0.0f, 0.0f, 0.8f });
+		SetColorDefault("con_outputSliderColor", { 0.0f, 0.62f, 0.7f, 0.8f });
 	}
 
 	void Dvar::InitializeRenderer()
@@ -77,6 +127,67 @@ namespace IW3SR
 		dvar->current.string = value;
 		dvar->latched.string = value;
 		dvar->reset.string = value;
+	}
+
+	// Linked into the engine's command list by hand: every Cmd_AddCommandInternal call site is inlined,
+	// and the console only completes names it finds walking this list. The node lives in this module,
+	// so Unregister has to take it back out before the module goes.
+	void Dvar::Register()
+	{
+		if (!cmds || UnsetCommand.name)
+			return;
+
+		UnsetCommand.name = "unset";
+		UnsetCommand.function = UnsetCommand_f;
+		UnsetCommand.next = *cmds;
+
+		*cmds = &UnsetCommand;
+	}
+
+	void Dvar::Unregister()
+	{
+		if (!cmds || !UnsetCommand.name)
+			return;
+
+		for (cmd_function_s** at = cmds; *at; at = &(*at)->next)
+		{
+			if (*at != &UnsetCommand)
+				continue;
+
+			*at = UnsetCommand.next;
+			break;
+		}
+		UnsetCommand = {};
+	}
+
+	void Dvar::Unset(const std::string& name)
+	{
+		if (name.empty())
+		{
+			Com_PrintMessage(CON_CHANNEL_CLIENT, "USAGE: unset <variable>\n", 0);
+			return;
+		}
+		dvar_s* dvar = Find(name);
+		if (!dvar)
+		{
+			Com_PrintMessage(CON_CHANNEL_CLIENT, std::format("^3'{}' is not a dvar.\n", name).c_str(), 0);
+			return;
+		}
+		if (!(dvar->flags & DVAR_SAVED))
+		{
+			Com_PrintMessage(CON_CHANNEL_CLIENT,
+				std::format("^3'{}' is not saved to the config.\n", dvar->name).c_str(), 0);
+			return;
+		}
+		const bool created = dvar->flags & DVAR_USERCREATED;
+		dvar->flags = DvarFlags(dvar->flags & ~DVAR_SAVED);
+		dvar_modifiedFlags |= DVAR_SAVED;
+
+		Com_PrintMessage(CON_CHANNEL_CLIENT,
+			std::format("'{}' will be dropped from the config on exit{}.\n", dvar->name,
+				created ? "" : ", and comes back at its default")
+				.c_str(),
+			0);
 	}
 
 	void Dvar::Shutdown()

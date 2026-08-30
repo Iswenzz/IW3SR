@@ -15,8 +15,13 @@ namespace IW3SR
 	{
 	public:
 		static void Initialize();
+		static void InitializeConsole();
 		static void InitializeRenderer();
 		static void InitializeGame();
+
+		static void Register();
+		static void Unregister();
+		static void Unset(const std::string& name);
 
 		static dvar_s* RegisterInt(const char* name, DvarFlags flags, const char* description, int value, int min,
 			int max);
@@ -71,5 +76,6 @@ namespace IW3SR
 
 	private:
 		static std::vector<StringOverride> Overrides;
+		static cmd_function_s UnsetCommand;
 	};
 }
