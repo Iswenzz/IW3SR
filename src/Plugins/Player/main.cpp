@@ -2,6 +2,7 @@
 
 #include "Player/Modules/CEF.hpp"
 #include "Player/Modules/CGAZ.hpp"
+#include "Player/Modules/Discord.hpp"
 #include "Player/Modules/FPS.hpp"
 #include "Player/Modules/KMOV.hpp"
 #include "Player/Modules/Lagometer.hpp"
@@ -15,6 +16,7 @@ PLUGIN void Initialize()
 
 	Modules::Load<CEF>();
 	Modules::Load<CGAZ>();
+	Modules::Load<Discord>();
 	Modules::Load<FPS>();
 	Modules::Load<KMOV>();
 	Modules::Load<Lagometer>();
@@ -27,6 +29,7 @@ PLUGIN void Shutdown()
 {
 	Modules::Remove("sr.player.cef");
 	Modules::Remove("sr.player.cgaz");
+	Modules::Remove("sr.player.discord");
 	Modules::Remove("sr.player.fps");
 	Modules::Remove("sr.player.kmov");
 	Modules::Remove("sr.player.lagometer");

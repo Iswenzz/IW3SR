@@ -3,6 +3,8 @@ target_sources(Player PRIVATE
 	CEF.cpp
 	CGAZ.hpp
 	CGAZ.cpp
+	Discord.hpp
+	Discord.cpp
 	FPS.hpp
 	FPS.cpp
 	KMOV.hpp
