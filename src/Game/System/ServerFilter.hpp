@@ -1,8 +1,6 @@
 #pragma once
 #include "Game/Base.hpp"
 
-#include "Game/System/Remote.hpp"
-
 namespace IW3SR
 {
 	constexpr int FilterBrowser = 0;  // hidden from the server browser
@@ -26,8 +24,10 @@ namespace IW3SR
 		static bool Command(const std::string& command);
 
 	private:
-		static void Apply(const RemoteResult& result);
+		static void Apply(const std::string& body, const std::string& error);
 		static std::vector<FilterEntry> Parse(const std::string& body);
+		static std::string ValueForKey(std::string_view info, std::string_view key);
+		static bool HasHeader(const std::string& body);
 
 		static inline dvar_s* Url = nullptr;
 		static inline dvar_s* Enabled = nullptr;
