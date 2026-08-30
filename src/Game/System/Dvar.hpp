@@ -3,10 +3,20 @@
 
 namespace IW3SR
 {
+	struct StringOverride
+	{
+		dvar_s* Var = nullptr;
+		const char* Current = nullptr;
+		const char* Latched = nullptr;
+		const char* Reset = nullptr;
+	};
+
 	class API Dvar
 	{
 	public:
 		static void Initialize();
+		static void InitializeRenderer();
+		static void InitializeGame();
 
 		static dvar_s* RegisterInt(const char* name, DvarFlags flags, const char* description, int value, int min,
 			int max);
@@ -25,6 +35,9 @@ namespace IW3SR
 		static dvar_s* RegisterColor(const char* name, DvarFlags flags, const char* description, float r, float g,
 			float b, float a);
 		static dvar_s* Find(const std::string& name);
+
+		static void OverrideString(dvar_s* dvar, const char* value);
+		static void Shutdown();
 
 		template <typename T>
 		static T Get(const std::string& name)
@@ -55,5 +68,8 @@ namespace IW3SR
 
 			*reinterpret_cast<T*>(&dvar->latched) = value;
 		}
+
+	private:
+		static std::vector<StringOverride> Overrides;
 	};
 }

@@ -1,12 +1,45 @@
 #include "Dvar.hpp"
+#include "Patch.hpp"
 
 namespace IW3SR
 {
+	std::vector<StringOverride> Dvar::Overrides;
+
 	void Dvar::Initialize()
 	{
 		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
 		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "about:blank");
 
+		if (const auto developer_script = Find("developer_script"))
+			developer_script->flags = DVAR_NONE;
+
+		if (!Patch::UseCoD4X)
+			RegisterBool("debug_show_viewpos", DVAR_NONE, "Draw the view position and angles", false);
+	}
+
+	void Dvar::InitializeRenderer()
+	{
+		if (const auto r_filmusetweaks = Find("r_filmusetweaks"))
+			r_filmusetweaks->flags = DVAR_NONE;
+
+		if (const auto r_fullbright = Find("r_fullbright"))
+			r_fullbright->flags = DVAR_SAVED;
+
+		if (const auto r_glowusetweaks = Find("r_glowusetweaks"))
+			r_glowusetweaks->flags = DVAR_NONE;
+
+		if (const auto r_lodBiasRigid = Find("r_lodBiasRigid"))
+			r_lodBiasRigid->domain.value.min = -1000000;
+
+		if (const auto r_lodBiasSkinned = Find("r_lodBiasSkinned"))
+			r_lodBiasSkinned->domain.value.min = -1000000;
+
+		if (const auto r_zfar = Find("r_zfar"))
+			r_zfar->flags = DVAR_SAVED;
+	}
+
+	void Dvar::InitializeGame()
+	{
 		if (const auto bg_bobmax = Find("bg_bobmax"))
 			bg_bobmax->flags = DVAR_SAVED;
 
@@ -27,27 +60,36 @@ namespace IW3SR
 
 		if (const auto cg_gun_z = Find("cg_gun_z"))
 			cg_gun_z->flags = DVAR_SAVED;
+	}
 
-		if (const auto developer_script = Find("developer_script"))
-			developer_script->flags = DVAR_NONE;
+	// Points a string dvar at a buffer we own. Dvar_Shutdown resolves every string dvar value back
+	// to a script string and drops a reference on it, so the engine's own pointers are kept here and
+	// put back in Shutdown; releasing a reference against a buffer the string table never issued
+	// corrupts the script memory tree and the next free spins forever.
+	void Dvar::OverrideString(dvar_s* dvar, const char* value)
+	{
+		if (!dvar || dvar->type != DvarType::STRING || !value)
+			return;
 
-		if (const auto r_filmusetweaks = Find("r_filmusetweaks"))
-			r_filmusetweaks->flags = DVAR_NONE;
+		if (std::ranges::none_of(Overrides, [dvar](const StringOverride& saved) { return saved.Var == dvar; }))
+			Overrides.emplace_back(dvar, dvar->current.string, dvar->latched.string, dvar->reset.string);
 
-		if (const auto r_fullbright = Find("r_fullbright"))
-			r_fullbright->flags = DVAR_SAVED;
+		dvar->current.string = value;
+		dvar->latched.string = value;
+		dvar->reset.string = value;
+	}
 
-		if (const auto r_glowusetweaks = Find("r_glowusetweaks"))
-			r_glowusetweaks->flags = DVAR_NONE;
+	void Dvar::Shutdown()
+	{
+		for (const StringOverride& saved : Overrides)
+		{
+			saved.Var->current.string = saved.Current;
+			saved.Var->latched.string = saved.Latched;
+			saved.Var->reset.string = saved.Reset;
+		}
+		Overrides.clear();
 
-		if (const auto r_lodBiasRigid = Find("r_lodBiasRigid"))
-			r_lodBiasRigid->domain.value.min = -1000000;
-
-		if (const auto r_lodBiasSkinned = Find("r_lodBiasSkinned"))
-			r_lodBiasSkinned->domain.value.min = -1000000;
-
-		if (const auto r_zfar = Find("r_zfar"))
-			r_zfar->flags = DVAR_SAVED;
+		Dvar_Shutdown_h();
 	}
 
 	dvar_s* Dvar::RegisterInt(const char* name, DvarFlags flags, const char* description, int value, int min, int max)
