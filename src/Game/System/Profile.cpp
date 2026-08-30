@@ -8,25 +8,22 @@ namespace IW3SR
 
 	constexpr uint32_t HomePathDvar = 0xCB1DCC0;
 
-	// CoD4X calls its own format "nondecoded": magic 'ice0', the digest left zeroed and the stats
-	// written in the clear (LiveStorage_ProcessNondecodedStatsData, cl_main.c:5115). Retail writes
-	// 'iwm0' and signs it with an MD5 over statFilePath and the stats. CoD4X reads both - it hands
-	// 'iwm0' straight to retail's own decoder - so only this direction was ever missing, and retail
-	// rejecting 'ice0' is the whole reason the two clients looked like they reset each other.
-	constexpr uint32_t PlainMagic = 0x30656369; // 'ice0', little endian
+	// CoD4X's stats format: plaintext and unsigned (cl_main.c:5115), unlike retail's sealed 'iwm0'.
+	constexpr uint32_t PlainMagic = 0x30656369; // 'ice0'
 
-	// A byte at stats+0x12F records the stat_version the file was written under, and the loader
-	// compares it against the dvar - both clients default it to 10, so this only fires if something
-	// moves it. A mismatch clears the block and opens MENU_RESETCUSTOMCLASSES: "your online stats
-	// have been reset to level 1 by Infinity Ward". Nothing is migrated on the way, so a bump only
-	// ever destroys. The stats have already loaded and been marked valid by this point, so taking
-	// the matching branch leaves nothing half-initialised behind it.
-	//   00579ad9: 74 4e   je 0x579b29   the branch taken when the versions agree
+	constexpr uintptr_t EncodeStatsData = 0x5794E0;
+	constexpr uintptr_t SysTimeGetTime = 0x69136C;
+
+	constexpr int32_t MagicField = offsetof(saveStatData_t, magic);
+	constexpr int32_t SaveTimeField = offsetof(saveStatData_t, saveTime);
+	constexpr int32_t DigestField = offsetof(saveStatData_t, digest);
+	constexpr int32_t DigestSize = sizeof(saveStatData_t::digest);
+
+	// stats+0x12F holds the stat_version the file was written under, and a mismatch wipes the block
+	// and opens MENU_RESETCUSTOMCLASSES. Nothing is migrated on the way, so a bump only ever destroys.
 	constexpr uintptr_t StatsVersionCheck = 0x579AD9;
 
-	// A real stats_t is sparse - a few hundred counters spread through 8192 bytes - so a block with
-	// almost no zeroes in it is not stats at all. Cheap, and it is the one check that tells a good
-	// file from a buffer that was never filled in.
+	// A real stats_t is sparse, so a block without many zeroes was never filled in.
 	static bool LooksLikeStats(const saveStatData_t& data)
 	{
 		const auto* bytes = reinterpret_cast<const byte*>(&data.stats);
@@ -34,10 +31,8 @@ namespace IW3SR
 		return static_cast<size_t>(zeros) > sizeof(data.stats) / 2;
 	}
 
-	// Taken before the game has opened them, so each copy is the last state that survived a run.
-	// Every profile and every mod directory, because which pair is active is not known this early.
-	// A file that does not read as stats is skipped rather than written over a good backup - the
-	// point of the backup is the launch that goes wrong, which is exactly when the source is bad.
+	// Every profile and mod directory, because which pair is active is not known this early. A file
+	// that does not read as stats is skipped: a bad source is what a backup must not overwrite.
 	static void BackupStats(const std::filesystem::path& profiles)
 	{
 		std::error_code error;
@@ -58,15 +53,40 @@ namespace IW3SR
 		}
 	}
 
-	// Kept alive for the process: the engine stores the pointer rather than copying, and frees a
-	// current value only when it differs from both the latched and the reset one - so all three are
-	// set to this and it never tries to free a buffer it did not allocate.
+	// The engine stores this pointer rather than copying, and all three dvar slots point at it so it
+	// never tries to free a buffer it did not allocate.
 	static std::string HomePath;
 
-	// FS_RegisterDvars runs again on every filesystem restart, and an 'ice0' file is read again on
-	// every fs_game change; neither wants its one-off work repeated hundreds of times.
+	// Every call site below runs again on a filesystem restart or an fs_game change; their one-off
+	// work must not.
 	static bool Applied = false;
 	static bool Announced = false;
+	static bool FormatApplied = false;
+
+	// Retail seals the block with XXTEA and an HMAC keyed off the CD key at 0x724B84, which the two
+	// clients do not load from the same place: retail reads HKLM only (0x4FDE70), CoD4X prefers HKCU
+	// (common.c:1646). Different keys mean the other client decodes noise, fails the digest and
+	// quarantines the file, so CoD4X's unkeyed format is written instead. The saveStatData_t arrives
+	// in eax, hence a stub rather than a hook.
+	ASM_FUNCTION(LiveStorage_EncodeStatsData)
+	{
+		using namespace asmjit;
+
+		a.push(x86::esi);
+		a.mov(x86::esi, x86::eax);
+
+		a.mov(x86::dword_ptr(x86::esi, MagicField), PlainMagic);
+		a.call(x86::dword_ptr(SysTimeGetTime));
+		a.mov(x86::dword_ptr(x86::esi, SaveTimeField), x86::eax);
+
+		// Nothing reads the digest in this format, and zeroing beats shipping whatever the stack held.
+		a.xor_(x86::eax, x86::eax);
+		for (int32_t offset = 0; offset < DigestSize; offset += sizeof(uint32_t))
+			a.mov(x86::dword_ptr(x86::esi, DigestField + offset), x86::eax);
+
+		a.pop(x86::esi);
+		a.ret();
+	}
 
 	static bool Resolve(std::filesystem::path& path)
 	{
@@ -81,10 +101,9 @@ namespace IW3SR
 		return !error;
 	}
 
-	// Retail splits the profile directory between the two roots. Save file I/O - active.txt and
-	// config_mp.cfg - goes through fs_homepath (0x55B4D0, 0x55B2D0, 0x55C0E8), but the one search path
-	// entry for "players" is built from fs_basepath, and so is the profile create/exists check. In a
-	// stock install both dvars name the install directory, so nothing ever noticed.
+	// Retail splits the profile directory between both roots: save file I/O goes through fs_homepath,
+	// but the "players" search path entry and the profile create/exists check are built from
+	// fs_basepath. A stock install has the two naming the same directory, so nothing ever noticed.
 	static void UseHomePathForProfiles()
 	{
 		Memory::Set<uint32_t>(0x4FB021, HomePathDvar);
@@ -92,8 +111,7 @@ namespace IW3SR
 		Memory::Set<uint32_t>(0x55E6F9, HomePathDvar);
 	}
 
-	// FS_ReplaceSeparators runs over both sides first, so a path written under one separator still
-	// matches one written under the other.
+	// FS_ReplaceSeparators runs over both sides first, so either separator matches.
 	static bool SamePath(const char* left, const char* right)
 	{
 		const auto normalize = [](const char* value)
@@ -106,10 +124,8 @@ namespace IW3SR
 		return normalize(left) == normalize(right);
 	}
 
-	// Retail's LiveStorage_DecodeStatsData2. An 'ice0' file carries no signature by design, so
-	// verifying one would always fail and take the corrupt path; CoD4X checks nothing but the
-	// fs_game the stats were written under, and neither does this. Every other magic is retail's own
-	// file and keeps retail's signature check untouched.
+	// An 'ice0' file carries no signature by design, so only the fs_game it was written under is
+	// checked, as CoD4X does. Every other magic keeps retail's own verification.
 	char Profile::DecodeStats(saveStatData_t* data, const char* gamedir)
 	{
 		if (!data || data->magic != PlainMagic)
@@ -122,6 +138,15 @@ namespace IW3SR
 				data->statFilePath[0] ? data->statFilePath : "the base game");
 
 		return mine ? 1 : 0;
+	}
+
+	// Harmless under CoD4X, which replaces LiveStorage_UploadStats and never reaches retail's encoder.
+	void Profile::UseCoD4XStatsFormat()
+	{
+		if (std::exchange(FormatApplied, true))
+			return;
+
+		Memory::JMP(EncodeStatsData, ASM_LOAD(LiveStorage_EncodeStatsData));
 	}
 
 	void Profile::RegisterDvars()
@@ -137,8 +162,8 @@ namespace IW3SR
 			Log::WriteLine(Channel::Error, "fs_homepath is not a string dvar; profiles stay in the install.");
 			return;
 		}
-		// Cvar_RegisterString has already applied any +set from the command line, so a current value
-		// that differs from the default is a deliberate choice and outranks this.
+		// Cvar_RegisterString has already applied any +set, so a current value differing from the
+		// default is a deliberate choice and outranks this.
 		if (homepath->current.string && homepath->reset.string
 			&& std::strcmp(homepath->current.string, homepath->reset.string) != 0)
 		{
