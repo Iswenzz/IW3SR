@@ -34,20 +34,30 @@ namespace IW3SR
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
 
-		switch (COD4X_VERSION)
-		{
-		case 211:
-			CoD4X_21_1();
-			break;
-		case 213:
+		// Kill retail's client autoupdate RCE. A server arms autoupdateStarted (0x8F4CCC) during the
+		// handshake, names a file CL_InitDownloads pulls into "updates", and CL_DownloadsComplete then
+		// Sys_QuitAndStartProcess-es it
+		Memory::NOP(0x46B8D0, 10);
+		Memory::NOP(0x46A919, 5);
+
+		// 21.3 is the only build these signatures are written against. Any other keeps the base
+		// patches and simply goes without the CoD4X specific retargets.
+		if (COD4X_VERSION == 213)
 			CoD4X_21_3();
-			break;
-		}
+
+		Autocomplete::Initialize();
+		GHuffman::Initialize();
+
 		CreateWindowExA_h.Install();
 		Cmd_ExecuteSingleCommand_h.Install();
+		Com_InitDvars_h.Install();
+		FS_RegisterDvars_h.Install();
+		LiveStorage_DecodeStatsData_h.Install();
 		Com_PrintMessage_h.Install();
+		CG_CalcViewValues_h.Install();
 		CG_DrawCrosshair_h.Install();
 		CG_PredictPlayerState_Internal_h.Install();
+		CG_RegisterItems_h.Install();
 		CG_RegisterWeapons_h.Install();
 		CG_Respawn_h.Install();
 		CL_InitCGame_h.Install();
