@@ -25,6 +25,7 @@ namespace IW3SR
 	centity_s* cg_entities = Signature(0x84F2D8);
 	int& com_frameTime = Signature(0x1476EFC);
 	int& frame_msec = Signature(0xC5F8D0);
+	int& dvar_modifiedFlags = Signature(0xCBA73F4);
 	float& com_timescaleValue = Signature(0x1435D68);
 	int* g_entities = Signature(0x12885C4);
 	int* g_clients = Signature(0x13255A8);
@@ -89,6 +90,7 @@ namespace IW3SR
 	uint16_t& scr_const_player = Signature(0x1406EEC);
 
 	// Console
+	float* con_versionColor = Signature(0x6BDEF0);
 	float* con_matchtxtColor_currentDvar = Signature(0x6BDF14);
 	float* con_matchtxtColor_currentValue = Signature(0x6BDF24);
 	float* con_matchtxtColor_defaultValue = Signature(0x6BDF34);

@@ -28,6 +28,7 @@ namespace IW3SR
 	API extern centity_s* cg_entities;
 	API extern int& com_frameTime;
 	API extern int& frame_msec;
+	API extern int& dvar_modifiedFlags;
 	API extern float& com_timescaleValue;
 	API extern int* g_entities;
 	API extern int* g_clients;
@@ -91,6 +92,7 @@ namespace IW3SR
 	API extern uint16_t& scr_const_player;
 
 	// Console
+	extern float* con_versionColor;
 	extern float* con_matchtxtColor_currentDvar;
 	extern float* con_matchtxtColor_currentValue;
 	extern float* con_matchtxtColor_defaultValue;

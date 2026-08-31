@@ -18,8 +18,14 @@ namespace IW3SR
 		static void ReallocXAssetPoolsX();
 
 	private:
-		static void CoD4X_21_1();
 		static void CoD4X_21_3();
+
+		static void DisablePunkbuster();
+		static void SkipImproperQuitPrompt();
+		static void SkipOptimalSettingsPrompt();
+		static void WidenColorEscapes();
+		static void RenameConsolePrompt();
+		static void RecolorConsoleText();
 
 		static int GetCoD4XVersion();
 	};

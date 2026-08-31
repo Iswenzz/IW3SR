@@ -1,37 +1,134 @@
 #include "System.hpp"
+#include "AssetDump.hpp"
+#include "Assets.hpp"
 #include "Capture.hpp"
+#include "CdKey.hpp"
+#include "Channel.hpp"
+#include "Demo.hpp"
+#include "Discord.hpp"
+#include "Download.hpp"
+#include "Dvar.hpp"
+#include "Master.hpp"
 #include "Mouse.hpp"
+#include "NetSim.hpp"
 #include "Patch.hpp"
+#include "Protocol.hpp"
+#include "QoS.hpp"
+#include "Rank.hpp"
+#include "Rcon.hpp"
+#include "ServerFilter.hpp"
+#include "Shell.hpp"
+#include "Sound.hpp"
 #include "Timestep.hpp"
+#include "Zones.hpp"
 
 namespace IW3SR
 {
+	void GSystem::Initialize()
+	{
+		if (Initialized)
+			return;
+		Initialized = true;
+
+		Dvar::Initialize();
+		GShell::Initialize();
+		GProtocol::Initialize();
+		NetSim::Initialize();
+		GRcon::Initialize();
+		GMaster::Initialize();
+		GQoS::Initialize();
+		ServerFilter::Initialize();
+		GDownload::Initialize();
+		GChannel::Initialize();
+		GCdKey::Initialize();
+		Timestep::Initialize();
+		Assets::Initialize();
+		GRank::Initialize();
+		GAssetDump::Initialize();
+		Capture::Initialize();
+		Demo::Initialize();
+		GMouse::Initialize();
+		GDiscord::Initialize();
+	}
+
 	void GSystem::Shutdown(int localClientNum)
 	{
 		if (IsShutdown)
 			return;
 		IsShutdown = true;
 
+		NetSim::Shutdown();
+		GRcon::Shutdown();
+		GMaster::Shutdown();
+		GQoS::Shutdown();
+		GDiscord::Shutdown();
+		GDownload::Shutdown();
+		GZones::Shutdown();
+
 		Capture::Shutdown();
 		GMouse::Shutdown();
 		Browser::Shutdown();
 		Application::Shutdown();
+
+		GChannel::Shutdown();
+		GProtocol::Shutdown();
+		Dvar::Unregister();
 	}
 
 	void GSystem::MainLoop(int tickRate)
 	{
 		PbServerProcessEvents_h(tickRate);
+
 		GMouse::Frame();
 		Timestep::Frame();
 		Capture::Tick();
+		Demo::Tick();
+		GCdKey::Frame();
+		GMaster::Frame();
+		GRank::Frame();
+		GRcon::Frame();
+		GDiscord::Frame();
+		GDownload::Frame();
+		GChannel::Frame();
+
+		GProtocol::Frame();
+		GSystem::Tasks.Submit();
 
 		if (ExitRequested)
 			Cmd_ExecuteSingleCommand(0, 0, "quit\n");
 	}
 
+	static bool Borderless(LPCSTR name, DWORD& style, int& x, int& y, int& width, int& height)
+	{
+		if (!name || std::string_view(name) != "CoD4" || (style & WS_CAPTION) == 0)
+			return false;
+
+		const POINT corner = { x, y };
+		const HMONITOR monitor = MonitorFromPoint(corner, MONITOR_DEFAULTTOPRIMARY);
+
+		MONITORINFO info = { sizeof(info) };
+		if (!monitor || !GetMonitorInfoA(monitor, &info))
+			return false;
+
+		const int monitorWidth = info.rcMonitor.right - info.rcMonitor.left;
+		const int monitorHeight = info.rcMonitor.bottom - info.rcMonitor.top;
+
+		if (width < monitorWidth || height < monitorHeight)
+			return false;
+
+		style = WS_POPUP;
+		x = info.rcMonitor.left;
+		y = info.rcMonitor.top;
+		width = monitorWidth;
+		height = monitorHeight;
+		return true;
+	}
+
 	HWND GSystem::CreateMainWindow(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X,
 		int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 	{
+		Borderless(lpClassName, dwStyle, X, Y, nWidth, nHeight);
+
 		HWND hwnd = CreateWindowExA_h(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent,
 			hMenu, hInstance, lpParam);
 
@@ -57,7 +154,7 @@ namespace IW3SR
 			if (result == RawInput::Keyboard)
 				Keyboard::Process(msg, lParam);
 			else if (result == RawInput::Consumed)
-				return DefWindowProc(hWnd, msg, wParam, lParam); // WM_INPUT still needs its cleanup
+				return DefWindowProc(hWnd, msg, wParam, lParam);
 			break;
 		}
 
@@ -93,19 +190,23 @@ namespace IW3SR
 	{
 		std::string command = cmd;
 
-		if (Timestep::Defer(localClientNum, controllerIndex, command))
-			return;
-		if (command == "sr_timestep_test")
-		{
-			Timestep::StartTest();
-			return;
-		}
-		if (command == "sr_timestep_status")
-		{
-			Timestep::Status();
-			return;
-		}
 		if (Capture::Command(command))
+			return;
+		if (GShell::Command(command))
+			return;
+		if (Demo::Command(command))
+			return;
+		if (GSound::Command(command))
+			return;
+		if (GRcon::Command(command))
+			return;
+		if (GMaster::Command(command))
+			return;
+		if (ServerFilter::Command(command))
+			return;
+		if (GAssetDump::Command(command))
+			return;
+		if (GDownload::Command(command))
 			return;
 
 		Cmd_ExecuteSingleCommand_h(localClientNum, controllerIndex, cmd);

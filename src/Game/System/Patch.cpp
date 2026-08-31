@@ -1,4 +1,8 @@
 #include "Patch.hpp"
+#include "Autocomplete.hpp"
+#include "Huffman.hpp"
+#include "PMem.hpp"
+#include "Profile.hpp"
 
 namespace IW3SR
 {
@@ -8,7 +12,17 @@ namespace IW3SR
 		LoadLibraryW_h.Install();
 		LoadLibraryExW_h.Install();
 
-		DisableCoD4X = false;
+		nlohmann::json settings;
+		Environment::Load(settings, "ui.json");
+		DisableCoD4X = settings.value("DisableCoD4X", false);
+
+		if (!DisableCoD4X)
+			return;
+
+		SkipImproperQuitPrompt();
+		SkipOptimalSettingsPrompt();
+		WidenColorEscapes();
+		DisablePunkbuster();
 	}
 
 	void Patch::Base()
@@ -24,9 +38,7 @@ namespace IW3SR
 		// Increase hunkTotal
 		Memory::Set<uint8_t>(0x563A29, 0xF0);
 
-		// Increase gmem
-		Memory::Set<uint8_t>(0x4FF23F, 0x20);
-		Memory::Set<uint8_t>(0x4FF274, 0x20);
+		GPMem::Initialize();
 
 		// Disable <developer 1> condition for debug rendering
 		Memory::NOP(0x6496D8, 3);
@@ -34,25 +46,26 @@ namespace IW3SR
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
 
-		// Kill retail's client autoupdate RCE. A server arms autoupdateStarted (0x8F4CCC) during the
-		// handshake, names a file CL_InitDownloads pulls into "updates", and CL_DownloadsComplete then
-		// Sys_QuitAndStartProcess-es it
+		// Kill retail's client autoupdate RCE
 		Memory::NOP(0x46B8D0, 10);
 		Memory::NOP(0x46A919, 5);
 
-		// 21.3 is the only build these signatures are written against. Any other keeps the base
-		// patches and simply goes without the CoD4X specific retargets.
+		RenameConsolePrompt();
+		RecolorConsoleText();
+
 		if (COD4X_VERSION == 213)
 			CoD4X_21_3();
 
 		Autocomplete::Initialize();
 		GHuffman::Initialize();
 
+		LiveStorage_DecodeStatsData_h.Install();
+		Profile::UseCoD4XStatsFormat();
+
 		CreateWindowExA_h.Install();
 		Cmd_ExecuteSingleCommand_h.Install();
 		Com_InitDvars_h.Install();
 		FS_RegisterDvars_h.Install();
-		LiveStorage_DecodeStatsData_h.Install();
 		Com_PrintMessage_h.Install();
 		CG_CalcViewValues_h.Install();
 		CG_DrawCrosshair_h.Install();
@@ -62,12 +75,22 @@ namespace IW3SR
 		CG_Respawn_h.Install();
 		CL_InitCGame_h.Install();
 		CL_Shutdown_h.Install();
+		Dvar_Shutdown_h.Install();
 		CL_Connect_h.Install();
+		CL_ConnectionlessPacket_h.Install();
+		CL_PacketEvent_h.Install();
+		CL_BeginDownload_h.Install();
+		CL_ParseGamestate_h.Install();
+		CL_SystemInfoChanged_h.Install();
 		CL_Disconnect_h.Install();
+		CL_ReadDemoMessage_h.Install();
 		CL_CreateNewCommands_h.Install();
 		CL_FinishMove_h.Install();
 		DB_LoadXAssets_h.Install();
+		DL_BeginDownload_h.Install();
 		G_GetFreeCorpseSlot_h.Install();
+		DB_FindXAssetHeader_h.Install();
+		Image_LoadFromFile_h.Install();
 		MainWndProc_h.Install();
 		PbServerProcessEvents_h.Install();
 		PM_WalkMove_h.Install();
@@ -80,6 +103,7 @@ namespace IW3SR
 		R_Init_h.Install();
 		R_Shutdown_h.Install();
 		RB_ExecuteRenderCommandsLoop_h.Install();
+		RB_LookupColor_h.Install();
 		RB_EndSceneRendering_h.Install();
 		Script_ScriptMenuResponse_h.Install();
 		UI_VersionNumber_h.Install();
@@ -231,27 +255,6 @@ namespace IW3SR
 		Crash::Patch(COD4X_BASE);
 	}
 
-	void Patch::CoD4X_21_1()
-	{
-		// Increase fps cap for menus and loadscreen
-		Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
-
-		bg_weaponNames = Signature(0x402D8C).DeRef();
-		db_xassetPool = Signature(0x488F05).DeRef();
-		g_poolSize = Signature(0x488F0F).DeRef();
-		XAssetStdCount = Signature(COD4X_BASE + 0x4482BA0);
-
-		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 24 04 00 00 E8"));
-		CL_RestartForDemo_h.Update(Signature(COD4X_BIN, "55 89 E5 81 EC 48 09 00 00 C7 04 24"));
-		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 18 B8 ?? ?? ?? ?? 8B 50 20"));
-		MainWndProc_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 84 00 00 00 C7 04 24 02"));
-		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 38 89 45 E4 8B 45 E4 89 45 F4"));
-		XAssetsInitStdCount_h.Update(COD4X_BASE + 0x82CAF);
-
-		XAssetsInitStdCount_h();
-		ReallocXAssetPoolsX();
-	}
-
 	void Patch::CoD4X_21_3()
 	{
 		// Increase fps cap for menus and loadscreen
@@ -265,7 +268,7 @@ namespace IW3SR
 
 		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 60 E8 ?? ?? ?? ?? 83 F8 02 74 ?? C7 44 24 04"));
 		CL_FinishMove_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 15 ?? ?? ?? ?? 8B 44 24 10 88 50 14 8B 15"));
-		CL_RestartForDemo_h.Update(Signature(COD4X_BIN, "55 89 E5 81 EC 48 09 00 00 C7 04 24"));
+		CL_RestartForDemo_h.Update(Signature(COD4X_BIN, "55 57 56 53 89 C3 81 EC 3C 09 00 00"));
 		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? ?? ?? ?? ?? C7 44 24 08 64 2F 00 00 83 C0 0C C7"));
 		MainWndProc_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 7C C7 04 24 02 00 00 00"));
 		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 44 24 1C 0F B7 00 8D 5C 24 1C"));

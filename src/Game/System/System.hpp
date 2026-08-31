@@ -8,6 +8,9 @@ namespace IW3SR
 	public:
 		static inline bool ExitRequested = false;
 		static inline bool IsShutdown = false;
+		static inline bool Initialized = false;
+
+		static inline Dispatcher Tasks;
 
 		static void Initialize();
 		static void Shutdown(int localClientNum);

@@ -6,12 +6,23 @@
 
 #include "Game/System/Assets.hpp"
 #include "Game/System/Capture.hpp"
+#include "Game/System/Channel.hpp"
 #include "Game/System/Client.hpp"
 #include "Game/System/Console.hpp"
+#include "Game/System/Colors.hpp"
+#include "Game/System/Demo.hpp"
+#include "Game/System/Download.hpp"
+#include "Game/System/Huffman.hpp"
+#include "Game/System/PMem.hpp"
+#include "Game/System/Profile.hpp"
 #include "Game/System/Patch.hpp"
+#include "Game/System/Protocol.hpp"
 #include "Game/System/Server.hpp"
 #include "Game/System/System.hpp"
 #include "Game/System/Timestep.hpp"
+#include "Game/System/Zones.hpp"
+
+#include <cstddef>
 
 // clang-format off
 namespace IW3SR
@@ -28,10 +39,16 @@ namespace IW3SR
 		Com_PrintMessage_h(0x4FCA50, GConsole::Write);
 
 	Hook<void(int localClientNum)>
+		CG_CalcViewValues_h(0x451990, Timestep::CalcViewValues);
+
+	Hook<void(int localClientNum)>
 		CG_DrawCrosshair_h(0x4311A0, GRenderer::Draw2D);
 
 	Hook<void(int localClientNum)>
 		CG_PredictPlayerState_Internal_h(0x447260, Client::Predict);
+
+	Hook<void()>
+		CG_RegisterItems_h(0x454BA0, Assets::RegisterItems);
 
 	Hook<void(const char** weapons, int weaponCount)>
 		CG_RegisterWeapons_h(0x458E20, Assets::RegisterWeapons);
@@ -49,14 +66,34 @@ namespace IW3SR
 		CL_Shutdown_h(0x46FDF0, ASM_LOAD(CL_Shutdown_h));
 
 	Hook<void()>
+		Dvar_Shutdown_h(0x56B7D0, Dvar::Shutdown);
+
+	Hook<void()>
 		CL_Connect_h(0x471050, Client::Connect);
+
+	Hook<void(netadr_t from, void* msg)>
+		CL_ConnectionlessPacket_h(0x46C0D0, ASM_LOAD(CL_ConnectionlessPacket_h));
+
+	Hook<void(netadr_t from)>
+		CL_PacketEvent_h(0x46C320, ASM_LOAD(CL_PacketEvent_h));
+
+	Hook<void(const char* remoteName)>
+		CL_BeginDownload_h(0x46AB00, ASM_LOAD(CL_BeginDownload_h));
+
+	Hook<void(int localClientNum, msg_t* msg)>
+		CL_ParseGamestate_h(0x473CE0, GProtocol::ParseGamestateHook);
+
+	Hook<void()>
+		CL_SystemInfoChanged_h(0x473AB0, GProtocol::SystemInfoChanged);
 
 	Hook<void(int localClientNum)>
 		CL_Disconnect_h(0x4696B0, Client::Disconnect);
 
-	// Lives in CoD4X, the address is resolved per version in Patch.
 	Hook<int(int protocol)>
-		CL_RestartForDemo_h(Capture::RestartForDemo);
+		CL_RestartForDemo_h(uintptr_t(0), ASM_LOAD(CL_RestartForDemo_h));
+
+	Hook<void(int localClientNum)>
+		CL_ReadDemoMessage_h(0x4690C0, Demo::ReadMessage);
 
 	Hook<void FASTCALL(int localClientNum)>
 		CL_CreateNewCommands_h(0x463E00, Timestep::CreateNewCommands);
@@ -66,6 +103,12 @@ namespace IW3SR
 
 	Hook<int()>
 		G_GetFreeCorpseSlot_h(0x4C9770, GServer::GetFreeCorpseSlot);
+
+	Hook<void*(int type, const char* name)>
+		DB_FindXAssetHeader_h(0x489570, Assets::FindXAssetHeader);
+
+	Hook<bool(GfxImage* image, void* reader)>
+		Image_LoadFromFile_h(0x642380, Assets::LoadImageFromFile);
 
 	Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)>
 		IDirect3DDevice9_Reset_h(GRenderer::Reset);
@@ -99,6 +142,21 @@ namespace IW3SR
 
 	Hook<void(playerState_s* ps, pml_t* pml)>
 		PM_CrashLand_h(0x40FFB0, ASM_LOAD(PM_CrashLand_h));
+
+	Hook<int(const char* localName, const char* remoteName)>
+		DL_BeginDownload_h(0x500AE0, GDownload::BeginDownload);
+
+	Hook<void()>
+		Com_InitDvars_h(0x4FEA80, GPMem::InitDvars);
+
+	Hook<void()>
+		FS_RegisterDvars_h(0x55E390, Profile::RegisterDvars);
+
+	Hook<char(saveStatData_t*, const char*)>
+		LiveStorage_DecodeStatsData_h(0x579540, Profile::DecodeStats);
+
+	Hook<void()>
+		RB_LookupColor_h(0x613790, ASM_LOAD(RB_LookupColor_h));
 
 	Hook<void(const char** text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation,
 		int style, const vec4& color)>
@@ -154,6 +212,105 @@ namespace IW3SR
 		a.popad();
 		a.pop(x86::ebp);
 		a.jmp(ASM_TRAMPOLINE(CL_Shutdown_h));
+	}
+
+	ASM_FUNCTION(CL_ConnectionlessPacket_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, -0x04)); // (eax) msg
+		a.mov(x86::eax, x86::dword_ptr(x86::eax, offsetof(msg_t, data))); // msg->data
+		a.add(x86::eax, 0x04);
+		a.push(x86::eax); // packet, past the 0xFFFFFFFF marker
+		a.lea(x86::eax, x86::dword_ptr(x86::ebp, 0x08));
+		a.push(x86::eax); // from
+		a.call(GProtocol::Inspect);
+		a.add(x86::esp, 0x08);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.jmp(ASM_TRAMPOLINE(CL_ConnectionlessPacket_h));
+	}
+
+	ASM_FUNCTION(CL_PacketEvent_h)
+	{
+		Label consumed = a.newLabel();
+
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, -0x0C)); // (edx) time
+		a.push(x86::dword_ptr(x86::ebp, -0x1C)); // (esi) msg
+		a.lea(x86::eax, x86::dword_ptr(x86::ebp, 0x08));
+		a.push(x86::eax); // from
+		a.call(GChannel::PacketEvent);
+		a.add(x86::esp, 0x0C);
+		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax); // returned through popad's eax slot
+
+		a.popad();
+		a.pop(x86::ebp);
+
+		a.test(x86::eax, x86::eax);
+		a.jnz(consumed);
+		a.jmp(ASM_TRAMPOLINE(CL_PacketEvent_h));
+
+		a.bind(consumed);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CL_RestartForDemo_h)
+	{
+		Label restart = a.newLabel();
+
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (eax) protocol
+		a.call(Capture::RestartForDemo);
+		a.add(x86::esp, 0x04);
+
+		a.test(x86::eax, x86::eax);
+		a.jnz(restart);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.xor_(x86::eax, x86::eax);
+		a.ret();
+
+		a.bind(restart);
+		a.popad();
+		a.pop(x86::ebp);
+		a.jmp(ASM_TRAMPOLINE(CL_RestartForDemo_h));
+	}
+
+	ASM_FUNCTION(CL_BeginDownload_h)
+	{
+		Label allowed = a.newLabel();
+
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x08));	 // remoteName
+		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (eax) localName
+		a.call(GDownload::AllowBegin);
+		a.add(x86::esp, 0x08);
+
+		a.test(x86::eax, x86::eax);
+		a.jnz(allowed);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+
+		a.bind(allowed);
+		a.popad();
+		a.pop(x86::ebp);
+		a.jmp(ASM_TRAMPOLINE(CL_BeginDownload_h));
 	}
 
 	ASM_FUNCTION(CG_Respawn_h)
@@ -214,6 +371,18 @@ namespace IW3SR
 		a.jmp(ASM_TRAMPOLINE(R_AddCmdDrawText_h));
 	}
 
+	ASM_FUNCTION(RB_LookupColor_h)
+	{
+		a.pushad();
+		a.push(x86::edx);
+		a.movzx(x86::eax, x86::cl);
+		a.push(x86::eax);
+		a.call(Colors::Lookup);
+		a.add(x86::esp, 0x08);
+		a.popad();
+		a.ret();
+	}
+
 	ASM_FUNCTION(RB_ExecuteRenderCommandsLoop_h)
 	{
 		a.push(x86::ebp);
@@ -227,5 +396,123 @@ namespace IW3SR
 		a.popad();
 		a.pop(x86::ebp);
 		a.jmp(ASM_TRAMPOLINE(RB_ExecuteRenderCommandsLoop_h));
+	}
+
+	ASM_FUNCTION(MSG_ReadBitsCompress_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C)); // readsize
+		a.push(x86::dword_ptr(x86::ebp, 0x08)); // output
+		a.push(x86::eax);						// input
+		a.mov(x86::ecx, reinterpret_cast<uintptr_t>(&GHuffman::Decompress));
+		a.call(x86::ecx);
+
+		a.mov(x86::esp, x86::ebp);
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(ParseConfigClient_h)
+	{
+		a.lea(x86::eax, x86::dword_ptr(x86::esp, 0x10));
+		a.pushad();
+		a.push(x86::eax);
+		a.call(GProtocol::ParseConfigClient);
+		a.add(x86::esp, 0x04);
+		a.popad();
+
+		a.push(imm(0x474838));
+		a.ret();
+	}
+
+	ASM_FUNCTION(CL_GetSnapshot_h)
+	{
+		Label empty = a.newLabel();
+
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C)); // snapshot
+		a.push(x86::dword_ptr(x86::ebp, 0x08)); // snapshotNumber
+		a.mov(x86::edx, 0x45AB90);
+		a.call(x86::edx);
+		a.add(x86::esp, 0x08);
+
+		a.test(x86::eax, x86::eax);
+		a.jz(empty);
+
+		a.pushad();
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));
+		a.call(GProtocol::ApplySnapshotNames);
+		a.add(x86::esp, 0x04);
+		a.popad();
+
+		a.bind(empty);
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CL_ServerCommand_h)
+	{
+		a.mov(x86::byte_ptr(x86::esi, 0x3FF), imm(0));
+
+		a.pushad();
+		a.push(x86::esi);
+		a.call(GProtocol::ServerCommand);
+		a.add(x86::esp, 0x04);
+		a.popad();
+
+		a.ret();
+	}
+
+	ASM_FUNCTION(ExtendedHeader_h)
+	{
+		const uintptr_t fields[] = { 0xC84FE4, 0x914E1C, 0x914E20,
+			reinterpret_cast<uintptr_t>(&ExtendedConfigDataSequence) };
+
+		a.push(x86::ebx);
+		a.push(x86::ebp);
+		a.push(x86::esi);
+		a.push(x86::edi);
+
+		for (uintptr_t field : fields)
+		{
+			a.mov(x86::eax, x86::esi);
+			a.mov(x86::edi, x86::dword_ptr(field));
+			a.mov(x86::edx, 0x5054A0);
+			a.call(x86::edx);
+		}
+
+		a.pop(x86::edi);
+		a.pop(x86::esi);
+		a.pop(x86::ebp);
+		a.pop(x86::ebx);
+		a.ret();
+	}
+
+	ASM_FUNCTION(ReadOriginFloat_h)
+	{
+		a.push(x86::eax);
+		a.call(GProtocol::ReadOriginFloat);
+		a.add(x86::esp, 0x04);
+		a.ret();
+	}
+
+	ASM_FUNCTION(DB_FileSize_h)
+	{
+		a.push(x86::eax);							  // the name, for the second call
+		a.push(x86::dword_ptr(x86::esp, 0x08));		  // the path kind, back where the original wants it
+		a.mov(x86::edx, 0x48B940);
+		a.call(x86::edx);
+		a.add(x86::esp, 0x04);
+		a.pop(x86::ecx);							  // the name again; the original may have clobbered it
+
+		a.push(x86::eax);							  // the size it found, zero when it found nothing
+		a.push(x86::ecx);
+		a.call(GZones::FileSize);
+		a.add(x86::esp, 0x08);
+		a.ret();
 	}
 }

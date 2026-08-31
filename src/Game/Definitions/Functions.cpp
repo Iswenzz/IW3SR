@@ -18,12 +18,48 @@ namespace IW3SR
 	Function<int(const char* name, void* callback)>
 		BG_RegisterWeapon = 0x416660;
 
+	Function<void(int itemIndex)>
+		CG_RegisterItemVisuals = 0x454320;
+
 	Function<void(trace_t* result, const vec3& start, const vec3& mins, const vec3& maxs,
 		const vec3& end, int skipEntity, int tracemask)>
 		CG_Trace = 0x45A230;
 
+	Function<void(int localClientNum, const char* text)>
+		Cbuf_AddText = ASM_LOAD(Cbuf_AddText);
+
+	Function<void()>
+		Com_ClientDObjClearAllSkel = 0x500F70;
+
+	Function<void(int localClientNum)>
+		CL_ClearState = ASM_LOAD(CL_ClearState);
+
+	Function<void()>
+		CL_DemoCompleted = 0x468DF0;
+
+	Function<void(int localClientNum)>
+		CL_DownloadsComplete = ASM_LOAD(CL_DownloadsComplete);
+
+	Function<void(int localClientNum)>
+		CL_InitDownloads = ASM_LOAD(CL_InitDownloads);
+
+	Function<void()>
+		CL_ReadDemoArchive = 0x468EA0;
+
+	Function<void(int localClientNum)>
+		CL_ReadDemoData = 0x468F90;
+
+	Function<void(netadr_t from, msg_t* msg)>
+		CL_ServersResponsePacket = ASM_LOAD(CL_ServersResponsePacket);
+
+	Function<void(const char* mapName, const char* gametype)>
+		CL_SetupForNewServerMap = ASM_LOAD(CL_SetupForNewServerMap);
+
 	Function<void(int localClientNum, int controllerIndex, const char* text)>
 		Cmd_ExecuteSingleCommand = 0x4F9AB0;
+
+	Function<void(int code, const char* format, const char* message)>
+		Com_Error = 0x4FD330;
 
 	Function<char*(const char** pData, bool allowLineBreaks)>
 		Com_ParseExt = 0x570FB0;
@@ -33,6 +69,9 @@ namespace IW3SR
 
 	Function<bool(const char* zoneName, DB_FILE_EXISTS_PATH path)>
 		DB_FileExists = ASM_LOAD(DB_FileExists);
+
+	Function<uint8_t(int type, const char* name)>
+		DB_IsXAssetDefault = 0x4898A0;
 
 	Function<void(const char *localName, const char *remoteName)>
 		DL_BeginDownload = 0x500AE0;
@@ -76,17 +115,47 @@ namespace IW3SR
 		float r, float g, int b, int a, int null4, int null5)>
 		Dvar_RegisterVariantColor = ASM_LOAD(Dvar_RegisterVariant);
 
+	Function<void(const char* name, const char* value, int source)>
+		Dvar_SetFromStringByNameFromSource = ASM_LOAD(Dvar_SetFromStringByNameFromSource);
+
+	Function<void(const char* path, const char* dir)>
+		FS_AddIwdFilesForGameDirectory = 0x55D8B0;
+
+	Function<int(void* buffer, int length, int file)>
+		FS_Read = 0x55C120;
+
+	Function<int(const char* filename)>
+		FS_SV_FOpenFileWrite = 0x502BF0;
+
 	Function<void(gentity_s* ent)>
 		G_FreeEntity = 0x4E3A50;
 
 	Function<void(const vec3& end, int passEntityNum, trace_t* results, const vec3& start, int contentMask)>
 		G_MissileTrace = ASM_LOAD(G_MissileTrace);
 
+	Function<bool FASTCALL(GfxImage* image)>
+		Image_SetDefaultTexture = 0x616DB0;
+
+	Function<void(char* infoString, const char* key, const char* value)>
+		Info_SetValueForKey = 0x572280;
+
 	Function<bool(pmove_t* pm, pml_t* pml)>
 		Jump_Check = ASM_LOAD(Jump_Check);
 
 	Function<Material*(const char* material, int size)>
 		Material_RegisterHandle = ASM_LOAD(Material_RegisterHandle);
+
+	Function<int(const uint8_t* input, uint8_t* output, int readsize)>
+		MSG_ReadBitsCompress = ASM_LOAD(MSG_ReadBitsCompress);
+
+	Function<void(msg_t* msg, entityState_s* to, const entityState_s* from, int number)>
+		MSG_ReadDeltaEntity = ASM_LOAD(MSG_ReadDeltaEntity);
+
+	Function<char*(msg_t* msg)>
+		MSG_ReadStringLine = ASM_LOAD(MSG_ReadStringLine);
+
+	Function<bool(netsrc_t sock, int length, const void* data, netadr_t to)>
+		NET_SendPacket = ASM_LOAD(NET_SendPacket);
 
 	Function<void(pmove_t* pm)>
 		PmoveSingle = 0x4143A0;
@@ -168,6 +237,15 @@ namespace IW3SR
 
 	Function<void()>
 		RB_EndTessSurface = 0x61A2F0;
+
+	Function<void(unsigned int track, int fadeTime)>
+		SND_StopBackground = ASM_LOAD(SND_StopBackground);
+
+	Function<bool(int length, const void* data, netadr_t to)>
+		Sys_SendPacket = ASM_LOAD(Sys_SendPacket);
+
+	Function<void(int localClientNum)>
+		UI_CloseAllMenus = 0x54B060;
 }
 // clang-format on
 namespace IW3SR
@@ -265,6 +343,23 @@ namespace IW3SR
 		a.ret();
 	}
 
+	ASM_FUNCTION(Dvar_SetFromStringByNameFromSource)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x10));			 // source
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // value
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // name
+		a.call(0x56D0A0);
+		a.add(x86::esp, 0x08);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
 	ASM_FUNCTION(G_MissileTrace)
 	{
 		a.push(x86::ebp);
@@ -311,6 +406,158 @@ namespace IW3SR
 		a.mov(x86::ecx, x86::dword_ptr(x86::ebp, 0x08)); // material
 		a.call(0x5F2AA0);
 		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(MSG_ReadBitsCompress)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+
+		a.push(x86::dword_ptr(x86::ebp, 0x10));			 // readsize
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // output
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // input
+		a.mov(x86::ecx, 0x5053C0);						 // Scratch, the callee reads eax and the stack only
+		a.call(x86::ecx);
+
+		a.mov(x86::esp, x86::ebp);
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(MSG_ReadDeltaEntity)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+
+		a.push(x86::dword_ptr(x86::ebp, 0x14));			 // number
+		a.push(x86::dword_ptr(x86::ebp, 0x10));			 // from
+		a.push(imm(0));									 // time
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x0C)); // to
+		a.mov(x86::ecx, x86::dword_ptr(x86::ebp, 0x08)); // msg
+		a.mov(x86::edx, 0x506E20);
+		a.call(x86::edx);
+
+		a.mov(x86::esp, x86::ebp);
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(MSG_ReadStringLine)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::edx, x86::dword_ptr(x86::ebp, 0x08)); // msg
+		a.call(0x505890);
+		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(Cbuf_AddText)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+
+		a.mov(x86::ecx, x86::dword_ptr(x86::ebp, 0x08)); // localClientNum
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x0C)); // text
+		a.mov(x86::edx, 0x4F8D90);
+		a.call(x86::edx);
+
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CL_SetupForNewServerMap)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.push(x86::edi);
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // gametype
+		a.mov(x86::edi, x86::dword_ptr(x86::ebp, 0x08)); // mapName
+		a.mov(x86::eax, 0x470580);
+		a.call(x86::eax);
+		a.add(x86::esp, 0x04);
+
+		a.pop(x86::edi);
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CL_ClearState)
+	{
+		a.push(x86::esi);
+		a.mov(x86::esi, x86::dword_ptr(x86::esp, 0x08)); // localClientNum
+		a.mov(x86::eax, 0x461DA0);
+		a.call(x86::eax);
+		a.pop(x86::esi);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CL_DownloadsComplete)
+	{
+		a.push(x86::edi);
+		a.mov(x86::edi, x86::dword_ptr(x86::esp, 0x08)); // localClientNum
+		a.mov(x86::eax, 0x46A8D0);
+		a.call(x86::eax);
+		a.pop(x86::edi);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CL_InitDownloads)
+	{
+		a.mov(x86::eax, x86::dword_ptr(x86::esp, 0x04)); // localClientNum
+		a.mov(x86::ecx, 0x46AC60);
+		a.call(x86::ecx);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CL_ServersResponsePacket)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x18)); // from, copied by value
+		a.push(x86::dword_ptr(x86::ebp, 0x14));
+		a.push(x86::dword_ptr(x86::ebp, 0x10));
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));
+		a.push(x86::dword_ptr(x86::ebp, 0x08));
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x1C)); // msg
+		a.call(0x4714B0);
+		a.add(x86::esp, 0x14);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(NET_SendPacket)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x24)); // to, copied by value
+		a.push(x86::dword_ptr(x86::ebp, 0x20));
+		a.push(x86::dword_ptr(x86::ebp, 0x1C));
+		a.push(x86::dword_ptr(x86::ebp, 0x18));
+		a.push(x86::dword_ptr(x86::ebp, 0x14));
+		a.push(x86::dword_ptr(x86::ebp, 0x08));			 // sock
+		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x0C)); // length
+		a.mov(x86::edi, x86::dword_ptr(x86::ebp, 0x10)); // data
+		a.call(0x508B40);
+		a.movzx(x86::eax, x86::al);
+		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
+		a.add(x86::esp, 0x18);
 
 		a.popad();
 		a.pop(x86::ebp);
@@ -571,6 +818,40 @@ namespace IW3SR
 		a.call(0x5F1EE0);
 		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
 		a.add(x86::esp, 0x08);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(SND_StopBackground)
+	{
+		a.mov(x86::ecx, 0x5C4770);						 // Scratch, the callee reads edx and the stack only
+		a.mov(x86::edx, x86::dword_ptr(x86::esp, 0x04)); // track
+		a.mov(x86::eax, x86::dword_ptr(x86::esp, 0x08)); // fadeTime
+		a.push(x86::eax);
+		a.call(x86::ecx);
+		a.add(x86::esp, 0x04);
+		a.ret();
+	}
+
+	ASM_FUNCTION(Sys_SendPacket)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x20)); // to, copied by value
+		a.push(x86::dword_ptr(x86::ebp, 0x1C));
+		a.push(x86::dword_ptr(x86::ebp, 0x18));
+		a.push(x86::dword_ptr(x86::ebp, 0x14));
+		a.push(x86::dword_ptr(x86::ebp, 0x10));
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // data
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // length
+		a.call(0x577F50);
+		a.movzx(x86::eax, x86::al);
+		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
+		a.add(x86::esp, 0x18);
 
 		a.popad();
 		a.pop(x86::ebp);

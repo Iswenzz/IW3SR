@@ -22,12 +22,48 @@ namespace IW3SR
 	API extern Function<int(const char* name, void* callback)>
 		BG_RegisterWeapon;
 
+	API extern Function<void(int itemIndex)>
+		CG_RegisterItemVisuals;
+
 	API extern Function<void(trace_t* result, const vec3& start, const vec3& mins, const vec3& maxs,
 		const vec3& end, int skipEntity, int tracemask)>
 		CG_Trace;
 
+	extern Function<void(int localClientNum, const char* text)>
+		Cbuf_AddText;
+
+	extern Function<void()>
+		Com_ClientDObjClearAllSkel;
+
+	extern Function<void(int localClientNum)>
+		CL_ClearState;
+
+	extern Function<void()>
+		CL_DemoCompleted;
+
+	extern Function<void(int localClientNum)>
+		CL_DownloadsComplete;
+
+	extern Function<void(int localClientNum)>
+		CL_InitDownloads;
+
+	extern Function<void()>
+		CL_ReadDemoArchive;
+
+	extern Function<void(int localClientNum)>
+		CL_ReadDemoData;
+
+	extern Function<void(netadr_t from, msg_t* msg)>
+		CL_ServersResponsePacket;
+
+	extern Function<void(const char* mapName, const char* gametype)>
+		CL_SetupForNewServerMap;
+
 	extern Function<void(int localClientNum, int controllerIndex, const char* text)>
 		Cmd_ExecuteSingleCommand;
+
+	API extern Function<void(int code, const char* format, const char* message)>
+		Com_Error;
 
 	extern Function<char*(const char** pData, bool allowLineBreaks)>
 		Com_ParseExt;
@@ -37,6 +73,9 @@ namespace IW3SR
 
 	API extern Function<bool(const char* zoneName, DB_FILE_EXISTS_PATH path)>
 		DB_FileExists;
+
+	extern Function<uint8_t(int type, const char* name)>
+		DB_IsXAssetDefault;
 
 	extern Function<void(const char *localName, const char *remoteName)>
 		DL_BeginDownload;
@@ -80,17 +119,47 @@ namespace IW3SR
 		float r, float g, int b, int a, int null4, int null5)>
 		Dvar_RegisterVariantColor;
 
+	extern Function<void(const char* name, const char* value, int source)>
+		Dvar_SetFromStringByNameFromSource;
+
+	extern Function<void(const char* path, const char* dir)>
+		FS_AddIwdFilesForGameDirectory;
+
+	extern Function<int(void* buffer, int length, int file)>
+		FS_Read;
+
+	extern Function<int(const char* filename)>
+		FS_SV_FOpenFileWrite;
+
 	API extern Function<void(gentity_s* ent)>
 		G_FreeEntity;
 
 	API extern Function<void(const vec3& end, int passEntityNum, trace_t* results, const vec3& start, int contentMask)>
 		G_MissileTrace;
 
+	extern Function<bool FASTCALL(GfxImage* image)>
+		Image_SetDefaultTexture;
+
+	extern Function<void(char* infoString, const char* key, const char* value)>
+		Info_SetValueForKey;
+
 	API extern Function<bool(pmove_t* pm, pml_t* pml)>
 		Jump_Check;
 
 	API extern Function<Material*(const char* material, int size)>
 		Material_RegisterHandle;
+
+	extern Function<int(const uint8_t* input, uint8_t* output, int readsize)>
+		MSG_ReadBitsCompress;
+
+	extern Function<void(msg_t* msg, entityState_s* to, const entityState_s* from, int number)>
+		MSG_ReadDeltaEntity;
+
+	extern Function<char*(msg_t* msg)>
+		MSG_ReadStringLine;
+
+	extern Function<bool(netsrc_t sock, int length, const void* data, netadr_t to)>
+		NET_SendPacket;
 
 	API extern Function<void(pmove_t* pm)>
 		PmoveSingle;
@@ -149,7 +218,6 @@ namespace IW3SR
 	API extern Function<void()>
 		R_SyncRenderThread;
 
-	// drawType: bit 0 renders, bit 1 presents. Pass 1 for an offscreen pass.
 	API extern Function<void(uint32_t drawType)>
 		R_IssueRenderCommands;
 
@@ -173,18 +241,38 @@ namespace IW3SR
 
 	API extern Function<void()>
 		RB_EndTessSurface;
+
+	extern Function<void(unsigned int track, int fadeTime)>
+		SND_StopBackground;
+
+	extern Function<bool(int length, const void* data, netadr_t to)>
+		Sys_SendPacket;
+
+	extern Function<void(int localClientNum)>
+		UI_CloseAllMenus;
 }
 // clang-format on
 namespace IW3SR
 {
 	ASM_FUNCTION(BG_AddWeapon);
 	ASM_FUNCTION(BG_EvaluateTrajectory);
+	ASM_FUNCTION(Cbuf_AddText);
+	ASM_FUNCTION(CL_ClearState);
+	ASM_FUNCTION(CL_DownloadsComplete);
+	ASM_FUNCTION(CL_InitDownloads);
 	ASM_FUNCTION(DB_FileExists);
 	ASM_FUNCTION(Dvar_FindVar);
 	ASM_FUNCTION(Dvar_RegisterVariant);
+	ASM_FUNCTION(Dvar_SetFromStringByNameFromSource);
 	ASM_FUNCTION(G_MissileTrace);
 	ASM_FUNCTION(Jump_Check);
 	ASM_FUNCTION(Material_RegisterHandle);
+	ASM_FUNCTION(MSG_ReadBitsCompress);
+	ASM_FUNCTION(MSG_ReadDeltaEntity);
+	ASM_FUNCTION(MSG_ReadStringLine);
+	ASM_FUNCTION(CL_ServersResponsePacket);
+	ASM_FUNCTION(CL_SetupForNewServerMap);
+	ASM_FUNCTION(NET_SendPacket);
 	ASM_FUNCTION(PM_AddTouchEnt);
 	ASM_FUNCTION(PM_CorrectAllSolid);
 	ASM_FUNCTION(PM_CrashLand);
@@ -200,4 +288,6 @@ namespace IW3SR
 	ASM_FUNCTION(R_SetLodOrigin);
 	ASM_FUNCTION(R_RenderScene);
 	ASM_FUNCTION(R_TextWidth);
+	ASM_FUNCTION(SND_StopBackground);
+	ASM_FUNCTION(Sys_SendPacket);
 }

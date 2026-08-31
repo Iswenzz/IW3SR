@@ -2,6 +2,13 @@
 
 #include "Game/Renderer/Renderer.hpp"
 #include "Game/System/Capture.hpp"
+#include "Game/System/CdKey.hpp"
+#include "Game/System/Channel.hpp"
+#include "Game/System/Dvar.hpp"
+#include "Game/System/Net.hpp"
+#include "Game/System/Protocol.hpp"
+#include "Game/System/QoS.hpp"
+#include "Game/System/ServerFilter.hpp"
 #include "Game/System/Timestep.hpp"
 
 namespace IW3SR
@@ -9,6 +16,8 @@ namespace IW3SR
 	void Client::Initialize(int localClientNum)
 	{
 		CL_InitCGame_h(localClientNum);
+
+		Dvar::InitializeGame();
 		GRenderer::UpdateMaterials();
 
 		auto& players = Player::GetAll();
@@ -18,11 +27,28 @@ namespace IW3SR
 		Console::Commands.clear();
 		for (int i = 0; i <= dvarCount - 1; i++)
 			Console::AddCommand(dvars[i]->name);
+
+		Console::AddCommand("replayDemo");
+		Console::AddCommand("unset");
 	}
 
 	void Client::Connect()
 	{
+		GCdKey::Protect();
+
 		CL_Connect_h();
+
+		if (ServerFilter::Check(clc.serverAddress, FilterConnect))
+		{
+			Com_PrintMessage(CON_CHANNEL_ERROR,
+				std::format("^1{} is on the server filter list.\n", Net::ToString(clc.serverAddress)).c_str(), 0);
+			if (client_ui)
+				client_ui->connectionState = CA_DISCONNECTED;
+			return;
+		}
+		GProtocol::Connect();
+		GChannel::Connect();
+		GQoS::Connected();
 		Timestep::Reset();
 
 		EventClientConnect event;
@@ -34,6 +60,8 @@ namespace IW3SR
 		CL_Disconnect_h(localClientNum);
 		Timestep::Reset();
 		Capture::Disconnected();
+		GQoS::Disconnected();
+		GChannel::Disconnect();
 
 		EventClientDisconnect event;
 		Application::Dispatch(event);
@@ -88,5 +116,4 @@ namespace IW3SR
 			deltaAngles[2] += delta.z;
 		}
 	}
-
 }

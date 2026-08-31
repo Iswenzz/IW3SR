@@ -1,23 +1,79 @@
 target_sources(IW3SR PRIVATE
+	AssetDump.hpp
+	AssetDump.cpp
 	Assets.hpp
 	Assets.cpp
+	Autocomplete.hpp
+	Autocomplete.cpp
 	Capture.hpp
 	Capture.cpp
+	CdKey.hpp
+	CdKey.cpp
+	Channel.hpp
+	Channel.cpp
+	Colors.hpp
+	Colors.cpp
+	Profile.hpp
+	Profile.cpp
 	Client.hpp
 	Client.cpp
 	Console.hpp
 	Console.cpp
+	Crypto.hpp
+	Crypto.cpp
+	Demo.hpp
+	Demo.cpp
+	Discord.hpp
+	Discord.cpp
+	DiscordIPC.hpp
+	DiscordIPC.cpp
+	Download.hpp
+	Download.cpp
 	Dvar.hpp
 	Dvar.cpp
+	Huffman.hpp
+	Huffman.cpp
+	Master.hpp
+	Master.cpp
 	Mouse.hpp
 	Mouse.cpp
+	Net.hpp
+	Net.cpp
+	NetSim.hpp
+	NetSim.cpp
+	PMem.hpp
+	PMem.cpp
+	Protocol.hpp
+	Protocol.cpp
+	QoS.hpp
+	QoS.cpp
+	Query.hpp
+	Query.cpp
+	Rank.hpp
+	Rank.cpp
+	Rcon.hpp
+	Rcon.cpp
 	Schedule.hpp
 	Schedule.cpp
 	Patch.hpp
 	Patch.cpp
 	Server.hpp
 	Server.cpp
+	ServerFilter.hpp
+	ServerFilter.cpp
+	Shell.hpp
+	Shell.cpp
+	Sound.hpp
+	Sound.cpp
 	System.hpp
 	System.cpp
 	Timestep.hpp
-	Timestep.cpp)
+	Timestep.cpp
+	Transport.hpp
+	Transport.cpp
+	Zones.hpp
+	Zones.cpp)
+
+if(BUILD_TESTING)
+	add_subdirectory(__test__)
+endif()

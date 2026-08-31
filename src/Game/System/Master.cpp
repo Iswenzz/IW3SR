@@ -205,7 +205,9 @@ namespace IW3SR
 	std::vector<uint8_t> BuildGetServersResponse(std::span<const MasterEntry> entries)
 	{
 		// Split so the trailing hex escape cannot swallow the 'g' that follows it.
-		static constexpr std::string_view tag = "\xFF\xFF\xFF\xFF" "getserversResponse";
+		static constexpr std::string_view tag =
+			"\xFF\xFF\xFF\xFF"
+			"getserversResponse";
 
 		std::vector<uint8_t> packet;
 		packet.reserve(tag.size() + entries.size() * 7 + 4);
@@ -329,8 +331,8 @@ namespace IW3SR
 			return false;
 
 		std::lock_guard lock(Mutex);
-		return std::ranges::any_of(Authorities, [&](const netadr_t& authority)
-			{ return Net::Key(authority) == Net::Key(address); });
+		return std::ranges::any_of(Authorities,
+			[&](const netadr_t& authority) { return Net::Key(authority) == Net::Key(address); });
 	}
 
 	bool GMaster::IsBusy()
@@ -350,11 +352,11 @@ namespace IW3SR
 		// Asking as protocol 6 gets an empty list back - the masters answer that with "\EOF" and only
 		// list servers to a client claiming the extended protocol. So this is sr_extendedProtocol's
 		// question, not one of its own: the list is the servers this client is willing to speak to.
-		const int protocol
-			= GProtocol::CanSpeakExtended() ? GProtocol::ExtendedVersion : GProtocol::LegacyVersion;
+		const int protocol = GProtocol::UsingExtended() ? GProtocol::ExtendedVersion : GProtocol::LegacyVersion;
 		const bool ping = query && (!PingDvar || PingDvar->current.enabled);
 
-		Start([=]
+		Start(
+			[=]
 			{
 				// Dropped before the query rather than after it, so a master that cannot be reached or
 				// answers with nothing leaves an empty list instead of the last one that worked.
@@ -455,7 +457,8 @@ namespace IW3SR
 		if (address.empty())
 			return false;
 
-		Start([=]
+		Start(
+			[=]
 			{
 				Listing = false;
 

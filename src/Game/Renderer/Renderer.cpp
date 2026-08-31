@@ -6,9 +6,24 @@
 #include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/UI/About.hpp"
 #include "Game/Renderer/UI/UI.hpp"
+#include "Game/System/AssetDump.hpp"
 #include "Game/System/Assets.hpp"
 #include "Game/System/Capture.hpp"
+#include "Game/System/CdKey.hpp"
+#include "Game/System/Channel.hpp"
+#include "Game/System/Demo.hpp"
+#include "Game/System/Discord.hpp"
+#include "Game/System/Download.hpp"
+#include "Game/System/Master.hpp"
 #include "Game/System/Mouse.hpp"
+#include "Game/System/NetSim.hpp"
+#include "Game/System/Patch.hpp"
+#include "Game/System/Protocol.hpp"
+#include "Game/System/QoS.hpp"
+#include "Game/System/Rank.hpp"
+#include "Game/System/Rcon.hpp"
+#include "Game/System/ServerFilter.hpp"
+#include "Game/System/Shell.hpp"
 #include "Game/System/System.hpp"
 #include "Game/System/Timestep.hpp"
 
@@ -21,11 +36,9 @@ namespace IW3SR
 		IDirect3DDevice9_Reset_h.Update(VTABLE(dx->device, 16));
 		IDirect3DDevice9_EndScene_h.Update(VTABLE(dx->device, 42));
 
-		Dvar::Initialize();
-		Timestep::Initialize();
-		Assets::Initialize();
-		Capture::Initialize();
-		GMouse::Initialize();
+		GSystem::Initialize();
+
+		Dvar::InitializeRenderer();
 		GPortal::Initialize();
 		Modules::Deserialize();
 

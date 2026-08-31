@@ -923,7 +923,7 @@ namespace IW3SR
 		PMF_TIME_HARDLANDING = BIT(7),
 		PMF_TIME_KNOCKBACK = BIT(8),
 		PMF_PRONEMOVE_OVERRIDDEN = BIT(9),
-		PMF_JUMP_HELD = BIT(10),
+		PMF_RESPAWNED = BIT(10),
 		PMF_FROZEN = BIT(11),
 		PMF_NO_PRONE = BIT(12),
 		PMF_LADDER_FALL = BIT(13),
@@ -4096,6 +4096,22 @@ namespace IW3SR
 		char ipx[10];
 	};
 
+	struct msg_t
+	{
+		int overflowed;
+		int readOnly;
+		uint8_t* data;
+		uint8_t* splitData;
+		int maxsize;
+		int cursize;
+		int splitSize;
+		int readcount;
+		int bit;
+		int lastRefEntity;
+	};
+
+	static_assert(sizeof(msg_t) == 0x28);
+
 	struct netProfilePacket_t
 	{
 		int iTime;
@@ -5210,7 +5226,8 @@ namespace IW3SR
 		short minPing;
 		short maxPing;
 		short ping;
-		char pad_0x002C[0x5];
+		uint32_t queryTime;
+		char pad_0x0030[0x1];
 		char hostName[32];
 		char mapName[32];
 		char game[24];
@@ -5269,10 +5286,10 @@ namespace IW3SR
 		float mapCenter[3];
 		int numlocalservers;
 		serverInfo_t localServers[128];
-		int ui_displayedServerAmount;
-		int ui_totalServerAmount;
-		int ui_someothercrap;
-		int waitglobalserverresponse;
+		int currentPingServer;
+		int countPingServers;
+		int totalSeenServers;
+		int globalServerRequestTime;
 		int numglobalservers;
 		serverInfo_t globalServers[20000];
 		int numfavoriteservers;
@@ -6159,8 +6176,8 @@ namespace IW3SR
 		float tagMat[4][3];
 	};
 
-	// Slot of the server corpse pool recycled by the clonePlayer() script call.
-	// Only the fields the engine's slot picker touches are mapped.
+	// Slot of the server corpse pool recycled by clonePlayer(). Only the fields the engine's slot
+	// picker touches are mapped.
 	struct corpseInfo_t
 	{
 		char pad[4];
@@ -6597,6 +6614,16 @@ namespace IW3SR
 		int dataCount;
 	};
 
+	struct constConfigString_t
+	{
+		int index;
+		const char* string;
+		int null1;
+		int null2;
+	};
+
+	static_assert(sizeof(constConfigString_t) == 16);
+
 	enum StanceState
 	{
 		CL_STANCE_STAND = 0x0,
@@ -6952,6 +6979,15 @@ namespace IW3SR
 		stats_t stats;
 		byte dataValid;
 		byte writeFlag;
+	};
+
+	struct saveStatData_t
+	{
+		int magic;
+		int saveTime;
+		byte digest[16];
+		char statFilePath[260];
+		stats_t stats;
 	};
 }
 
