@@ -49,15 +49,19 @@ namespace IW3SR
 		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
 		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "about:blank");
 
+		if (!Patch::UseCoD4X)
+			RegisterBool("debug_show_viewpos", DVAR_NONE, "Draw the view position and angles", false);
+
 		if (const auto developer_script = Find("developer_script"))
 			developer_script->flags = DVAR_NONE;
 
-		if (!Patch::UseCoD4X)
-			RegisterBool("debug_show_viewpos", DVAR_NONE, "Draw the view position and angles", false);
+		if (const auto rate = Find("rate"))
+			rate->domain.integer.max = 100000;
+
+		if (const auto snaps = Find("snaps"))
+			snaps->domain.integer.max = 75;
 	}
 
-	// Retail draws the console as olive boxes with a yellow prompt. The boxes are dvars and move here;
-	// the prompt, the version line and the matched dvar name are .rdata constants, recoloured in Patch.
 	void Dvar::InitializeConsole()
 	{
 		SetColorDefault("con_inputBoxColor", { 0.0f, 0.0f, 0.0f, 0.9f });
