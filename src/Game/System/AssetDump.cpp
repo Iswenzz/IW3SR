@@ -331,8 +331,8 @@ namespace IW3SR
 			return asset.header.techniqueSet->name;
 		case ASSET_TYPE_IMAGE:
 			return asset.header.image->name;
-		case ASSET_TYPE_CLIPMAP:
-		case ASSET_TYPE_CLIPMAP_PVS:
+		case ASSET_TYPE_CLIPMAP_SP:
+		case ASSET_TYPE_CLIPMAP_MP:
 			return asset.header.clipMap->name;
 		case ASSET_TYPE_COMWORLD:
 			return asset.header.comWorld->name;
