@@ -32,7 +32,7 @@ namespace IW3SR::UC
 				latest.erase(std::remove(latest.begin(), latest.end(), '\n'), latest.end());
 				latest.erase(std::remove(latest.begin(), latest.end(), '\r'), latest.end());
 
-				Actions::Add(
+				GRenderer::Tasks.Add(
 					[ok, latest]()
 					{
 						Checking = false;
@@ -79,7 +79,7 @@ namespace IW3SR::UC
 			{
 				const auto fail = [](std::string message)
 				{
-					Actions::Add(
+					GRenderer::Tasks.Add(
 						[message = std::move(message)]()
 						{
 							Downloading = false;
@@ -101,7 +101,7 @@ namespace IW3SR::UC
 						return fail("Could not write the downloaded archive.");
 				}
 
-				Actions::Add(
+				GRenderer::Tasks.Add(
 					[]()
 					{
 						Downloading = false;
@@ -145,7 +145,7 @@ namespace IW3SR::UC
 					file << script;
 				}
 
-				Actions::Add(
+				GRenderer::Tasks.Add(
 					[scriptPath]()
 					{
 						Extracting = false;

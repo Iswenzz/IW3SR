@@ -1,6 +1,7 @@
 #include "Modules.hpp"
 
 #include "Game/System/Dvar.hpp"
+#include "Game/System/Patch.hpp"
 
 namespace IW3SR::UC
 {
@@ -270,7 +271,7 @@ namespace IW3SR::UC
 
 	void Modules::Settings()
 	{
-		Header("Settings", std::string("Interface") + Dot + "Input");
+		Header("Settings", std::string("Interface") + Dot + "Input" + Dot + "Client");
 
 		BeginPanel("##settings", { 0, 0 }, PanelColor);
 		if (ImGui::CollapsingHeader("General", ImGuiTreeNodeFlags_DefaultOpen))

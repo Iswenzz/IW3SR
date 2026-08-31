@@ -129,7 +129,11 @@ namespace IW3SR
 			UpdateMaterials();
 		}
 		if (!Capture::Recording || Capture::DrawOverlay())
+		{
+			Tasks.Submit();
 			Renderer::Frame();
+			Input::Reset();
+		}
 
 		Console::Frame();
 

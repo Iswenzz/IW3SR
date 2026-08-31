@@ -91,7 +91,7 @@ namespace IW3SR::UC
 
 		system("cd /d \"" CMAKE_BINARY_DIR "\" && cmake --build . --config Debug --target Install");
 
-		Actions::Add(
+		GRenderer::Tasks.Add(
 			[this]()
 			{
 				IW3SR::Modules::Deserialize();
