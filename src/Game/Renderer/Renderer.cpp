@@ -47,10 +47,33 @@ namespace IW3SR
 		R_Shutdown_h(window);
 	}
 
+	void GRenderer::DrawViewpos()
+	{
+		if (Patch::UseCoD4X)
+			return;
+
+		static const auto enabled = Dvar::Find("debug_show_viewpos");
+		if (!enabled || !enabled->current.enabled || !cgs || !clients)
+			return;
+
+		static GText text{ "", FONT_NORMAL, -10, 60, 1.2, vec4(1) };
+
+		const vec3& origin = cgs->refdef.vieworg;
+		const vec3& angles = clients->viewangles;
+
+		text.Value = std::format("{:.1f} {:.1f} {:.1f}\n{:.1f} {:.1f} {:.1f}", origin.x, origin.y, origin.z, angles.x,
+			angles.y, angles.z);
+
+		text.SetRectAlignment(Horizontal::Right, Vertical::Fullscreen);
+		text.SetAlignment(Alignment::Right, Alignment::Top);
+		text.Render();
+	}
+
 	void GRenderer::Draw2D(int localClientNum)
 	{
 		CG_DrawCrosshair_h(localClientNum);
 		GPortal::DrawDebug();
+		DrawViewpos();
 
 		EventRenderer2D event;
 		Application::Dispatch(event);
