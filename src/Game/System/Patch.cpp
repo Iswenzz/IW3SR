@@ -86,10 +86,137 @@ namespace IW3SR
 		Vsnprintf_h.Install();
 	}
 
+	void Patch::DisablePunkbuster()
+	{
+		const std::pair<uintptr_t, uintptr_t> loaders[] = { { 0x5BF990, 0x6F8D0C }, { 0x5C1230, 0x6F8DDC } };
+
+		for (const auto& [address, error] : loaders)
+		{
+			if (Memory::Get<uint32_t>(address) != 0x0400EC81 || Memory::Get<uint16_t>(address + 4) != 0x0000)
+			{
+				Log::WriteLine(Channel::Error, "PunkBuster loader at {:X} is not stock 1.7.", address);
+				continue;
+			}
+			Memory::Set<uint8_t>(address, 0xB8);
+			Memory::Set<uint32_t>(address + 1, static_cast<uint32_t>(error));
+			Memory::Set<uint8_t>(address + 5, 0xC3);
+		}
+		for (const auto& [address, size] :
+			{ std::pair<uintptr_t, uint8_t>{ 0x5776C3, 0x0A }, std::pair<uintptr_t, uint8_t>{ 0x5776D6, 0x19 } })
+		{
+			if (Memory::Get<uint8_t>(address) != 0x75 || Memory::Get<uint8_t>(address + 1) != size)
+			{
+				Log::WriteLine(Channel::Error, "PunkBuster startup branch at {:X} is not stock 1.7.", address);
+				continue;
+			}
+			Memory::Set<uint8_t>(address, 0xEB);
+		}
+	}
+
+	void Patch::SkipImproperQuitPrompt()
+	{
+		constexpr uintptr_t site = 0x577415;
+
+		if (Memory::Get<uint8_t>(site) != 0x6A || Memory::Get<uint8_t>(site + 1) != 0x33)
+		{
+			Log::WriteLine(Channel::Error, "The improper quit prompt is not where 1.7 puts it.");
+			return;
+		}
+		Memory::Set<uint8_t>(site, 0xEB);
+		Memory::Set<uint8_t>(site + 1, 0x50);
+	}
+
+	void Patch::SkipOptimalSettingsPrompt()
+	{
+		for (uintptr_t site : { uintptr_t(0x5766C0), uintptr_t(0x57679A) })
+		{
+			if (Memory::Get<uint16_t>(site) != 0x15FF || Memory::Get<uint32_t>(site + 2) != 0x691274)
+			{
+				Log::WriteLine(Channel::Error, "The optimal settings prompt at {:X} is not stock 1.7.", site);
+				continue;
+			}
+			Memory::Write(site, std::vector<uint8_t>{ 0x83, 0xC4, 0x10, 0x33, 0xC0, 0x90 });
+		}
+	}
+
+	void Patch::WidenColorEscapes()
+	{
+		// Two encodings: 3C ii for al, and 80 Fx ii for cl/dl/bl.
+		constexpr uintptr_t sites[] = { 0x42D2AA, 0x44B25E, 0x45ED48, 0x53920A, 0x54FC6D, 0x5500C6, 0x558B5E, 0x558BA7,
+			0x571D3C, 0x571D86, 0x57A404, 0x5F1F3F, 0x5F1FF6, 0x5F2145, 0x614070 };
+
+		// The visible-length helper at 0x45D520 folds both bounds into one unsigned test instead,
+		// 'sub al,0x30 / cmp al,9 / ja reject', so its immediate is the width of the range.
+		constexpr uintptr_t spanSite = 0x45D591;
+
+		// Passing the predicate is not enough on its own: the glyph loop then inlines ColorIndex to ask
+		// whether the escape is ^7, and retail's version folds every index past 9 to exactly 7. A
+		// widened ^: would reset to the base colour instead of reaching the lookup, so the clamp has to
+		// move with it - CoD4X takes it to 17 (rb_backend.c:296).
+		constexpr uintptr_t indexSite = 0x61407E;
+
+		for (uintptr_t site : sites)
+		{
+			const bool shortForm = Memory::Get<uint8_t>(site) == 0x3C;
+			const uintptr_t operand = site + (shortForm ? 1 : 2);
+
+			if ((!shortForm && Memory::Get<uint8_t>(site) != 0x80) || Memory::Get<uint8_t>(operand) != '9')
+			{
+				Log::WriteLine(Channel::Error, "The colour escape bound at {:X} is not stock 1.7.", site);
+				continue;
+			}
+			Memory::Set<uint8_t>(operand, '@');
+		}
+
+		if (Memory::Get<uint8_t>(spanSite) != 0x3C || Memory::Get<uint8_t>(spanSite + 1) != '9' - '0')
+			Log::WriteLine(Channel::Error, "The colour escape span at {:X} is not stock 1.7.", spanSite);
+		else
+			Memory::Set<uint8_t>(spanSite + 1, '@' - '0');
+
+		if (Memory::Get<uint8_t>(indexSite) != 0x80 || Memory::Get<uint8_t>(indexSite + 2) != '9' - '0' + 1)
+			Log::WriteLine(Channel::Error, "The colour index clamp at {:X} is not stock 1.7.", indexSite);
+		else
+			Memory::Set<uint8_t>(indexSite + 2, '@' - '0' + 1);
+	}
+
+	void Patch::RenameConsolePrompt()
+	{
+		constexpr uintptr_t site = 0x46060E;
+		constexpr uintptr_t format = 0x6CF58C;
+
+		static const char prompt[] = "IW3SR> ";
+
+		if (Memory::Get<uint8_t>(site) != 0x68 || Memory::Get<uint32_t>(site + 1) != format)
+		{
+			Log::WriteLine(Channel::Error, "The console prompt at {:X} is not stock 1.7.", site);
+			return;
+		}
+		Memory::Set<uint32_t>(site + 1, static_cast<uint32_t>(reinterpret_cast<uintptr_t>(prompt)));
+	}
+
+	void Patch::RecolorConsoleText()
+	{
+		constexpr vec4 stockVersion = { 1.0f, 1.0f, 0.0f, 1.0f };
+		constexpr vec4 stockMatch = { 1.0f, 1.0f, 0.8f, 1.0f };
+
+		const auto recolor = [](float* at, const vec4& stock, const vec4& color)
+		{
+			const uintptr_t address = reinterpret_cast<uintptr_t>(at);
+
+			if (Memory::Get<vec4>(address) != stock)
+			{
+				Log::WriteLine(Channel::Error, "The console text colour at {:X} is not stock 1.7.", address);
+				return;
+			}
+			Memory::Set(address, color);
+		};
+
+		recolor(con_versionColor, stockVersion, { 0.0f, 0.9f, 1.0f, 1.0f });
+		recolor(con_matchtxtColor_currentDvar, stockMatch, { 0.7f, 0.95f, 1.0f, 1.0f });
+	}
+
 	void Patch::CoD4X(HMODULE mod)
 	{
-		// The launcher probes for modules that are not always there, and a failed load still
-		// reaches us. There is no image to read a version out of in that case.
 		if (UseCoD4X || !mod)
 			return;
 		UseCoD4X = true;
