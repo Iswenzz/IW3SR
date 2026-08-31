@@ -285,12 +285,12 @@ namespace IW3SR::UC
 				"edges of the screen, and stays smooth and stable on the frame rate at\n"
 				"high polling rates, where 1000 Hz and above used to stutter and flicker.");
 
-			bool disable = UI::Serialized.value("DisableCoD4X", false);
+			bool allow = UI::Serialized.value("CoD4X", true);
 
-			if (ImGui::Checkbox("Disable CoD4X", &disable))
-				UI::Serialized["DisableCoD4X"] = disable;
+			if (ImGui::Checkbox("CoD4X", &allow))
+				UI::Serialized["CoD4X"] = allow;
 			ImGui::Tooltip("Applies on the next launch.");
-			if (disable == Patch::UseCoD4X)
+			if (allow != Patch::UseCoD4X)
 				ImGui::TextDisabled("Restart the game to apply.");
 		}
 		ImGui::EndChild();
