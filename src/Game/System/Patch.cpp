@@ -14,9 +14,9 @@ namespace IW3SR
 
 		nlohmann::json settings;
 		Environment::Load(settings, "ui.json");
-		DisableCoD4X = settings.value("DisableCoD4X", false);
+		AllowCoD4X = settings.value("CoD4X", true);
 
-		if (!DisableCoD4X)
+		if (AllowCoD4X)
 			return;
 
 		SkipImproperQuitPrompt();
