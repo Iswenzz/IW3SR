@@ -247,7 +247,7 @@ namespace IW3SR
 		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
 		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
 
-		if (name == "launcher.dll" && Patch::DisableCoD4X)
+		if (name == "launcher.dll" && !Patch::AllowCoD4X)
 			FreeLibrary(mod);
 		if (name.starts_with("cod4x"))
 			Patch::CoD4X(mod);

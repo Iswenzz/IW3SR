@@ -515,4 +515,14 @@ namespace IW3SR
 		a.add(x86::esp, 0x08);
 		a.ret();
 	}
+
+	ASM_FUNCTION(FrameWait_h)
+	{
+		a.pushad();
+		a.call(Patch::FrameWait);
+		a.popad();
+
+		a.push(imm(0x500037));
+		a.ret();
+	}
 }

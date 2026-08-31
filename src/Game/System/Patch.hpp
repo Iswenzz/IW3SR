@@ -8,7 +8,7 @@ namespace IW3SR
 	public:
 		static inline bool UseBase;
 		static inline bool UseCoD4X;
-		static inline bool DisableCoD4X;
+		static inline bool AllowCoD4X = true;
 
 		static void Initialize();
 		static void Base();
@@ -17,10 +17,14 @@ namespace IW3SR
 		static void ReallocXAssetPools();
 		static void ReallocXAssetPoolsX();
 
+		static void FrameWait();
+
 	private:
 		static void CoD4X_21_3();
 
 		static void DisablePunkbuster();
+		static void TightenFrameLimiter();
+		static void TightenFrameLimiterX();
 		static void SkipImproperQuitPrompt();
 		static void SkipOptimalSettingsPrompt();
 		static void WidenColorEscapes();

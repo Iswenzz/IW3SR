@@ -30,6 +30,7 @@ namespace IW3SR
 
 		Console::AddCommand("replayDemo");
 		Console::AddCommand("unset");
+		Console::AddCommand("sr_assets_usage");
 	}
 
 	void Client::Connect()

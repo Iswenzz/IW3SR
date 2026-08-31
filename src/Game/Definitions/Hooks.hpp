@@ -195,4 +195,5 @@ namespace IW3SR
 	ASM_FUNCTION(ExtendedHeader_h);
 	ASM_FUNCTION(ReadOriginFloat_h);
 	ASM_FUNCTION(DB_FileSize_h);
+	ASM_FUNCTION(FrameWait_h);
 }

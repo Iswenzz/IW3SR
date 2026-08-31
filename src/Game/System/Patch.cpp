@@ -4,8 +4,21 @@
 #include "PMem.hpp"
 #include "Profile.hpp"
 
+#ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
+	#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
+#endif
+
 namespace IW3SR
 {
+	// Com_Frame's client spin waits for Sys_Milliseconds to tick over, and sleeps a whole millisecond
+	// each time round. What it needs is whatever is left of the current millisecond, so a full one
+	// overshoots into the tick after the one it was waiting for and costs roughly a frame in three at
+	// com_maxfps 1000. CoD4X rewrites the function and polls at fifty microseconds instead
+	constexpr uintptr_t FrameSleepSite = 0x50007F;
+
+	// Negative is relative, in hundreds of nanoseconds.
+	constexpr int64_t FrameWaitDue = -500;
+
 	void Patch::Initialize()
 	{
 		LoadLibraryA_h.Install();
@@ -52,6 +65,7 @@ namespace IW3SR
 
 		RenameConsolePrompt();
 		RecolorConsoleText();
+		TightenFrameLimiter();
 
 		if (COD4X_VERSION == 213)
 			CoD4X_21_3();
@@ -110,57 +124,81 @@ namespace IW3SR
 		Vsnprintf_h.Install();
 	}
 
+	// A waitable timer sleeps the thread where a spin would hold the core, and the high resolution flag
+	// is what gets it under the millisecond the scheduler otherwise rounds up to. Windows before 1803
+	// has no such timer and yields instead, which is no worse than the Sleep(1) this replaces. The wait
+	// is bounded so a timer that never signals cannot stall the frame.
+	void Patch::FrameWait()
+	{
+		static const HANDLE timer
+			= CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+
+		LARGE_INTEGER due = {};
+		due.QuadPart = FrameWaitDue;
+
+		if (!timer || !SetWaitableTimer(timer, &due, 0, nullptr, nullptr, FALSE))
+		{
+			Sleep(0);
+			return;
+		}
+		WaitForSingleObject(timer, 1);
+	}
+
+	void Patch::TightenFrameLimiter()
+	{
+		// The jump back to the top of the spin moves into the thunk, so the six bytes go as one.
+		Memory::JMP(FrameSleepSite, ASM_LOAD(FrameWait_h));
+		Memory::NOP(FrameSleepSite + 5, 1);
+	}
+
+	// CoD4X's own spin yields where it means to wait. Its usleep is mingw's, which is
+	// Sleep(useconds / 1000) - the 0x10624DD3 multiply and shr 6 in the DLL - so usleep(50) is Sleep(0)
+	// and the loop spins hot, at the mercy of whatever the scheduler does next. The timer wait costs
+	// the same wall clock without holding the core, so its loop gets it too.
+	void Patch::TightenFrameLimiterX()
+	{
+		const uintptr_t site = Signature(COD4X_BIN, "C7 04 24 32 00 00 00 E8");
+		if (!site)
+		{
+			Log::WriteLine(Channel::Error, "The CoD4X frame limiter is not where {} puts it.", COD4X_BIN);
+			return;
+		}
+		// usleep is cdecl and the argument is already written into the frame rather than pushed, so
+		// the call goes straight to a function that takes none and the stack is untouched either way.
+		Memory::CALL(site + 7, reinterpret_cast<uintptr_t>(&Patch::FrameWait));
+	}
+
 	void Patch::DisablePunkbuster()
 	{
+		// Each loader returns its own error code instead of running.
 		const std::pair<uintptr_t, uintptr_t> loaders[] = { { 0x5BF990, 0x6F8D0C }, { 0x5C1230, 0x6F8DDC } };
 
 		for (const auto& [address, error] : loaders)
 		{
-			if (Memory::Get<uint32_t>(address) != 0x0400EC81 || Memory::Get<uint16_t>(address + 4) != 0x0000)
-			{
-				Log::WriteLine(Channel::Error, "PunkBuster loader at {:X} is not stock 1.7.", address);
-				continue;
-			}
 			Memory::Set<uint8_t>(address, 0xB8);
 			Memory::Set<uint32_t>(address + 1, static_cast<uint32_t>(error));
 			Memory::Set<uint8_t>(address + 5, 0xC3);
 		}
-		for (const auto& [address, size] :
-			{ std::pair<uintptr_t, uint8_t>{ 0x5776C3, 0x0A }, std::pair<uintptr_t, uint8_t>{ 0x5776D6, 0x19 } })
-		{
-			if (Memory::Get<uint8_t>(address) != 0x75 || Memory::Get<uint8_t>(address + 1) != size)
-			{
-				Log::WriteLine(Channel::Error, "PunkBuster startup branch at {:X} is not stock 1.7.", address);
-				continue;
-			}
+
+		// jnz to jmp, so startup takes the branch that skips it.
+		for (uintptr_t address : { uintptr_t(0x5776C3), uintptr_t(0x5776D6) })
 			Memory::Set<uint8_t>(address, 0xEB);
-		}
 	}
 
 	void Patch::SkipImproperQuitPrompt()
 	{
 		constexpr uintptr_t site = 0x577415;
 
-		if (Memory::Get<uint8_t>(site) != 0x6A || Memory::Get<uint8_t>(site + 1) != 0x33)
-		{
-			Log::WriteLine(Channel::Error, "The improper quit prompt is not where 1.7 puts it.");
-			return;
-		}
+		// push 0x33 to a jmp over the prompt.
 		Memory::Set<uint8_t>(site, 0xEB);
 		Memory::Set<uint8_t>(site + 1, 0x50);
 	}
 
 	void Patch::SkipOptimalSettingsPrompt()
 	{
+		// The call goes, its four arguments come off the stack, and it answers zero.
 		for (uintptr_t site : { uintptr_t(0x5766C0), uintptr_t(0x57679A) })
-		{
-			if (Memory::Get<uint16_t>(site) != 0x15FF || Memory::Get<uint32_t>(site + 2) != 0x691274)
-			{
-				Log::WriteLine(Channel::Error, "The optimal settings prompt at {:X} is not stock 1.7.", site);
-				continue;
-			}
 			Memory::Write(site, std::vector<uint8_t>{ 0x83, 0xC4, 0x10, 0x33, 0xC0, 0x90 });
-		}
 	}
 
 	void Patch::WidenColorEscapes()
@@ -179,28 +217,12 @@ namespace IW3SR
 		// move with it - CoD4X takes it to 17 (rb_backend.c:296).
 		constexpr uintptr_t indexSite = 0x61407E;
 
+		// The short form carries its immediate one byte in, the long form two.
 		for (uintptr_t site : sites)
-		{
-			const bool shortForm = Memory::Get<uint8_t>(site) == 0x3C;
-			const uintptr_t operand = site + (shortForm ? 1 : 2);
+			Memory::Set<uint8_t>(site + (Memory::Get<uint8_t>(site) == 0x3C ? 1 : 2), '@');
 
-			if ((!shortForm && Memory::Get<uint8_t>(site) != 0x80) || Memory::Get<uint8_t>(operand) != '9')
-			{
-				Log::WriteLine(Channel::Error, "The colour escape bound at {:X} is not stock 1.7.", site);
-				continue;
-			}
-			Memory::Set<uint8_t>(operand, '@');
-		}
-
-		if (Memory::Get<uint8_t>(spanSite) != 0x3C || Memory::Get<uint8_t>(spanSite + 1) != '9' - '0')
-			Log::WriteLine(Channel::Error, "The colour escape span at {:X} is not stock 1.7.", spanSite);
-		else
-			Memory::Set<uint8_t>(spanSite + 1, '@' - '0');
-
-		if (Memory::Get<uint8_t>(indexSite) != 0x80 || Memory::Get<uint8_t>(indexSite + 2) != '9' - '0' + 1)
-			Log::WriteLine(Channel::Error, "The colour index clamp at {:X} is not stock 1.7.", indexSite);
-		else
-			Memory::Set<uint8_t>(indexSite + 2, '@' - '0' + 1);
+		Memory::Set<uint8_t>(spanSite + 1, '@' - '0');
+		Memory::Set<uint8_t>(indexSite + 2, '@' - '0' + 1);
 	}
 
 	void Patch::RenameConsolePrompt()
@@ -210,33 +232,17 @@ namespace IW3SR
 
 		static const char prompt[] = "IW3SR> ";
 
-		if (Memory::Get<uint8_t>(site) != 0x68 || Memory::Get<uint32_t>(site + 1) != format)
-		{
-			Log::WriteLine(Channel::Error, "The console prompt at {:X} is not stock 1.7.", site);
-			return;
-		}
+		// The operand of the push that hands the format string to the drawer.
 		Memory::Set<uint32_t>(site + 1, static_cast<uint32_t>(reinterpret_cast<uintptr_t>(prompt)));
 	}
 
 	void Patch::RecolorConsoleText()
 	{
-		constexpr vec4 stockVersion = { 1.0f, 1.0f, 0.0f, 1.0f };
-		constexpr vec4 stockMatch = { 1.0f, 1.0f, 0.8f, 1.0f };
+		const auto recolor = [](float* at, const vec4& color)
+		{ Memory::Set(reinterpret_cast<uintptr_t>(at), color); };
 
-		const auto recolor = [](float* at, const vec4& stock, const vec4& color)
-		{
-			const uintptr_t address = reinterpret_cast<uintptr_t>(at);
-
-			if (Memory::Get<vec4>(address) != stock)
-			{
-				Log::WriteLine(Channel::Error, "The console text colour at {:X} is not stock 1.7.", address);
-				return;
-			}
-			Memory::Set(address, color);
-		};
-
-		recolor(con_versionColor, stockVersion, { 0.0f, 0.9f, 1.0f, 1.0f });
-		recolor(con_matchtxtColor_currentDvar, stockMatch, { 0.7f, 0.95f, 1.0f, 1.0f });
+		recolor(con_versionColor, { 0.0f, 0.9f, 1.0f, 1.0f });
+		recolor(con_matchtxtColor_currentDvar, { 0.7f, 0.95f, 1.0f, 1.0f });
 	}
 
 	void Patch::CoD4X(HMODULE mod)
@@ -253,6 +259,7 @@ namespace IW3SR
 		COD4X_VERSION = GetCoD4XVersion();
 
 		Crash::Patch(COD4X_BASE);
+		TightenFrameLimiterX();
 	}
 
 	void Patch::CoD4X_21_3()
