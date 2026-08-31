@@ -14,7 +14,7 @@ static bool IsGameProcess()
 	char exe[MAX_PATH] = { 0 };
 	GetModuleFileName(nullptr, exe, MAX_PATH);
 	std::string name = std::filesystem::path(exe).filename().string();
-	for (char& c : name)
+	for (char &c : name)
 		c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
 	return name == "iw3mp.exe";
 }
@@ -55,13 +55,13 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 	return TRUE;
 }
 
-#define PROXY(CallingConv, ReturnType, FuncName, Params, Args)                  \
-	__declspec(dllexport) ReturnType CallingConv _##FuncName Params             \
-	{                                                                           \
-		static auto address = GetProcAddress(RealLibrary(), #FuncName);         \
-		if (!address)                                                           \
-			return E_FAIL;                                                      \
-		return reinterpret_cast<ReturnType(CallingConv*) Params>(address) Args; \
+#define PROXY(CallingConv, ReturnType, FuncName, Params, Args)                   \
+	__declspec(dllexport) ReturnType CallingConv _##FuncName Params              \
+	{                                                                            \
+		static auto address = GetProcAddress(RealLibrary(), #FuncName);          \
+		if (!address)                                                            \
+			return E_FAIL;                                                       \
+		return reinterpret_cast<ReturnType(CallingConv *) Params>(address) Args; \
 	}
 
 // clang-format off

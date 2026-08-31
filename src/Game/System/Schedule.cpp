@@ -28,8 +28,8 @@ namespace IW3SR
 		}
 	}
 
-	Steps PlanSteps(Cadence& cadence, int* widths, int limit, int step, int target, int frametime,
-		int maxDrift, const Pacing& pacing)
+	Steps PlanSteps(Cadence& cadence, int* widths, int limit, int step, int target, int frametime, int maxDrift,
+		const Pacing& pacing)
 	{
 		if (step < 1)
 			step = 1;

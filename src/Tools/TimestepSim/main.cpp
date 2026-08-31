@@ -30,33 +30,38 @@ namespace
 
 	void Usage()
 	{
-		std::cout <<
-			"timestep-sim - offline comparison of vanilla movement against the timestep\n\n"
-			"  --mode <cod4|q3|q3cpm|cs>   physics mode (default q3cpm)\n"
-			"  --g-speed <n>               190 stock, 210 speedrun (default 190)\n"
-			"  --keys <wasd letters>       movement keys held, e.g. wa, wd, a, d, ad\n"
-			"  --jump <hold|tap|none>      default hold\n"
-			"  --jump-period <ms>          tap period (default 400)\n"
-			"  --alternate <ms>            swap strafe key and sweep direction on this period\n"
-			"  --yaw-rate <deg/s>          mouse sweep, positive turns left\n"
-			"  --com-maxfps <n>            movement rate (default 333)\n"
-			"  --sr-maxfps <n>             render cap with the timestep on, 0 follows com_maxfps\n"
-			"  --rates <fps:ms,...>        cycle com_maxfps through these legs, e.g. 333:2000,125:2000\n"
-			"  --duration <ms>             default 3000\n"
-			"  --work-us <n>               what a frame's own work costs (default 500)\n"
-			"  --sleep-us <n>              what NET_Sleep(1) costs (default 1200)\n"
-			"  --split <limiter|grid>      limiter is what the game does; grid is the even division\n"
-			"                              it used to do, kept only for contrast (default limiter)\n"
-			"  --timestep                  run the split client instead of the vanilla one\n"
-			"  --compare                   run both clients and print the difference\n"
-			"  --sweep                     compare across a grid of rates\n"
-			"  --matrix                    every mode, g_speed and key combination\n"
-			"  --self-test                 assert the split is identical when render == movement\n"
-			"  --csv <path>                write every command to a file\n";
+		std::cout << "timestep-sim - offline comparison of vanilla movement against the timestep\n\n"
+					 "  --mode <cod4|q3|q3cpm|cs>   physics mode (default q3cpm)\n"
+					 "  --g-speed <n>               190 stock, 210 speedrun (default 190)\n"
+					 "  --keys <wasd letters>       movement keys held, e.g. wa, wd, a, d, ad\n"
+					 "  --jump <hold|tap|none>      default hold\n"
+					 "  --jump-period <ms>          tap period (default 400)\n"
+					 "  --alternate <ms>            swap strafe key and sweep direction on this period\n"
+					 "  --yaw-rate <deg/s>          mouse sweep, positive turns left\n"
+					 "  --com-maxfps <n>            movement rate (default 333)\n"
+					 "  --sr-maxfps <n>             render cap with the timestep on, 0 follows com_maxfps\n"
+					 "  --rates <fps:ms,...>        cycle com_maxfps through these legs, e.g. 333:2000,125:2000\n"
+					 "  --duration <ms>             default 3000\n"
+					 "  --work-us <n>               what a frame's own work costs (default 500)\n"
+					 "  --sleep-us <n>              what NET_Sleep(1) costs (default 1200)\n"
+					 "  --split <limiter|grid>      limiter is what the game does; grid is the even division\n"
+					 "                              it used to do, kept only for contrast (default limiter)\n"
+					 "  --timestep                  run the split client instead of the vanilla one\n"
+					 "  --compare                   run both clients and print the difference\n"
+					 "  --sweep                     compare across a grid of rates\n"
+					 "  --matrix                    every mode, g_speed and key combination\n"
+					 "  --self-test                 assert the split is identical when render == movement\n"
+					 "  --csv <path>                write every command to a file\n";
 	}
 
-	int Int(const char* text) { return std::atoi(text); }
-	float Float(const char* text) { return static_cast<float>(std::atof(text)); }
+	int Int(const char* text)
+	{
+		return std::atoi(text);
+	}
+	float Float(const char* text)
+	{
+		return static_cast<float>(std::atof(text));
+	}
 
 	bool ParseArgs(int argc, char** argv, Options& options)
 	{
@@ -78,17 +83,15 @@ namespace
 			else if (arg == "--jump" && hasNext)
 			{
 				const std::string value = argv[++i];
-				options.config.hand.jump = value == "none" ? Jump::None
-					: value == "tap"                       ? Jump::Tapped
-														   : Jump::Held;
+				options.config.hand.jump = value == "none" ? Jump::None : value == "tap" ? Jump::Tapped : Jump::Held;
 			}
 			else if (arg == "--bot" && hasNext)
 			{
 				const std::string value = argv[++i];
 				options.config.bot = value == "original" ? Bot::Original
-					: value == "clamped"                 ? Bot::Clamped
-					: value == "scaled"                  ? Bot::Scaled
-					: value == "modal"                   ? Bot::Modal
+					: value == "clamped"				 ? Bot::Clamped
+					: value == "scaled"					 ? Bot::Scaled
+					: value == "modal"					 ? Bot::Modal
 														 : Bot::None;
 			}
 			else if (arg == "--engage-ramp" && hasNext)
@@ -193,17 +196,12 @@ namespace
 	void Print(const char* label, const RunResult& result)
 	{
 		std::cout << std::fixed << std::setprecision(1);
-		std::cout << "  " << std::left << std::setw(10) << label
-				  << " cmds " << std::setw(6) << result.commands
-				  << " frames " << std::setw(6) << result.frames
-				  << " peak " << std::setw(8) << result.peakSpeed
-				  << " mean " << std::setw(8) << result.meanSpeed
-				  << " dist " << std::setw(9) << result.distance
-				  << " net " << std::setw(8) << static_cast<int>(result.displacement)
-				  << " turn " << std::setw(7) << static_cast<int>(result.turned)
-				  << " jumps " << std::setw(4) << result.jumps
-				  << " ground " << std::setw(5) << result.groundCommands
-				  << " physics " << result.physicsMs << "ms\n";
+		std::cout << "  " << std::left << std::setw(10) << label << " cmds " << std::setw(6) << result.commands
+				  << " frames " << std::setw(6) << result.frames << " peak " << std::setw(8) << result.peakSpeed
+				  << " mean " << std::setw(8) << result.meanSpeed << " dist " << std::setw(9) << result.distance
+				  << " net " << std::setw(8) << static_cast<int>(result.displacement) << " turn " << std::setw(7)
+				  << static_cast<int>(result.turned) << " jumps " << std::setw(4) << result.jumps << " ground "
+				  << std::setw(5) << result.groundCommands << " physics " << result.physicsMs << "ms\n";
 		std::cout << "  " << std::setw(10) << " " << " steps: " << Histogram(result) << "\n";
 		std::cout << "  " << std::setw(10) << " " << " aim:   " << AimMotion(result) << "\n";
 	}
@@ -219,11 +217,10 @@ namespace
 		file << "serverTime,msec,frame,fps,buttons,forwardmove,rightmove,yaw,x,y,z,vx,vy,vz,speed,ground\n";
 		for (const Sample& s : result.samples)
 		{
-			file << s.serverTime << ',' << s.msec << ',' << s.frame << ',' << s.movementFps << ','
-				 << s.buttons << ',' << s.forwardmove << ',' << s.rightmove << ',' << s.yaw << ','
-				 << s.origin.x << ',' << s.origin.y << ',' << s.origin.z << ',' << s.velocity.x << ','
-				 << s.velocity.y << ',' << s.velocity.z << ',' << s.speed << ',' << (s.onGround ? 1 : 0)
-				 << '\n';
+			file << s.serverTime << ',' << s.msec << ',' << s.frame << ',' << s.movementFps << ',' << s.buttons << ','
+				 << s.forwardmove << ',' << s.rightmove << ',' << s.yaw << ',' << s.origin.x << ',' << s.origin.y << ','
+				 << s.origin.z << ',' << s.velocity.x << ',' << s.velocity.y << ',' << s.velocity.z << ',' << s.speed
+				 << ',' << (s.onGround ? 1 : 0) << '\n';
 		}
 		std::cout << "wrote " << result.samples.size() << " commands to " << path << "\n";
 	}
@@ -273,13 +270,11 @@ namespace
 		const RunResult a = Run(vanilla);
 		const RunResult b = Run(timestep);
 
-		std::cout << ModeName(config.mode) << " g_speed " << config.gSpeed
-				  << " - com_maxfps " << config.comMaxFps << ", drawn at "
-				  << (timestep.srMaxFps ? timestep.srMaxFps : config.comMaxFps) << "\n";
+		std::cout << ModeName(config.mode) << " g_speed " << config.gSpeed << " - com_maxfps " << config.comMaxFps
+				  << ", drawn at " << (timestep.srMaxFps ? timestep.srMaxFps : config.comMaxFps) << "\n";
 		Print("vanilla", a);
 		Print("timestep", b);
-		std::cout << std::fixed << std::setprecision(2)
-				  << "  -> peak " << Percent(a.peakSpeed, b.peakSpeed) << "%"
+		std::cout << std::fixed << std::setprecision(2) << "  -> peak " << Percent(a.peakSpeed, b.peakSpeed) << "%"
 				  << ", mean " << Percent(a.meanSpeed, b.meanSpeed) << "%"
 				  << ", distance " << Percent(a.distance, b.distance) << "%"
 				  << ", commands " << Percent(static_cast<float>(a.commands), static_cast<float>(b.commands))
@@ -327,21 +322,19 @@ namespace
 						const RunResult a = Run(config);
 						const RunResult b = Run(split);
 
-						const bool same = a.commands == b.commands
-							&& std::abs(a.peakSpeed - b.peakSpeed) < 0.01f
+						const bool same = a.commands == b.commands && std::abs(a.peakSpeed - b.peakSpeed) < 0.01f
 							&& std::abs(a.distance - b.distance) < 0.01f;
 
 						checks++;
 						if (!same)
 						{
 							failures++;
-							std::cout << "  FAIL " << std::setw(6) << ModeName(mode) << " g" << speed
-									  << " " << std::setw(3) << combo << " @" << std::setw(4) << rate
-									  << ": cmds " << a.commands << " vs " << b.commands
-									  << ", peak " << std::fixed << std::setprecision(2) << a.peakSpeed
-									  << " vs " << b.peakSpeed
-									  << " (" << std::showpos << Percent(a.peakSpeed, b.peakSpeed)
-									  << "%)" << std::noshowpos << "\n";
+							std::cout << "  FAIL " << std::setw(6) << ModeName(mode) << " g" << speed << " "
+									  << std::setw(3) << combo << " @" << std::setw(4) << rate << ": cmds "
+									  << a.commands << " vs " << b.commands << ", peak " << std::fixed
+									  << std::setprecision(2) << a.peakSpeed << " vs " << b.peakSpeed << " ("
+									  << std::showpos << Percent(a.peakSpeed, b.peakSpeed) << "%)" << std::noshowpos
+									  << "\n";
 						}
 					}
 				}
@@ -384,29 +377,26 @@ namespace
 						const RunResult a = Run(config);
 						const RunResult b = Run(split);
 
-						const bool same = a.commands == b.commands
-							&& std::abs(a.peakSpeed - b.peakSpeed) < 0.01f
+						const bool same = a.commands == b.commands && std::abs(a.peakSpeed - b.peakSpeed) < 0.01f
 							&& std::abs(a.distance - b.distance) < 0.01f;
 
 						checks++;
 						if (!same)
 						{
 							failures++;
-							std::cout << "  FAIL " << std::setw(6) << ModeName(mode) << " g" << speed
-									  << " " << std::setw(3) << combo << " " << std::setw(30) << schedule
-									  << ": cmds " << a.commands << " vs " << b.commands
-									  << ", peak " << std::fixed << std::setprecision(2) << a.peakSpeed
-									  << " vs " << b.peakSpeed
-									  << " (" << std::showpos << Percent(a.peakSpeed, b.peakSpeed)
-									  << "%)" << std::noshowpos << "\n";
+							std::cout << "  FAIL " << std::setw(6) << ModeName(mode) << " g" << speed << " "
+									  << std::setw(3) << combo << " " << std::setw(30) << schedule << ": cmds "
+									  << a.commands << " vs " << b.commands << ", peak " << std::fixed
+									  << std::setprecision(2) << a.peakSpeed << " vs " << b.peakSpeed << " ("
+									  << std::showpos << Percent(a.peakSpeed, b.peakSpeed) << "%)" << std::noshowpos
+									  << "\n";
 						}
 					}
 				}
 			}
 		}
 
-		std::cout << "\n" << (checks - failures) << "/" << checks << " identical, " << failures
-				  << " differ\n";
+		std::cout << "\n" << (checks - failures) << "/" << checks << " identical, " << failures << " differ\n";
 		return failures ? 1 : 0;
 	}
 
@@ -417,15 +407,14 @@ namespace
 		const Mode modes[] = { Mode::COD4, Mode::Q3, Mode::Q3CPM, Mode::CS };
 		const int speeds[] = { 190, 210 };
 
-		std::cout << "peak speed at each client's own best sweep rate. com_maxfps "
-				  << base.comMaxFps << ", timestep drawn at "
-				  << (base.srMaxFps ? base.srMaxFps : base.comMaxFps) << ", sleep "
-				  << base.pacing.sleepMicros << "us, split "
-				  << (base.split == SplitMode::Limiter ? "limiter" : "grid") << "\n\n";
+		std::cout << "peak speed at each client's own best sweep rate. com_maxfps " << base.comMaxFps
+				  << ", timestep drawn at " << (base.srMaxFps ? base.srMaxFps : base.comMaxFps) << ", sleep "
+				  << base.pacing.sleepMicros << "us, split " << (base.split == SplitMode::Limiter ? "limiter" : "grid")
+				  << "\n\n";
 
-		std::cout << std::left << std::setw(7) << "mode" << std::setw(8) << "g_speed"
-				  << std::setw(6) << "keys" << std::right << std::setw(10) << "vanilla"
-				  << std::setw(10) << "timestep" << std::setw(10) << "peak" << std::setw(12) << "distance"
+		std::cout << std::left << std::setw(7) << "mode" << std::setw(8) << "g_speed" << std::setw(6) << "keys"
+				  << std::right << std::setw(10) << "vanilla" << std::setw(10) << "timestep" << std::setw(10) << "peak"
+				  << std::setw(12) << "distance"
 				  << "\n";
 
 		for (Mode mode : modes)
@@ -450,13 +439,11 @@ namespace
 					const Best a = FindBest(vanilla);
 					const Best b = FindBest(split);
 
-					std::cout << std::left << std::setw(7) << ModeName(mode) << std::setw(8) << speed
-							  << std::setw(6) << combo << std::right << std::fixed << std::setprecision(1)
-							  << std::setw(10) << a.peakSpeed << std::setw(10) << b.peakSpeed
-							  << std::setw(9) << std::showpos << std::setprecision(1)
-							  << Percent(a.peakSpeed, b.peakSpeed) << "%"
-							  << std::setw(11) << Percent(a.distance, b.distance) << "%"
-							  << std::noshowpos << "\n";
+					std::cout << std::left << std::setw(7) << ModeName(mode) << std::setw(8) << speed << std::setw(6)
+							  << combo << std::right << std::fixed << std::setprecision(1) << std::setw(10)
+							  << a.peakSpeed << std::setw(10) << b.peakSpeed << std::setw(9) << std::showpos
+							  << std::setprecision(1) << Percent(a.peakSpeed, b.peakSpeed) << "%" << std::setw(11)
+							  << Percent(a.distance, b.distance) << "%" << std::noshowpos << "\n";
 				}
 			}
 		}

@@ -2,8 +2,8 @@
 // Engine types the movement code needs, lifted from src/Game/Definitions/Structs.hpp with the
 // field names kept identical so the shipping movement sources compile against this unchanged.
 // Binary layout is deliberately not preserved: nothing here is ever mapped onto game memory.
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 
@@ -280,6 +280,12 @@ namespace IW3SR
 	constexpr float SHORT2ANGLE_SCALE = 360.0f / 65536.0f;
 	constexpr float ANGLE2SHORT_SCALE = 65536.0f / 360.0f;
 
-	inline float SHORT2ANGLE(int x) { return static_cast<float>(static_cast<int16_t>(x)) * SHORT2ANGLE_SCALE; }
-	inline int ANGLE2SHORT(float x) { return static_cast<int16_t>(static_cast<int>(x * ANGLE2SHORT_SCALE) & 0xFFFF); }
+	inline float SHORT2ANGLE(int x)
+	{
+		return static_cast<float>(static_cast<int16_t>(x)) * SHORT2ANGLE_SCALE;
+	}
+	inline int ANGLE2SHORT(float x)
+	{
+		return static_cast<int16_t>(static_cast<int>(x * ANGLE2SHORT_SCALE) & 0xFFFF);
+	}
 }

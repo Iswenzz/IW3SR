@@ -44,9 +44,7 @@ namespace IW3SR
 		return result;
 	}
 
-	A2SReader::A2SReader(std::span<const uint8_t> data) : Data(data)
-	{
-	}
+	A2SReader::A2SReader(std::span<const uint8_t> data) : Data(data) { }
 
 	uint8_t A2SReader::ReadByte()
 	{
@@ -70,8 +68,8 @@ namespace IW3SR
 		if (!at)
 			return 0;
 
-		return static_cast<uint32_t>(at[0]) | (static_cast<uint32_t>(at[1]) << 8)
-			| (static_cast<uint32_t>(at[2]) << 16) | (static_cast<uint32_t>(at[3]) << 24);
+		return static_cast<uint32_t>(at[0]) | (static_cast<uint32_t>(at[1]) << 8) | (static_cast<uint32_t>(at[2]) << 16)
+			| (static_cast<uint32_t>(at[3]) << 24);
 	}
 
 	uint64_t A2SReader::ReadLongLong()
@@ -261,7 +259,8 @@ namespace IW3SR
 				break;
 
 			netadr_t from = {};
-			const int length = Net::ReceiveFrom(socket, buffer.data(), static_cast<int>(buffer.size()), timeoutMs, from);
+			const int length =
+				Net::ReceiveFrom(socket, buffer.data(), static_cast<int>(buffer.size()), timeoutMs, from);
 			if (length <= 0)
 				break;
 
@@ -313,8 +312,8 @@ namespace IW3SR
 
 			// Sliced, so a caller shutting down never waits out the whole window.
 			netadr_t from = {};
-			const int length = Net::ReceiveFrom(socket, buffer.data(), static_cast<int>(buffer.size()),
-				std::min(left, 250), from);
+			const int length =
+				Net::ReceiveFrom(socket, buffer.data(), static_cast<int>(buffer.size()), std::min(left, 250), from);
 			if (length == NetFailed)
 				break;
 			if (length <= 0)
@@ -337,7 +336,8 @@ namespace IW3SR
 				continue;
 			}
 			if (result == A2SResult::Info)
-				replies.push_back({ entry->second.Address, info, std::max(1, Net::Milliseconds() - entry->second.Sent) });
+				replies.push_back(
+					{ entry->second.Address, info, std::max(1, Net::Milliseconds() - entry->second.Sent) });
 
 			pending.erase(entry);
 		}

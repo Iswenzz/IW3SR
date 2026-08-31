@@ -31,35 +31,13 @@ namespace
 	constexpr float SOLID_EPSILON = 1.0f / 1024.0f;
 
 	// bg_pmove.cpp CorrectSolidDeltas. The order is the search order: the first free point wins.
-	const vec3 CorrectSolidDeltas[26] =
-	{
-		{ 0.0f, 0.0f, 1.0f },
-		{ -1.0f, 0.0f, 1.0f },
-		{ 0.0f, -1.0f, 1.0f },
-		{ 1.0f, 0.0f, 1.0f },
-		{ 0.0f, 1.0f, 1.0f },
-		{ -1.0f, 0.0f, 0.0f },
-		{ 0.0f, -1.0f, 0.0f },
-		{ 1.0f, 0.0f, 0.0f },
-		{ 0.0f, 1.0f, 0.0f },
-		{ 0.0f, 0.0f, -1.0f },
-		{ -1.0f, 0.0f, -1.0f },
-		{ 0.0f, -1.0f, -1.0f },
-		{ 1.0f, 0.0f, -1.0f },
-		{ 0.0f, 1.0f, -1.0f },
-		{ -1.0f, -1.0f, 1.0f },
-		{ 1.0f, -1.0f, 1.0f },
-		{ 1.0f, 1.0f, 1.0f },
-		{ -1.0f, 1.0f, 1.0f },
-		{ -1.0f, -1.0f, 0.0f },
-		{ 1.0f, -1.0f, 0.0f },
-		{ 1.0f, 1.0f, 0.0f },
-		{ -1.0f, 1.0f, 0.0f },
-		{ -1.0f, -1.0f, -1.0f },
-		{ 1.0f, -1.0f, -1.0f },
-		{ 1.0f, 1.0f, -1.0f },
-		{ -1.0f, 1.0f, -1.0f }
-	};
+	const vec3 CorrectSolidDeltas[26] = { { 0.0f, 0.0f, 1.0f }, { -1.0f, 0.0f, 1.0f }, { 0.0f, -1.0f, 1.0f },
+		{ 1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, { -1.0f, 0.0f, 0.0f }, { 0.0f, -1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { -1.0f, 0.0f, -1.0f }, { 0.0f, -1.0f, -1.0f },
+		{ 1.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, -1.0f }, { -1.0f, -1.0f, 1.0f }, { 1.0f, -1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f }, { -1.0f, 1.0f, 1.0f }, { -1.0f, -1.0f, 0.0f }, { 1.0f, -1.0f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f }, { -1.0f, 1.0f, 0.0f }, { -1.0f, -1.0f, -1.0f }, { 1.0f, -1.0f, -1.0f },
+		{ 1.0f, 1.0f, -1.0f }, { -1.0f, 1.0f, -1.0f } };
 
 	struct BrushHit
 	{
@@ -74,8 +52,8 @@ namespace
 	// box. The ray is the player origin, which sits on the box's bottom face rather than at its
 	// centre, so the expansion is asymmetric in z: emaxs[2] moves by -mins[2], which is zero.
 	// Plane order and the enter/leave bookkeeping follow CM_TraceThroughBrush in cm_trace.cpp.
-	BrushHit TraceBrush(const Sim::Brush& brush, const vec3& start, const vec3& end,
-		const vec3& mins, const vec3& maxs, float best)
+	BrushHit TraceBrush(const Sim::Brush& brush, const vec3& start, const vec3& end, const vec3& mins, const vec3& maxs,
+		float best)
 	{
 		const vec3 emins = brush.mins - maxs;
 		const vec3 emaxs = brush.maxs - mins;
@@ -154,8 +132,14 @@ namespace
 		return (pml->groundTrace.surfaceFlags & SURF_TYPE_MASK) >> SURF_TYPE_SHIFT;
 	}
 
-	int LightLandingForSurface(const pml_t* pml) { return GroundSurfaceType(pml) ? 74 : 0; }
-	int MediumLandingForSurface(const pml_t* pml) { return GroundSurfaceType(pml) ? 73 : 0; }
+	int LightLandingForSurface(const pml_t* pml)
+	{
+		return GroundSurfaceType(pml) ? 74 : 0;
+	}
+	int MediumLandingForSurface(const pml_t* pml)
+	{
+		return GroundSurfaceType(pml) ? 73 : 0;
+	}
 
 	int HardLandingForSurface(const pml_t* pml)
 	{
@@ -326,12 +310,11 @@ namespace IW3SR
 		int damage = 0;
 		if (minHeight < maxHeight)
 		{
-			if (minHeight >= fallHeight
-				|| (pml->groundTrace.surfaceFlags & SURF_NODAMAGE)
-				|| ps->pm_type >= PM_DEAD)
+			if (minHeight >= fallHeight || (pml->groundTrace.surfaceFlags & SURF_NODAMAGE) || ps->pm_type >= PM_DEAD)
 				damage = 0;
 			else if (maxHeight > fallHeight)
-				damage = std::clamp(static_cast<int>((fallHeight - minHeight) / (maxHeight - minHeight) * 100.0f), 0, 100);
+				damage =
+					std::clamp(static_cast<int>((fallHeight - minHeight) / (maxHeight - minHeight) * 100.0f), 0, 100);
 			else
 				damage = 100;
 		}

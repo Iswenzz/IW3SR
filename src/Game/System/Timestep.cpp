@@ -43,8 +43,8 @@ namespace IW3SR
 
 		Enabled = Dvar::RegisterBool("sr_timestep", DVAR_SAVED,
 			"Run movement on a fixed timestep taken from com_maxfps, whatever the frame rate is", true);
-		MaxFps = Dvar::RegisterInt("sr_maxfps", DVAR_SAVED, "Frame rate cap, 0 to follow com_maxfps",
-			DisplayFps(), 0, 1000);
+		MaxFps =
+			Dvar::RegisterInt("sr_maxfps", DVAR_SAVED, "Frame rate cap, 0 to follow com_maxfps", DisplayFps(), 0, 1000);
 		Smooth = Dvar::RegisterBool("sr_timestep_smooth", DVAR_SAVED,
 			"Draw the view at the frame time instead of at the last movement step", true);
 		Log = Dvar::RegisterBool("sr_timestep_log", DVAR_TEMP,
@@ -117,7 +117,8 @@ namespace IW3SR
 		Warned = true;
 		Com_PrintMessage(CON_CHANNEL_ERROR,
 			std::format("^1Timestep: {} of {} steps are wider than com_maxfps ever sends, movement will "
-						"not match it. Please report this.\n", Wobble, Steady + Wobble)
+						"not match it. Please report this.\n",
+				Wobble, Steady + Wobble)
 				.c_str(),
 			0);
 	}
@@ -180,8 +181,7 @@ namespace IW3SR
 		Peak = 0;
 		Log->current.enabled = true;
 
-		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
-			"Timestep test running for 3 seconds, keep off the keyboard.\n", 0);
+		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, "Timestep test running for 3 seconds, keep off the keyboard.\n", 0);
 	}
 
 	void Timestep::TestFrame()
@@ -205,8 +205,8 @@ namespace IW3SR
 			Test = 0;
 			Log->current.enabled = false;
 
-			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
-				std::format("Timestep test done, peak speed {}.\n", Peak).c_str(), 0);
+			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, std::format("Timestep test done, peak speed {}.\n", Peak).c_str(),
+				0);
 			return;
 		}
 		// Forward, then jump, then strafe, each held for the rest of the run and staggered the way a
@@ -278,8 +278,7 @@ namespace IW3SR
 		// and carrying it would throw the view around rather than settle it.
 		if (ps.commandTime != clients->cmds[clients->cmdNumber & 0x7F].serverTime)
 			return;
-		if (ps.pm_type != PM_NORMAL && ps.pm_type != PM_NOCLIP && ps.pm_type != PM_UFO
-			&& ps.pm_type != PM_SPECTATOR)
+		if (ps.pm_type != PM_NORMAL && ps.pm_type != PM_NOCLIP && ps.pm_type != PM_UFO && ps.pm_type != PM_SPECTATOR)
 			return;
 
 		const int lag = clients->serverTime - ps.commandTime;

@@ -187,8 +187,7 @@ namespace IW3SR
 			int size = sizeof(error);
 
 			connected = Wait(static_cast<NetSocket>(handle), timeoutMs, true)
-				&& getsockopt(handle, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &size) == 0
-				&& error == 0;
+				&& getsockopt(handle, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &size) == 0 && error == 0;
 		}
 		if (!connected)
 		{

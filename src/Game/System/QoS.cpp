@@ -40,8 +40,8 @@ namespace IW3SR
 
 	// The engine shallow-copies an enum dvar's domain and keeps the pointer, so a temporary vector
 	// would leave the saved dvar dangling for Com_WriteConfiguration to read on quit.
-	static const std::vector<const char*> TrafficNames = { "besteffort", "background", "excellenteffort",
-		"audiovideo", "voice", "control" };
+	static const std::vector<const char*> TrafficNames = { "besteffort", "background", "excellenteffort", "audiovideo",
+		"voice", "control" };
 
 	void GQoS::Initialize()
 	{
@@ -154,8 +154,8 @@ namespace IW3SR
 		QOSCreate = reinterpret_cast<QOSCreateHandleFn>(GetProcAddress(Library, "QOSCreateHandle"));
 		QOSClose = reinterpret_cast<QOSCloseHandleFn>(GetProcAddress(Library, "QOSCloseHandle"));
 		QOSAddSocket = reinterpret_cast<QOSAddSocketToFlowFn>(GetProcAddress(Library, "QOSAddSocketToFlow"));
-		QOSRemoveSocket
-			= reinterpret_cast<QOSRemoveSocketFromFlowFn>(GetProcAddress(Library, "QOSRemoveSocketFromFlow"));
+		QOSRemoveSocket =
+			reinterpret_cast<QOSRemoveSocketFromFlowFn>(GetProcAddress(Library, "QOSRemoveSocketFromFlow"));
 
 		if (QOSCreate && QOSClose && QOSAddSocket && QOSRemoveSocket)
 			return true;
@@ -187,8 +187,8 @@ namespace IW3SR
 	NetSocket GQoS::FindGameSocket()
 	{
 		const dvar_s* port = Dvar::Find("net_port");
-		const uint16_t base = port && port->current.integer > 0 ? static_cast<uint16_t>(port->current.integer)
-															   : PortServer;
+		const uint16_t base =
+			port && port->current.integer > 0 ? static_cast<uint16_t>(port->current.integer) : PortServer;
 
 		for (uintptr_t handle = 4; handle < MaxSocketHandle; handle += 4)
 		{
@@ -203,7 +203,8 @@ namespace IW3SR
 			int type = 0;
 			int size = sizeof(type);
 
-			if (getsockopt(static_cast<SOCKET>(handle), SOL_SOCKET, SO_TYPE, reinterpret_cast<char*>(&type), &size) != 0)
+			if (getsockopt(static_cast<SOCKET>(handle), SOL_SOCKET, SO_TYPE, reinterpret_cast<char*>(&type), &size)
+				!= 0)
 				continue;
 			if (type != SOCK_DGRAM)
 				continue;

@@ -151,7 +151,6 @@ namespace IW3SR
 			"Use the segmented resumable download protocol when the server offers it", true);
 		UseCache = Dvar::RegisterBool("sr_download_cache", DVAR_SAVED,
 			"Keep an interrupted download and reuse the segments of it that still verify", true);
-
 	}
 
 	void GDownload::Shutdown()
@@ -432,7 +431,8 @@ namespace IW3SR
 
 		const size_t localEnd = list.find('@');
 		const std::string localName(list.substr(0, localEnd == std::string_view::npos ? list.size() : localEnd));
-		const std::string remainder(localEnd == std::string_view::npos ? std::string_view() : list.substr(localEnd + 1));
+		const std::string remainder(
+			localEnd == std::string_view::npos ? std::string_view() : list.substr(localEnd + 1));
 
 		CopyString(cls->downloadList, sizeof(cls->downloadList), remainder);
 		cls->downloadRestart = 1;

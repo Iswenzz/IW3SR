@@ -86,8 +86,11 @@ namespace Sim
 
 			switch (mode)
 			{
-			case Mode::COD4: break;
-			case Mode::Q3: step = seconds * wishspeed; break;
+			case Mode::COD4:
+				break;
+			case Mode::Q3:
+				step = seconds * wishspeed;
+				break;
 			case Mode::Q3CPM:
 				if (!cmd.forwardmove && cmd.rightmove)
 				{
@@ -153,8 +156,8 @@ namespace Sim
 		constexpr float Rad = 180.0f / 3.14159265358979323846f;
 		const float angle = airTheta > 0.0f ? airTheta : std::acos(std::clamp(raw, -1.0f, 1.0f)) * Rad;
 		const float velocityYaw = std::atan2(ps.velocity.y, ps.velocity.x) * Rad;
-		const float wishOffset
-			= std::atan2(static_cast<float>(-cmd.rightmove), static_cast<float>(cmd.forwardmove)) * Rad;
+		const float wishOffset =
+			std::atan2(static_cast<float>(-cmd.rightmove), static_cast<float>(cmd.forwardmove)) * Rad;
 
 		int side = cmd.rightmove > 0 ? 1 : cmd.rightmove < 0 ? -1 : 0;
 		if (side)
@@ -189,8 +192,8 @@ namespace Sim
 			return 0;
 
 		const float velocityYaw = std::atan2(ps.velocity.y, ps.velocity.x) * Rad;
-		const float wishOffset
-			= std::atan2(static_cast<float>(-cmd.rightmove), static_cast<float>(cmd.forwardmove)) * Rad;
+		const float wishOffset =
+			std::atan2(static_cast<float>(-cmd.rightmove), static_cast<float>(cmd.forwardmove)) * Rad;
 
 		// A CPM half beat caps its step at 30 regardless of angle, so the angle cannot pick
 		// its rate - a shorter frame simply leaves less of the cap unspent.
@@ -307,7 +310,8 @@ namespace Sim
 			// one the previous command's angle chose.
 			if (config.autoFps && ps.groundEntityNum == ENTITYNUM_NONE)
 			{
-				const int chosen = RingFps(ps, cl.cmds[cl.cmdNumber & 0x7F], config.ringDivisor, config.mode, config.cpmHalfBoost);
+				const int chosen =
+					RingFps(ps, cl.cmds[cl.cmdNumber & 0x7F], config.ringDivisor, config.mode, config.cpmHalfBoost);
 				if (chosen > 0)
 					movementFps = chosen;
 			}
@@ -322,16 +326,24 @@ namespace Sim
 				const bool half = cl.cmds[cl.cmdNumber & 0x7F].forwardmove == 0;
 				switch (config.mode)
 				{
-				case Mode::COD4: movementFps = 250; break;
-				case Mode::Q3: movementFps = 250; break;
-				case Mode::Q3CPM: movementFps = half ? 1000 : 250; break;
-				case Mode::CS: movementFps = 333; break;
+				case Mode::COD4:
+					movementFps = 250;
+					break;
+				case Mode::Q3:
+					movementFps = 250;
+					break;
+				case Mode::Q3CPM:
+					movementFps = half ? 1000 : 250;
+					break;
+				case Mode::CS:
+					movementFps = 333;
+					break;
 				}
 			}
 			const int renderFps = config.timestep && config.srMaxFps > 0 ? config.srMaxFps : movementFps;
 
-			const int msec = Com_ModifyMsec(
-				ComFrameLimiter(clock, cl.com_frameTime, lastFrameTime, renderFps, config.pacing));
+			const int msec =
+				Com_ModifyMsec(ComFrameLimiter(clock, cl.com_frameTime, lastFrameTime, renderFps, config.pacing));
 			const int now = clock.Milliseconds();
 
 			// Com_EventLoop: binds run and raw mouse counts land in the buffer, both before any
@@ -384,9 +396,8 @@ namespace Sim
 						}
 					}
 
-					const std::optional<float> target
-						= BotYaw(config.bot, config.mode, ps, cmd, movementFps, config.safetyFactor, inferredSide,
-							config.sideHysteresis, config.airControl);
+					const std::optional<float> target = BotYaw(config.bot, config.mode, ps, cmd, movementFps,
+						config.safetyFactor, inferredSide, config.sideHysteresis, config.airControl);
 
 					if (!target)
 					{

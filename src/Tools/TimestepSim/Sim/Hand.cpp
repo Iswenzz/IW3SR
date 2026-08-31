@@ -113,8 +113,7 @@ namespace Sim
 		if (Config.techniquePeriodMs > 0 && Config.keys.forward)
 		{
 			for (int index = 1; start + index * Config.techniquePeriodMs < Config.durationMs; index++)
-				Schedule.push_back(
-					{ start + index * Config.techniquePeriodMs, KB_FORWARD, index % 2 == 0 });
+				Schedule.push_back({ start + index * Config.techniquePeriodMs, KB_FORWARD, index % 2 == 0 });
 		}
 
 		switch (Config.jump)

@@ -84,9 +84,8 @@ namespace IW3SR::Addons
 
 		float accelerate = 0;
 		// Only the CoD4 walk move scales by damage, stance, weapon and strafe direction
-		const float scale = mode == MovementMode::COD4
-			? DamageScaleWalk(pm.ps->damageTimer) * CmdScaleWalk(&pm.cmd)
-			: CmdScale(pm.ps, &pm.cmd);
+		const float scale = mode == MovementMode::COD4 ? DamageScaleWalk(pm.ps->damageTimer) * CmdScaleWalk(&pm.cmd)
+													   : CmdScale(pm.ps, &pm.cmd);
 		const float wishspeed = scale * glm::length(w_vel);
 
 		// When a player gets hit, they temporarily lose full control, which allows them to be moved a bit

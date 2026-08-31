@@ -30,9 +30,8 @@ namespace IW3SR
 		FontName = font;
 
 		const auto it = std::ranges::find(GDraw2D::FontNames, FontName);
-		FontIndex = it != GDraw2D::FontNames.end()
-			? static_cast<int>(std::distance(GDraw2D::FontNames.begin(), it))
-			: 0;
+		FontIndex =
+			it != GDraw2D::FontNames.end() ? static_cast<int>(std::distance(GDraw2D::FontNames.begin(), it)) : 0;
 	}
 
 	void GText::SetResponsiveFont()

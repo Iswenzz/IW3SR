@@ -56,23 +56,17 @@ namespace Sim
 			int iOffset;
 		};
 
-		const viewLerpWaypoint_s viewLerp_StandCrouch[9] = {
-			{ 0, 60.0f, 0 }, { 1, 59.5f, 0 }, { 4, 58.5f, 0 }, { 30, 56.0f, 0 }, { 80, 44.0f, 0 },
-			{ 90, 41.5f, 0 }, { 95, 40.5f, 0 }, { 100, 40.0f, 0 }, { -1, 0.0f, 0 }
-		};
-		const viewLerpWaypoint_s viewLerp_CrouchStand[9] = {
-			{ 0, 40.0f, 0 }, { 5, 40.5f, 0 }, { 10, 41.5f, 0 }, { 20, 44.0f, 0 }, { 70, 56.0f, 0 },
-			{ 96, 58.5f, 0 }, { 99, 59.5f, 0 }, { 100, 60.0f, 0 }, { -1, 0.0f, 0 }
-		};
-		const viewLerpWaypoint_s viewLerp_CrouchProne[11] = {
-			{ 0, 40.0f, 0 }, { 11, 38.0f, 0 }, { 22, 33.0f, 0 }, { 34, 25.0f, 0 }, { 45, 16.0f, 0 },
-			{ 50, 15.0f, 0 }, { 55, 16.0f, 0 }, { 70, 18.0f, 0 }, { 90, 17.0f, 0 }, { 100, 11.0f, 0 },
-			{ -1, 0.0f, 0 }
-		};
-		const viewLerpWaypoint_s viewLerp_ProneCrouch[8] = {
-			{ 0, 11.0f, 0 }, { 5, 10.0f, 0 }, { 30, 21.0f, 0 }, { 50, 25.0f, 0 }, { 67, 31.0f, 0 },
-			{ 83, 34.0f, 0 }, { 100, 40.0f, 0 }, { -1, 0.0f, 0 }
-		};
+		const viewLerpWaypoint_s viewLerp_StandCrouch[9] = { { 0, 60.0f, 0 }, { 1, 59.5f, 0 }, { 4, 58.5f, 0 },
+			{ 30, 56.0f, 0 }, { 80, 44.0f, 0 }, { 90, 41.5f, 0 }, { 95, 40.5f, 0 }, { 100, 40.0f, 0 },
+			{ -1, 0.0f, 0 } };
+		const viewLerpWaypoint_s viewLerp_CrouchStand[9] = { { 0, 40.0f, 0 }, { 5, 40.5f, 0 }, { 10, 41.5f, 0 },
+			{ 20, 44.0f, 0 }, { 70, 56.0f, 0 }, { 96, 58.5f, 0 }, { 99, 59.5f, 0 }, { 100, 60.0f, 0 },
+			{ -1, 0.0f, 0 } };
+		const viewLerpWaypoint_s viewLerp_CrouchProne[11] = { { 0, 40.0f, 0 }, { 11, 38.0f, 0 }, { 22, 33.0f, 0 },
+			{ 34, 25.0f, 0 }, { 45, 16.0f, 0 }, { 50, 15.0f, 0 }, { 55, 16.0f, 0 }, { 70, 18.0f, 0 }, { 90, 17.0f, 0 },
+			{ 100, 11.0f, 0 }, { -1, 0.0f, 0 } };
+		const viewLerpWaypoint_s viewLerp_ProneCrouch[8] = { { 0, 11.0f, 0 }, { 5, 10.0f, 0 }, { 30, 21.0f, 0 },
+			{ 50, 25.0f, 0 }, { 67, 31.0f, 0 }, { 83, 34.0f, 0 }, { 100, 40.0f, 0 }, { -1, 0.0f, 0 } };
 
 		// A run that never registers a dvar still has to move like the retail defaults, so every
 		// lookup carries the value bg_misc.cpp / bg_jump.cpp registers.
@@ -272,8 +266,8 @@ namespace Sim
 			{
 				if (ss.lastSprintStart <= ss.lastSprintEnd)
 				{
-					sprintLeft = gametime + ss.sprintStartMaxLength
-						- (ss.lastSprintEnd - ss.lastSprintStart) - ss.lastSprintEnd;
+					sprintLeft =
+						gametime + ss.sprintStartMaxLength - (ss.lastSprintEnd - ss.lastSprintStart) - ss.lastSprintEnd;
 					if (ss.sprintDelay)
 						sprintLeft -= static_cast<int>(DvarFloat("player_sprintRechargePause", 0.0f) * 1000.0f);
 				}
@@ -473,8 +467,8 @@ namespace Sim
 
 		float PM_CmdScale(const playerState_s* ps, const usercmd_s* cmd)
 		{
-			const float total = std::sqrt(static_cast<float>(cmd->rightmove * cmd->rightmove
-				+ cmd->forwardmove * cmd->forwardmove));
+			const float total =
+				std::sqrt(static_cast<float>(cmd->rightmove * cmd->rightmove + cmd->forwardmove * cmd->forwardmove));
 
 			int max = std::abs(static_cast<int>(cmd->forwardmove));
 			if (std::abs(static_cast<int>(cmd->rightmove)) > max)
@@ -513,8 +507,7 @@ namespace Sim
 
 			if (iFromHeight != -1 && iToHeight != -1
 				&& (iToHeight != ps->viewHeightLerpTarget
-					|| (iToHeight == 40
-						&& (iFromHeight != 11 || ps->viewHeightLerpDown)
+					|| (iToHeight == 40 && (iFromHeight != 11 || ps->viewHeightLerpDown)
 						&& (iFromHeight != 60 || !ps->viewHeightLerpDown))))
 			{
 				return 0.0f;
@@ -539,9 +532,12 @@ namespace Sim
 
 			switch (PM_GetEffectiveStance(pm->ps))
 			{
-			case 1: return 0.15000001f;
-			case 2: return 0.64999998f;
-			default: return 1.0f;
+			case 1:
+				return 0.15000001f;
+			case 2:
+				return 0.64999998f;
+			default:
+				return 1.0f;
 			}
 		}
 
@@ -550,8 +546,8 @@ namespace Sim
 			const playerState_s* ps = pm->ps;
 			const bool proneAds = (ps->pm_flags & PMF_PRONE_BIT) != 0 && ps->fWeaponPosFrac > 0.0f;
 
-			const float total = std::sqrt(static_cast<float>(cmd->rightmove * cmd->rightmove
-				+ cmd->forwardmove * cmd->forwardmove));
+			const float total =
+				std::sqrt(static_cast<float>(cmd->rightmove * cmd->rightmove + cmd->forwardmove * cmd->forwardmove));
 
 			float fmove;
 			if (cmd->forwardmove >= 0)
@@ -609,8 +605,7 @@ namespace Sim
 			if (accelspeed <= inertiaMax)
 				return accelspeed;
 
-			const float oldSpeedSq = ps->oldVelocity[1] * ps->oldVelocity[1]
-				+ ps->oldVelocity[0] * ps->oldVelocity[0];
+			const float oldSpeedSq = ps->oldVelocity[1] * ps->oldVelocity[1] + ps->oldVelocity[0] * ps->oldVelocity[0];
 			if (oldSpeedSq < 0.0001f)
 				return accelspeed;
 
@@ -627,8 +622,8 @@ namespace Sim
 			trace_t trace = {};
 			const vec3 playerMins(-15.0f, -15.0f, 0.0f);
 			const vec3 playerMaxs(15.0f, 15.0f, 70.0f);
-			PM_PlayerTrace(pm, &trace, ps->origin, playerMins, playerMaxs, ps->origin,
-				ps->clientNum, pm->tracemask & ~CONTENTS_BODY);
+			PM_PlayerTrace(pm, &trace, ps->origin, playerMins, playerMaxs, ps->origin, ps->clientNum,
+				pm->tracemask & ~CONTENTS_BODY);
 			return !trace.allsolid;
 		}
 
@@ -663,8 +658,7 @@ namespace Sim
 				return true;
 
 			return ps->weaponstate == 12 || ps->weaponstate == 13 || ps->weaponstate == 14
-				|| (ps->weaponstate >= 15 && ps->weaponstate <= 20)
-				|| ps->weaponstate == 25 || ps->weaponstate == 26;
+				|| (ps->weaponstate >= 15 && ps->weaponstate <= 20) || ps->weaponstate == 25 || ps->weaponstate == 26;
 		}
 
 		void PM_StartSprint(playerState_s* ps, pmove_t* pm, int sprintLeft)
@@ -719,13 +713,10 @@ namespace Sim
 				}
 			}
 			else if ((!ss->sprintDelay
-					|| DvarFloat("player_sprintRechargePause", 0.0f) * 1000.0f
-						<= static_cast<float>(pm->cmd.serverTime - ss->lastSprintEnd))
-				&& (pm->cmd.buttons & BUTTON_SPRINT)
-				&& !(ps->pm_flags & PMF_NO_SPRINT)
-				&& !ss->sprintButtonUpRequired
-				&& !PM_SprintStartInterferingButtons(ps, pm->cmd.forwardmove, pm->cmd.buttons)
-				&& PM_CanStand(ps, pm))
+						 || DvarFloat("player_sprintRechargePause", 0.0f) * 1000.0f
+							 <= static_cast<float>(pm->cmd.serverTime - ss->lastSprintEnd))
+				&& (pm->cmd.buttons & BUTTON_SPRINT) && !(ps->pm_flags & PMF_NO_SPRINT) && !ss->sprintButtonUpRequired
+				&& !PM_SprintStartInterferingButtons(ps, pm->cmd.forwardmove, pm->cmd.buttons) && PM_CanStand(ps, pm))
 			{
 				const int sprintLeft = PM_GetSprintLeft(ps, pm->cmd.serverTime);
 				if (DvarFloat("player_sprintMinTime", 1.0f) * 1000.0f < static_cast<float>(sprintLeft))
@@ -738,12 +729,9 @@ namespace Sim
 			playerState_s* ps = pm->ps;
 
 			ps->pm_flags &= ~PMF_WALKING;
-			if (ps->pm_type < PM_DEAD
-				&& (pm->cmd.buttons & CMD_BUTTON_ADS)
-				&& !(ps->pm_flags & PMF_PRONE_BIT)
-				&& (ps->pm_flags & PMF_SIGHT_AIMING)
-				&& ps->weaponstate != 7 && ps->weaponstate != 9 && ps->weaponstate != 11
-				&& ps->weaponstate != 10 && ps->weaponstate != 8)
+			if (ps->pm_type < PM_DEAD && (pm->cmd.buttons & CMD_BUTTON_ADS) && !(ps->pm_flags & PMF_PRONE_BIT)
+				&& (ps->pm_flags & PMF_SIGHT_AIMING) && ps->weaponstate != 7 && ps->weaponstate != 9
+				&& ps->weaponstate != 11 && ps->weaponstate != 10 && ps->weaponstate != 8)
 			{
 				ps->pm_flags |= PMF_WALKING;
 			}
@@ -797,10 +785,8 @@ namespace Sim
 		void PM_MeleeChargeUpdate(pmove_t* pm, pml_t* pml)
 		{
 			playerState_s* ps = pm->ps;
-			const bool chargeValid = (ps->pm_flags & PMF_MELEE_CHARGE)
-				&& ps->pm_type == PM_NORMAL
-				&& !(ps->eFlags & EF_TURRET_ACTIVE)
-				&& !(ps->pm_flags & (PMF_MANTLE | PMF_LADDER));
+			const bool chargeValid = (ps->pm_flags & PMF_MELEE_CHARGE) && ps->pm_type == PM_NORMAL
+				&& !(ps->eFlags & EF_TURRET_ACTIVE) && !(ps->pm_flags & (PMF_MANTLE | PMF_LADDER));
 
 			if (!chargeValid)
 			{
@@ -811,8 +797,8 @@ namespace Sim
 			if (!ps->meleeChargeTime)
 			{
 				const float yaw = ps->meleeChargeYaw * DEG_TO_RAD;
-				const float chargeVel = std::sqrt(chargeFriction
-					* static_cast<float>(ps->meleeChargeDist + ps->meleeChargeDist));
+				const float chargeVel =
+					std::sqrt(chargeFriction * static_cast<float>(ps->meleeChargeDist + ps->meleeChargeDist));
 
 				ps->velocity[0] = chargeVel * std::cos(yaw);
 				ps->velocity[1] = chargeVel * std::sin(yaw);
@@ -843,8 +829,8 @@ namespace Sim
 				if (pCurr->iFrac > iFrac)
 				{
 					const viewLerpWaypoint_s* pPrev = &pTable[i - 1];
-					const float entryFrac = static_cast<float>(iFrac - pPrev->iFrac)
-						/ static_cast<float>(pCurr->iFrac - pPrev->iFrac);
+					const float entryFrac =
+						static_cast<float>(iFrac - pPrev->iFrac) / static_cast<float>(pCurr->iFrac - pPrev->iFrac);
 					*pfPosOfs = pPrev->iOffset + (pCurr->iOffset - pPrev->iOffset) * entryFrac;
 					return (pCurr->fViewHeight - pPrev->fViewHeight) * entryFrac + pPrev->fViewHeight;
 				}
@@ -859,9 +845,8 @@ namespace Sim
 				return PM_ViewHeightTableLerp(iLerpFrac, viewLerp_CrouchProne, pfPosOfs);
 			if (ps->viewHeightLerpTarget == 40)
 			{
-				return ps->viewHeightLerpDown
-					? PM_ViewHeightTableLerp(iLerpFrac, viewLerp_StandCrouch, pfPosOfs)
-					: PM_ViewHeightTableLerp(iLerpFrac, viewLerp_ProneCrouch, pfPosOfs);
+				return ps->viewHeightLerpDown ? PM_ViewHeightTableLerp(iLerpFrac, viewLerp_StandCrouch, pfPosOfs)
+											  : PM_ViewHeightTableLerp(iLerpFrac, viewLerp_ProneCrouch, pfPosOfs);
 			}
 			return PM_ViewHeightTableLerp(iLerpFrac, viewLerp_CrouchStand, pfPosOfs);
 		}
@@ -904,8 +889,7 @@ namespace Sim
 
 			if (ps->viewHeightLerpTime)
 			{
-				const int lerpTime = PM_GetViewHeightLerpTime(ps, ps->viewHeightLerpTarget,
-					ps->viewHeightLerpDown);
+				const int lerpTime = PM_GetViewHeightLerpTime(ps, ps->viewHeightLerpTarget, ps->viewHeightLerpDown);
 				iLerpFrac = 100 * (pm->cmd.serverTime - ps->viewHeightLerpTime) / lerpTime;
 				if (iLerpFrac < 0)
 					iLerpFrac = 0;
@@ -955,10 +939,10 @@ namespace Sim
 					}
 					else
 					{
-						const int lerpTime = PM_GetViewHeightLerpTime(ps, ps->viewHeightLerpTarget,
-							ps->viewHeightLerpDown);
-						ps->viewHeightLerpTime = pm->cmd.serverTime
-							- static_cast<int>(iLerpFrac * 0.009999999776482582f * lerpTime);
+						const int lerpTime =
+							PM_GetViewHeightLerpTime(ps, ps->viewHeightLerpTarget, ps->viewHeightLerpDown);
+						ps->viewHeightLerpTime =
+							pm->cmd.serverTime - static_cast<int>(iLerpFrac * 0.009999999776482582f * lerpTime);
 						PM_ViewHeightTableForTarget(ps, iLerpFrac, &posOfs);
 					}
 				}
@@ -1075,8 +1059,8 @@ namespace Sim
 							if (ps->pm_flags & PMF_PRONE_BIT)
 							{
 								pm->maxs[2] = 50.0f;
-								PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs,
-									ps->origin, ps->clientNum, pm->tracemask & ~CONTENTS_BODY);
+								PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, ps->origin, ps->clientNum,
+									pm->tracemask & ~CONTENTS_BODY);
 								if (!trace.allsolid)
 								{
 									ps->pm_flags &= ~PMF_PRONE_BIT;
@@ -1090,13 +1074,13 @@ namespace Sim
 						}
 						else if (ps->pm_flags & PMF_PRONE_BIT)
 						{
-							PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs,
-								ps->origin, ps->clientNum, pm->tracemask & ~CONTENTS_BODY);
+							PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, ps->origin, ps->clientNum,
+								pm->tracemask & ~CONTENTS_BODY);
 							if (trace.allsolid)
 							{
 								pm->maxs[2] = 50.0f;
-								PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs,
-									ps->origin, ps->clientNum, pm->tracemask & ~CONTENTS_BODY);
+								PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, ps->origin, ps->clientNum,
+									pm->tracemask & ~CONTENTS_BODY);
 								if (!trace.allsolid)
 								{
 									ps->pm_flags &= ~PMF_PRONE_BIT;
@@ -1110,8 +1094,8 @@ namespace Sim
 						}
 						else if (ps->pm_flags & PMF_DUCKED)
 						{
-							PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs,
-								ps->origin, ps->clientNum, pm->tracemask & ~CONTENTS_BODY);
+							PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, ps->origin, ps->clientNum,
+								pm->tracemask & ~CONTENTS_BODY);
 							if (!trace.allsolid)
 								ps->pm_flags &= ~PMF_DUCKED;
 						}
@@ -1194,11 +1178,11 @@ namespace Sim
 				// move the origin.
 				vec3 vEnd = ps->origin;
 				vEnd[2] += 10.0f;
-				PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, vEnd,
-					ps->clientNum, pm->tracemask & ~CONTENTS_BODY);
+				PM_PlayerTrace(pm, &trace, ps->origin, pm->mins, pm->maxs, vEnd, ps->clientNum,
+					pm->tracemask & ~CONTENTS_BODY);
 				vEnd = Vec3Lerp(ps->origin, vEnd, trace.fraction);
-				PM_PlayerTrace(pm, &trace, vEnd, pm->mins, pm->maxs, ps->origin,
-					ps->clientNum, pm->tracemask & ~CONTENTS_BODY);
+				PM_PlayerTrace(pm, &trace, vEnd, pm->mins, pm->maxs, ps->origin, ps->clientNum,
+					pm->tracemask & ~CONTENTS_BODY);
 				ps->origin = Vec3Lerp(vEnd, ps->origin, trace.fraction);
 				ps->proneDirection = ps->viewangles[1];
 				ps->proneDirectionPitch = 0.0f;
@@ -1260,10 +1244,8 @@ namespace Sim
 				const vec3 moved = ps->origin - pml->previous_origin;
 				const float speed = std::sqrt(glm::dot(moved, moved));
 
-				if ((!pm->cmd.forwardmove && !pm->cmd.rightmove)
-					|| ps->groundEntityNum == ENTITYNUM_NONE
-					|| speed == 0.0f
-					|| speed <= pml->frametime * 5.0f)
+				if ((!pm->cmd.forwardmove && !pm->cmd.rightmove) || ps->groundEntityNum == ENTITYNUM_NONE
+					|| speed == 0.0f || speed <= pml->frametime * 5.0f)
 				{
 					ps->movementDir = 0;
 					return;
@@ -1382,7 +1364,8 @@ namespace Sim
 				const vec3 up(0.0f, 0.0f, 1.0f);
 				const vec3 forward = glm::cross(up, pml->right);
 				wishvel = (forward * static_cast<float>(pm->cmd.forwardmove)
-					+ pml->right * static_cast<float>(pm->cmd.rightmove)) * scale;
+							  + pml->right * static_cast<float>(pm->cmd.rightmove))
+					* scale;
 			}
 			if (ps->speed)
 			{
@@ -1405,10 +1388,18 @@ namespace Sim
 		{
 			switch (g_mode)
 			{
-			case Mode::COD4: PM_WalkMove(pm, pml); break;
-			case Mode::Q3: Q3::WalkMove(pm, pml, false); break;
-			case Mode::Q3CPM: Q3::WalkMove(pm, pml, true); break;
-			case Mode::CS: CS::WalkMove(pm, pml); break;
+			case Mode::COD4:
+				PM_WalkMove(pm, pml);
+				break;
+			case Mode::Q3:
+				Q3::WalkMove(pm, pml, false);
+				break;
+			case Mode::Q3CPM:
+				Q3::WalkMove(pm, pml, true);
+				break;
+			case Mode::CS:
+				CS::WalkMove(pm, pml);
+				break;
 			}
 		}
 
@@ -1416,10 +1407,18 @@ namespace Sim
 		{
 			switch (g_mode)
 			{
-			case Mode::COD4: PM_AirMove(pm, pml); break;
-			case Mode::Q3: Q3::AirMove(pm, pml, false); break;
-			case Mode::Q3CPM: Q3::AirMove(pm, pml, true); break;
-			case Mode::CS: CS::AirMove(pm, pml); break;
+			case Mode::COD4:
+				PM_AirMove(pm, pml);
+				break;
+			case Mode::Q3:
+				Q3::AirMove(pm, pml, false);
+				break;
+			case Mode::Q3CPM:
+				Q3::AirMove(pm, pml, true);
+				break;
+			case Mode::CS:
+				CS::AirMove(pm, pml);
+				break;
 			}
 		}
 
@@ -1427,10 +1426,16 @@ namespace Sim
 		{
 			switch (g_mode)
 			{
-			case Mode::COD4: PM_GroundTrace(pm, pml); break;
+			case Mode::COD4:
+				PM_GroundTrace(pm, pml);
+				break;
 			case Mode::Q3:
-			case Mode::Q3CPM: Q3::GroundTrace(pm, pml); break;
-			case Mode::CS: CS::GroundTrace(pm, pml); break;
+			case Mode::Q3CPM:
+				Q3::GroundTrace(pm, pml);
+				break;
+			case Mode::CS:
+				CS::GroundTrace(pm, pml);
+				break;
 			}
 		}
 	}
@@ -1475,8 +1480,7 @@ namespace Sim
 		{
 			drop = DvarFloat("player_meleeChargeFriction", 1200.0f) * pml->frametime;
 		}
-		else if (pml->walking && !(pml->groundTrace.surfaceFlags & SURF_SLICK)
-			&& !(ps->pm_flags & PMF_TIME_KNOCKBACK))
+		else if (pml->walking && !(pml->groundTrace.surfaceFlags & SURF_SLICK) && !(ps->pm_flags & PMF_TIME_KNOCKBACK))
 		{
 			const float stopspeed = DvarFloat("stopspeed", 100.0f);
 			float control = stopspeed <= speed ? speed : stopspeed;
@@ -1847,8 +1851,8 @@ namespace Sim
 
 		if (ps->pm_flags & PMF_SPRINTING)
 		{
-			pm->cmd.rightmove = static_cast<char>(static_cast<int>(pm->cmd.rightmove
-				* DvarFloat("player_sprintStrafeSpeedScale", 0.667f)));
+			pm->cmd.rightmove = static_cast<char>(
+				static_cast<int>(pm->cmd.rightmove * DvarFloat("player_sprintStrafeSpeedScale", 0.667f)));
 		}
 		if (Jump_Check(pm, pml))
 		{
@@ -1949,8 +1953,7 @@ namespace Sim
 			return;
 		}
 		// Thrown off the ground: only a ladder or a downward/glancing velocity keeps contact.
-		if (!(ps->pm_flags & PMF_LADDER) && ps->velocity[2] > 0.0f
-			&& glm::dot(ps->velocity, trace.normal) > 10.0f)
+		if (!(ps->pm_flags & PMF_LADDER) && ps->velocity[2] > 0.0f && glm::dot(ps->velocity, trace.normal) > 10.0f)
 		{
 			pml->almostGroundPlane = 0;
 			ps->groundEntityNum = ENTITYNUM_NONE;
@@ -2073,8 +2076,7 @@ namespace Sim
 			const bool pushedRight = pm->cmd.rightmove != pm->oldcmd.rightmove
 				&& std::abs(static_cast<int>(pm->oldcmd.rightmove)) < std::abs(static_cast<int>(pm->cmd.rightmove));
 
-			if (!pushedForward && !pushedRight
-				&& !(ps->pm_flags & PMF_SIGHT_AIMING)
+			if (!pushedForward && !pushedRight && !(ps->pm_flags & PMF_SIGHT_AIMING)
 				&& (ps->weaponstate <= 4 || ps->weaponstate == 7))
 			{
 				ps->pm_flags &= ~PMF_PRONEMOVE_OVERRIDDEN;
@@ -2093,10 +2095,8 @@ namespace Sim
 			ps->eFlags &= ~EF_NO_INPUT;
 
 		ps->eFlags &= ~EF_FIRING;
-		if (ps->pm_type != PM_INTERMISSION
-			&& !(ps->pm_flags & PMF_RESPAWNED)
-			&& (!ps->weaponstate || ps->weaponstate == 5)
-			&& (pm->cmd.buttons & BUTTON_ATTACK))
+		if (ps->pm_type != PM_INTERMISSION && !(ps->pm_flags & PMF_RESPAWNED)
+			&& (!ps->weaponstate || ps->weaponstate == 5) && (pm->cmd.buttons & BUTTON_ATTACK))
 		{
 			ps->eFlags |= EF_FIRING;
 		}

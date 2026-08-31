@@ -8,14 +8,14 @@
 #include "Game/System/Capture.hpp"
 #include "Game/System/Channel.hpp"
 #include "Game/System/Client.hpp"
-#include "Game/System/Console.hpp"
 #include "Game/System/Colors.hpp"
+#include "Game/System/Console.hpp"
 #include "Game/System/Demo.hpp"
 #include "Game/System/Download.hpp"
 #include "Game/System/Huffman.hpp"
 #include "Game/System/PMem.hpp"
-#include "Game/System/Profile.hpp"
 #include "Game/System/Patch.hpp"
+#include "Game/System/Profile.hpp"
 #include "Game/System/Protocol.hpp"
 #include "Game/System/Server.hpp"
 #include "Game/System/System.hpp"
@@ -220,7 +220,7 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.mov(x86::eax, x86::dword_ptr(x86::ebp, -0x04)); // (eax) msg
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, -0x04));				  // (eax) msg
 		a.mov(x86::eax, x86::dword_ptr(x86::eax, offsetof(msg_t, data))); // msg->data
 		a.add(x86::eax, 0x04);
 		a.push(x86::eax); // packet, past the 0xFFFFFFFF marker
@@ -502,14 +502,14 @@ namespace IW3SR
 
 	ASM_FUNCTION(DB_FileSize_h)
 	{
-		a.push(x86::eax);							  // the name, for the second call
-		a.push(x86::dword_ptr(x86::esp, 0x08));		  // the path kind, back where the original wants it
+		a.push(x86::eax);						// the name, for the second call
+		a.push(x86::dword_ptr(x86::esp, 0x08)); // the path kind, back where the original wants it
 		a.mov(x86::edx, 0x48B940);
 		a.call(x86::edx);
 		a.add(x86::esp, 0x04);
-		a.pop(x86::ecx);							  // the name again; the original may have clobbered it
+		a.pop(x86::ecx); // the name again; the original may have clobbered it
 
-		a.push(x86::eax);							  // the size it found, zero when it found nothing
+		a.push(x86::eax); // the size it found, zero when it found nothing
 		a.push(x86::ecx);
 		a.call(GZones::FileSize);
 		a.add(x86::esp, 0x08);

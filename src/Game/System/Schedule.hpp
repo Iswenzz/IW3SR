@@ -35,6 +35,6 @@ namespace IW3SR
 	// Deliberately free of engine state so the stepping can be exercised without the game running.
 	// frametime is the width of the render frame this is called from: the cadence seeds a frame
 	// behind the caller, or it would owe nothing on the frame it starts and stay a step short.
-	Steps PlanSteps(Cadence& cadence, int* widths, int limit, int step, int target, int frametime,
-		int maxDrift, const Pacing& pacing);
+	Steps PlanSteps(Cadence& cadence, int* widths, int limit, int step, int target, int frametime, int maxDrift,
+		const Pacing& pacing);
 }

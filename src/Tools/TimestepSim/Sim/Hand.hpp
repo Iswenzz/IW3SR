@@ -72,7 +72,10 @@ namespace Sim
 		int CountsAt(int time) const;
 		int YawCountsBetween(int from, int to) const;
 
-		const std::vector<KeyEvent>& Events() const { return Schedule; }
+		const std::vector<KeyEvent>& Events() const
+		{
+			return Schedule;
+		}
 
 		// A count moves the view by sensitivity * yawScale degrees, so the sweep rate means
 		// nothing until it is expressed in the client's units.

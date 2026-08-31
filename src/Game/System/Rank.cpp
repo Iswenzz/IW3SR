@@ -184,7 +184,7 @@ namespace IW3SR
 			return false;
 
 		for (uint16_t index = db_hashTable[HashForName(ASSET_TYPE_STRINGTABLE, name)]; index;
-			index = g_assetEntryPool[index].nextHash)
+			 index = g_assetEntryPool[index].nextHash)
 		{
 			const XAssetEntry& entry = g_assetEntryPool[index];
 			if (entry.asset.type != ASSET_TYPE_STRINGTABLE || !entry.asset.header.data)

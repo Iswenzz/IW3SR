@@ -54,4 +54,3 @@ namespace IW3SR
 			SND_StopBackground(track, fadeTime);
 	}
 }
-

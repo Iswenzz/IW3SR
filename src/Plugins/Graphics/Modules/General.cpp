@@ -62,7 +62,8 @@ namespace IW3SR::Addons
 		{
 			if (ImGui::Checkbox("Portal View", &sr_portal_view->current.enabled))
 				sr_portal_view->latched.enabled = sr_portal_view->current.enabled;
-			ImGui::Tooltip("Draw the far side of a linked portal pair into their surfaces.\n"
+			ImGui::Tooltip(
+				"Draw the far side of a linked portal pair into their surfaces.\n"
 				"Each portal on screen costs a second scene render.");
 		}
 	}

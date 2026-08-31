@@ -18,8 +18,7 @@ namespace IW3SR
 			return false;
 
 		const DWORD size = static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t));
-		const LSTATUS result =
-			RegSetValueExW(key, name, 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), size);
+		const LSTATUS result = RegSetValueExW(key, name, 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), size);
 
 		RegCloseKey(key);
 		return result == ERROR_SUCCESS;
@@ -170,8 +169,7 @@ namespace IW3SR
 		const std::wstring command = L"\"" + std::wstring(executable) + L"\"";
 
 		return WriteRegistry(root, nullptr, L"URL:Run game " + Widen(applicationId))
-			&& WriteRegistry(root, L"URL Protocol", L"")
-			&& WriteRegistry(root + L"\\DefaultIcon", nullptr, executable)
+			&& WriteRegistry(root, L"URL Protocol", L"") && WriteRegistry(root + L"\\DefaultIcon", nullptr, executable)
 			&& WriteRegistry(root + L"\\shell\\open\\command", nullptr, command);
 	}
 

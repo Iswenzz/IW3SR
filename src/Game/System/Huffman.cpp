@@ -58,8 +58,8 @@ namespace IW3SR
 			{
 				if (!Reported)
 				{
-					Log::WriteLine(Channel::Warning, "A client message decoded to {} bytes, truncated to {}.",
-						decoded, OutputSize);
+					Log::WriteLine(Channel::Warning, "A client message decoded to {} bytes, truncated to {}.", decoded,
+						OutputSize);
 					Reported = true;
 				}
 				decoded = OutputSize;
@@ -73,4 +73,3 @@ namespace IW3SR
 		}
 	}
 }
-

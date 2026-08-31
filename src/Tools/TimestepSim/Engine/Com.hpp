@@ -12,8 +12,14 @@ namespace Sim
 	{
 		int64_t micros = 0;
 
-		int Milliseconds() const { return static_cast<int>(micros / 1000); }
-		void Advance(int64_t us) { micros += us; }
+		int Milliseconds() const
+		{
+			return static_cast<int>(micros / 1000);
+		}
+		void Advance(int64_t us)
+		{
+			micros += us;
+		}
 	};
 
 	// How a frame is allowed to overshoot its target. Real hardware never lands on the cap

@@ -20,8 +20,8 @@ namespace IW3SR
 
 	void GPortal::Initialize()
 	{
-		Enabled = Dvar::RegisterBool("sr_portal_view", DVAR_SAVED, "Render the far side of a portal into its surface",
-			true);
+		Enabled =
+			Dvar::RegisterBool("sr_portal_view", DVAR_SAVED, "Render the far side of a portal into its surface", true);
 		Scale = Dvar::RegisterFloat("sr_portal_scale", DVAR_SAVED, "Portal view resolution, relative to the screen",
 			0.5f, 0.125f, 1.0f);
 		Distance = Dvar::RegisterFloat("sr_portal_distance", DVAR_SAVED,
@@ -318,7 +318,7 @@ namespace IW3SR
 		R_RenderScene(&view);
 		R_EndFrame();
 		R_IssueRenderCommands(1); // render without presenting
-		R_SyncRenderThread();     // r_smp_backend hands the pass off, so wait before copying
+		R_SyncRenderThread();	  // r_smp_backend hands the pass off, so wait before copying
 		Rendering = false;
 
 		if (Capture(target))
@@ -370,8 +370,8 @@ namespace IW3SR
 		// this by screen position, so the two have to describe the same rectangle. sr_portal_scale
 		// only decides how much resolution is kept.
 		const RECT source = { 0, 0, static_cast<LONG>(frame.width), static_cast<LONG>(frame.height) };
-		const bool copied = SUCCEEDED(dx->device->StretchRect(frame.surface.color, &source, texture->Surface,
-			nullptr, D3DTEXF_LINEAR));
+		const bool copied =
+			SUCCEEDED(dx->device->StretchRect(frame.surface.color, &source, texture->Surface, nullptr, D3DTEXF_LINEAR));
 
 		for (uint32_t slot = 0; bound; slot++, bound >>= 1)
 		{
@@ -449,9 +449,10 @@ namespace IW3SR
 		// left of the screen is usually covered by one of them.
 		static GText text{ "", FONT_NORMAL, 10, 120, 1.2f, vec4(1, 0, 1, 1) };
 
-		text.Value = std::format("portal: {}\nframes {}  mats {}  surfaces {}\nquads {}  paired {}  captured {}\n{}  {}",
-			DebugStage, DebugFrames, rgp ? rgp->materialCount : -1, Surfaces.size(), DebugModels, DebugMatched,
-			DebugCaptured, DebugMaterial, DebugTechniques);
+		text.Value =
+			std::format("portal: {}\nframes {}  mats {}  surfaces {}\nquads {}  paired {}  captured {}\n{}  {}",
+				DebugStage, DebugFrames, rgp ? rgp->materialCount : -1, Surfaces.size(), DebugModels, DebugMatched,
+				DebugCaptured, DebugMaterial, DebugTechniques);
 		text.Render();
 	}
 

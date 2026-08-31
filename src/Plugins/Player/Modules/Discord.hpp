@@ -34,7 +34,7 @@ namespace IW3SR::Addons
 		void Draw(const DiscordJoinRequest& request);
 		void DrawBar();
 
-		SERIALIZE_POLY(Discord, Module, TitleText, RequestText, AcceptText, DenyText, BarPosition, BarSize,
-			ColorHeader, ColorBackground, KeyAccept, KeyDeny, ShowOverlay)
+		SERIALIZE_POLY(Discord, Module, TitleText, RequestText, AcceptText, DenyText, BarPosition, BarSize, ColorHeader,
+			ColorBackground, KeyAccept, KeyDeny, ShowOverlay)
 	};
 }

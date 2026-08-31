@@ -35,8 +35,8 @@ namespace Sim
 		return plan;
 	}
 
-	int SplitCommands(ClientState& cl, int& movementClock, int movementFps, SplitMode mode,
-		IW3SR::Cadence& cadence, const Pacing& pacing, SplitStats& stats)
+	int SplitCommands(ClientState& cl, int& movementClock, int movementFps, SplitMode mode, IW3SR::Cadence& cadence,
+		const Pacing& pacing, SplitStats& stats)
 	{
 		const int step = 1000 / movementFps;
 
@@ -52,8 +52,7 @@ namespace Sim
 		}
 		else
 		{
-			const IW3SR::Pacing pace = { static_cast<int>(pacing.sleepMicros),
-				static_cast<int>(pacing.workMicros) };
+			const IW3SR::Pacing pace = { static_cast<int>(pacing.sleepMicros), static_cast<int>(pacing.workMicros) };
 			plan = IW3SR::PlanSteps(cadence, widths, MaxSteps, step, target, cl.frametime, MaxDrift, pace);
 		}
 		const int count = plan.Count;

@@ -123,8 +123,10 @@ namespace Sim
 			// cgameMaxYawSpeed caps a turret or vehicle turn. The sim never sets one, so the
 			// engine's min() against cl_yawspeed always resolves to cl_yawspeed.
 			const float max = cl.cl_yawspeed;
-			cl.viewangles[1] = static_cast<float>(cl.viewangles[1] - CL_KeyState(cl, &kb[KB_TURN_RIGHT]) * (speed * max));
-			cl.viewangles[1] = static_cast<float>(CL_KeyState(cl, &kb[KB_TURN_LEFT]) * (speed * max) + cl.viewangles[1]);
+			cl.viewangles[1] =
+				static_cast<float>(cl.viewangles[1] - CL_KeyState(cl, &kb[KB_TURN_RIGHT]) * (speed * max));
+			cl.viewangles[1] =
+				static_cast<float>(CL_KeyState(cl, &kb[KB_TURN_LEFT]) * (speed * max) + cl.viewangles[1]);
 		}
 
 		const float maxa = cl.cl_pitchspeed;
@@ -216,8 +218,8 @@ namespace Sim
 		if (!cl.frame_msec)
 			return;
 
-		const float rate = static_cast<float>(
-			sqrt(static_cast<double>(my * my + mx * mx)) / static_cast<double>(cl.frame_msec));
+		const float rate =
+			static_cast<float>(sqrt(static_cast<double>(my * my + mx * mx)) / static_cast<double>(cl.frame_msec));
 
 		// cgameFOVSensitivityScale is 1 outside a scope, which the sim never enters.
 		const float accelSensitivity = rate * cl.cl_mouseAccel + cl.cl_sensitivity;

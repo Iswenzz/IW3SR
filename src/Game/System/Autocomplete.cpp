@@ -66,8 +66,7 @@ namespace IW3SR
 			return;
 
 		const std::string& prefix = tokens[1];
-		Replace(prefix.size(),
-			Match(dvar->domain.enumeration.strings, dvar->domain.enumeration.stringCount, prefix));
+		Replace(prefix.size(), Match(dvar->domain.enumeration.strings, dvar->domain.enumeration.stringCount, prefix));
 	}
 
 	// An ambiguous prefix fills in only the part every candidate agrees on.

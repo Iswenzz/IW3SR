@@ -50,8 +50,7 @@ namespace IW3SR
 				error = std::format("no '{}' header", FilterMagic);
 
 			// This runs on a pool thread; the list and the console belong to the game one.
-			GSystem::Tasks.Add([body = error.empty() ? response.Body : std::string(), error]
-				{ Apply(body, error); });
+			GSystem::Tasks.Add([body = error.empty() ? response.Body : std::string(), error] { Apply(body, error); });
 		};
 		request.Send();
 	}

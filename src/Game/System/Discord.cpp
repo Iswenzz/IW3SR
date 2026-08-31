@@ -123,8 +123,7 @@ namespace IW3SR
 		AppIdDvar = Dvar::RegisterString("sr_discord_appid", DVAR_SAVED,
 			"Discord application the presence is published as", DefaultApplicationId);
 		JoinDvar = Dvar::RegisterBool("sr_discord_join", DVAR_SAVED,
-			"Publish a join secret so friends get a join button. Never published on a password protected server",
-			true);
+			"Publish a join secret so friends get a join button. Never published on a password protected server", true);
 		RegisterDvar = Dvar::RegisterBool("sr_discord_register", DVAR_SAVED,
 			"Register the discord- URL protocol for this user, which is what lets Discord launch the game on a join",
 			true);

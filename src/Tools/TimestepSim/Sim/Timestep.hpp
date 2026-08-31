@@ -26,6 +26,6 @@ namespace Sim
 		int clock = 0;
 	};
 
-	int SplitCommands(ClientState& cl, int& movementClock, int movementFps, SplitMode mode,
-		IW3SR::Cadence& cadence, const Pacing& pacing, SplitStats& stats);
+	int SplitCommands(ClientState& cl, int& movementClock, int movementFps, SplitMode mode, IW3SR::Cadence& cadence,
+		const Pacing& pacing, SplitStats& stats);
 }
