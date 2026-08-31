@@ -29,6 +29,13 @@ namespace IW3SR
 	constexpr uintptr_t FileSizeSite = 0x5039D1;
 	constexpr uintptr_t FileSizeTarget = 0x48B940;
 
+	// DB_TryLoadXFile only reaches the helper that opens <basepath>/usermaps/<map>/<name>.ff when
+	// fs_game names a mod, so with no mod loaded a usermap is looked for in zone/<language> alone and
+	// nowhere else. The branch that skips the helper:
+	//   0048a9d8: 74 21   je 0x48a9fb
+	constexpr uintptr_t UsermapBranch = 0x48A9D8;
+	constexpr uint16_t UsermapBranchStock = 0x2174; // je +0x21, little endian
+
 	// Runs on every CreateFileA in the process, and the names are ASCII, so no locale-aware tolower.
 	static constexpr char Lower(char value)
 	{
@@ -161,11 +168,27 @@ namespace IW3SR
 		Memory::CALL(FileSizeSite, ASM_LOAD(DB_FileSize_h));
 	}
 
+	// The helper the branch skips tries the mod fastfile first and the usermap second, and it reads
+	// fs_game for the mod path alone - so letting it run with no mod set costs one failed open of
+	// <basepath>/mod.ff on the zones that are not usermaps, and finds the ones that are.
+	void GZones::PatchUsermapSearch()
+	{
+		if (Patch::UseCoD4X)
+			return;
+		if (Memory::Get<uint16_t>(UsermapBranch) != UsermapBranchStock)
+		{
+			Log::WriteLine(Channel::Error, "The usermap branch at {:X} is not stock 1.7.", UsermapBranch);
+			return;
+		}
+		Memory::NOP(UsermapBranch, 2);
+	}
+
 	void GZones::Discover()
 	{
 		// Independent of the layer below: this is what lets an extended server's own zones be
 		// measured at all, and it has to happen even with sr_zones off.
 		PatchFileSize();
+		PatchUsermapSearch();
 
 		// Registered here rather than at renderer init, where the first batch is already loading.
 		// The anchor dvar covers the table not being up yet: a hook must not take the boot down.

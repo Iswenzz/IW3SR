@@ -29,6 +29,7 @@ namespace IW3SR
 
 		static void Discover();
 		static void PatchFileSize();
+		static void PatchUsermapSearch();
 		static void Collect();
 		static void MountIwd();
 		static bool Resolvable(const PatchZone& zone);
