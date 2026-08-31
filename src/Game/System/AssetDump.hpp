@@ -24,11 +24,14 @@ namespace IW3SR
 		static bool Allowed();
 		static std::optional<XAssetType> Parse(const std::string& name);
 
+		static void Walk(const std::function<void(const XAssetEntry&)>& visit);
 		static std::vector<AssetRecord> Collect(std::optional<XAssetType> type, const std::string& filter);
+		static std::array<int, ASSET_TYPE_COUNT> Count();
 		static void Take(std::vector<AssetRecord>& records, const XAssetEntry& entry, std::optional<XAssetType> type,
 			const std::string& filter);
 
 		static void List(std::optional<XAssetType> type, const std::string& filter);
+		static void Usage();
 		static void Dump(std::optional<XAssetType> type, const std::string& filter);
 
 		static bool Index(const std::filesystem::path& root, const std::vector<AssetRecord>& records);

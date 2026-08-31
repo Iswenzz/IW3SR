@@ -41,7 +41,7 @@ namespace IW3SR
 	void GAssetDump::Initialize()
 	{
 		Developer = Dvar::RegisterBool("sr_dev_assets", DVAR_NONE,
-			"Enable the xasset inspection commands, sr_assets and sr_assets_dump", false);
+			"Enable the xasset inspection commands, sr_assets, sr_assets_usage and sr_assets_dump", false);
 		Archive = Dvar::RegisterBool("sr_dev_assets_zip", DVAR_SAVED,
 			"Pack each dump into a single zip and drop the folder it was written from", false);
 	}
@@ -52,7 +52,7 @@ namespace IW3SR
 		std::string name;
 		stream >> name;
 
-		if (name != "sr_assets" && name != "sr_assets_dump")
+		if (name != "sr_assets" && name != "sr_assets_usage" && name != "sr_assets_dump")
 			return false;
 
 		std::string type, filter;
@@ -60,6 +60,12 @@ namespace IW3SR
 
 		if (!Allowed())
 			return true;
+
+		if (name == "sr_assets_usage")
+		{
+			Usage();
+			return true;
+		}
 
 		std::optional<XAssetType> selected;
 		if (!type.empty() && type != "*")
@@ -100,12 +106,10 @@ namespace IW3SR
 
 	// Walks the database the way DB_EnumXAssets does, but takes no db_hashCritSect, so it is only
 	// safe from the console with no zone load in flight.
-	std::vector<AssetRecord> GAssetDump::Collect(std::optional<XAssetType> type, const std::string& filter)
+	void GAssetDump::Walk(const std::function<void(const XAssetEntry&)>& visit)
 	{
-		std::vector<AssetRecord> records;
-
 		if (!db_hashTable || !g_assetEntryPool)
-			return records;
+			return;
 
 		// A chain walked off a torn hash table would never come back, so the walk is bounded.
 		uint32_t budget = PoolSize;
@@ -119,7 +123,7 @@ namespace IW3SR
 				budget--;
 
 				const XAssetEntry& entry = g_assetEntryPool[index];
-				Take(records, entry, type, filter);
+				visit(entry);
 
 				for (uint32_t alternate = entry.nextOverride; alternate && budget;
 					 alternate = g_assetEntryPool[alternate].nextOverride)
@@ -128,14 +132,37 @@ namespace IW3SR
 						break;
 					budget--;
 
-					Take(records, g_assetEntryPool[alternate], type, filter);
+					visit(g_assetEntryPool[alternate]);
 				}
 			}
 		}
+	}
+
+	std::vector<AssetRecord> GAssetDump::Collect(std::optional<XAssetType> type, const std::string& filter)
+	{
+		std::vector<AssetRecord> records;
+
+		Walk([&](const XAssetEntry& entry) { Take(records, entry, type, filter); });
+
 		std::ranges::sort(records, [](const AssetRecord& left, const AssetRecord& right)
 			{ return left.Type != right.Type ? left.Type < right.Type : left.Name < right.Name; });
 
 		return records;
+	}
+
+	// Counts the way DB_CountXAssets does: a pool slot is spent whether or not the entry is still
+	// inuse, and the types whose header has no readable name have to count too.
+	std::array<int, ASSET_TYPE_COUNT> GAssetDump::Count()
+	{
+		std::array<int, ASSET_TYPE_COUNT> counts = {};
+
+		Walk([&](const XAssetEntry& entry)
+			{
+				if (static_cast<uint32_t>(entry.asset.type) < ASSET_TYPE_COUNT)
+					counts[entry.asset.type]++;
+			});
+
+		return counts;
 	}
 
 	void GAssetDump::Take(std::vector<AssetRecord>& records, const XAssetEntry& entry, std::optional<XAssetType> type,
@@ -181,6 +208,25 @@ namespace IW3SR
 		}
 
 		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, std::format("{} assets.\n", records.size()).c_str(), 0);
+	}
+
+	void GAssetDump::Usage()
+	{
+		const std::array<int, ASSET_TYPE_COUNT> counts = Count();
+
+		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, "XAsset usage:\n", 0);
+		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, "Name                 Used  Free\n", 0);
+		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, "-------------------- ----- -----\n", 0);
+
+		for (size_t i = 0; i < counts.size(); i++)
+		{
+			const int size = g_poolSize ? static_cast<int>(g_poolSize[i]) : 0;
+
+			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
+				std::format("{:<20} {:>5} {:>5}\n", TypeName(static_cast<XAssetType>(i)), counts[i], size - counts[i])
+					.c_str(),
+				0);
+		}
 	}
 
 	void GAssetDump::Dump(std::optional<XAssetType> type, const std::string& filter)
