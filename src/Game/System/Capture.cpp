@@ -381,7 +381,7 @@ namespace IW3SR
 
 		// Rendering does not depend on the window being visible, we read the backbuffer
 		// before the frame is ever presented.
-		if (IsWindowVisible(window) != state)
+		if (static_cast<bool>(IsWindowVisible(window)) != state)
 			return;
 
 		ShowWindow(window, state ? SW_HIDE : SW_SHOW);
