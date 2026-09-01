@@ -28,9 +28,25 @@ namespace IW3SR
 		for (int i = 0; i <= dvarCount - 1; i++)
 			Console::AddCommand(dvars[i]->name);
 
-		Console::AddCommand("replayDemo");
 		Console::AddCommand("unset");
+		Console::AddCommand("replayDemo");
+		Console::AddCommand("sr_assets");
 		Console::AddCommand("sr_assets_usage");
+		Console::AddCommand("sr_capture");
+		Console::AddCommand("sr_demo");
+		Console::AddCommand("sr_download_cancel");
+		Console::AddCommand("sr_download_status");
+		Console::AddCommand("sr_openurl");
+		Console::AddCommand("sr_render");
+		Console::AddCommand("sr_serverfilter_list");
+		Console::AddCommand("sr_serverfilter_refresh");
+		Console::AddCommand("sr_serverinfo");
+		Console::AddCommand("sr_serverlist");
+		Console::AddCommand("sr_shell_register");
+		Console::AddCommand("sr_shell_unregister");
+		Console::AddCommand("snd_pause");
+		Console::AddCommand("snd_stopambient");
+		Console::AddCommand("snd_unpause");
 	}
 
 	void Client::Connect()

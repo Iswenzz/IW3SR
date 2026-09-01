@@ -164,18 +164,13 @@ namespace IW3SR
 			PendingMaterialUpdate = false;
 			UpdateMaterials();
 		}
-		if (!Capture::Recording || Capture::DrawOverlay())
-		{
-			Tasks.Submit();
-			Renderer::Frame();
-			Input::Reset();
-		}
-
+		Tasks.Submit();
+		Renderer::Frame();
+		Input::Reset();
 		Console::Frame();
 
 		IDirect3DDevice9_EndScene_h(device);
 
-		// The backbuffer can only be resolved outside of a begin/end scene block.
 		Capture::Frame(device);
 	}
 
