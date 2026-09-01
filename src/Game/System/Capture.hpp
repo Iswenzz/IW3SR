@@ -57,6 +57,7 @@ namespace IW3SR
 		static inline dvar_s* Binary = nullptr;
 		static inline dvar_s* Overlay = nullptr;
 		static inline dvar_s* Hidden = nullptr;
+		static inline dvar_s* Sound = nullptr;
 
 		static inline RenderState State = RenderState::Idle;
 		static inline RenderRequest Request;
@@ -82,13 +83,22 @@ namespace IW3SR
 		static inline std::atomic<bool> Aborted = false;
 		static inline int Frames = 0;
 
+		static inline bool Paced = false;
+		static inline uint64_t Started = 0;
+		static inline std::filesystem::path Target;
+		static inline std::filesystem::path Track;
+
 		static bool CreateSurfaces(IDirect3DDevice9* device);
 		static void ReleaseSurfaces();
 		static bool Copy(IDirect3DDevice9* device, size_t slot);
-		static bool Read(size_t slot);
+		static bool Read(size_t slot, int repeat = 1);
 		static void Flush();
 		static void Submit(CaptureFrame&& frame);
 		static void Encode();
+
+		static int Due();
+		static void Mux();
+		static std::filesystem::path Intermediate();
 
 		static void Hide(bool state);
 		static bool Spawn(const std::string& output);

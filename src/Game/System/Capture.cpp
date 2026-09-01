@@ -1,5 +1,6 @@
 #include "Capture.hpp"
 
+#include "Game/System/Audio.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/System.hpp"
 
@@ -10,6 +11,9 @@ namespace IW3SR
 	constexpr size_t MaxPendingFrames = 8;
 
 	constexpr DWORD EncoderTimeout = 30000;
+
+	// Ceiling on how many copies of one frame a stall can inject into the video.
+	constexpr int MaxRepeatedFrames = 8;
 
 	constexpr std::array<std::string_view, 5> Containers = { ".mp4", ".mkv", ".mov", ".avi", ".webm" };
 
@@ -41,6 +45,10 @@ namespace IW3SR
 			"Record the client overlay, huds included. The menu itself is only drawn while it is open", true);
 		Hidden = Dvar::RegisterBool("sr_render_hidden", DVAR_SAVED,
 			"Hide the game window while sr_render runs. The frames still come off the backbuffer", true);
+		Sound = Dvar::RegisterBool("sr_capture_sound", DVAR_SAVED,
+			"Record the game audio. Playback is what gets recorded, so the capture runs at real time "
+			"instead of the fixed timestep and drops frames the machine cannot keep up with",
+			true);
 	}
 
 	void Capture::Shutdown()
@@ -65,25 +73,50 @@ namespace IW3SR
 			Com_PrintMessage(CON_CHANNEL_ERROR, "^1Failed to create the capture surfaces.\n", 0);
 			return false;
 		}
-		const std::string path = Resolved(output);
+		Target = Resolved(output);
+		Paced = Sound && Sound->current.enabled;
+		Track.clear();
+
+		if (Paced)
+		{
+			Track = Target;
+			Track.replace_extension(".wav");
+
+			if (!Audio::Start(Track))
+			{
+				Com_PrintMessage(CON_CHANNEL_ERROR, "^3Recording without sound, the loopback capture failed.\n", 0);
+				Paced = false;
+				Track.clear();
+			}
+		}
+		// Started is stamped against the audio rather than the encoder, so the frames the spawn
+		// below eats are owed to the timeline and get filled in instead of shifting it.
+		Frames = 0;
+		Started = GetTickCount64();
+
+		// The video is muxed against the WAV afterwards, so it lands beside the target first.
+		const std::string path = Paced ? Intermediate().string() : Target.string();
+
 		if (!Spawn(path))
 		{
+			Audio::Stop();
 			ReleaseSurfaces();
 			return false;
 		}
-		Frames = 0;
 		Draining = false;
 		Aborted = false;
 		Recording = true;
 		Writer = std::thread(Encode);
 
-		// Fixes the client timestep so playback speed no longer depends on how fast we encode.
-		Dvar::Set<int>("cl_avidemo", Fps->current.integer);
+		// Loopback audio only exists on the wall clock, so pacing against it is what keeps the two
+		// tracks together. Without sound the fixed timestep buys a frame exact video instead.
+		if (!Paced)
+			Dvar::Set<int>("cl_avidemo", Fps->current.integer);
 
 		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
-			std::format("Recording {}x{} at {} fps to {}\nThe game runs slower than real time while recording, the "
-						"recorded video does not.\n",
-				Width, Height, Fps->current.integer, path)
+			std::format("Recording {}x{} at {} fps to {}\n{}\n", Width, Height, Fps->current.integer, Target.string(),
+				Paced ? "Recording sound, so the game runs at real time and drops frames it cannot keep up with."
+					  : "The game runs slower than real time while recording, the recorded video does not.")
 				.c_str(),
 			0);
 		return true;
@@ -95,7 +128,10 @@ namespace IW3SR
 			return;
 		Recording = false;
 
-		Dvar::Set<int>("cl_avidemo", 0);
+		Audio::Stop();
+
+		if (!Paced)
+			Dvar::Set<int>("cl_avidemo", 0);
 
 		if (!Aborted)
 			Flush();
@@ -111,6 +147,7 @@ namespace IW3SR
 
 		Terminate();
 		ReleaseSurfaces();
+		Mux();
 
 		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, std::format("Recorded {} frames.\n", Frames).c_str(), 0);
 	}
@@ -125,6 +162,12 @@ namespace IW3SR
 		if (!Recording || !device || !Resolve || !Staging[Slot])
 			return;
 
+		// Resolving the backbuffer is the expensive half, so a frame that is not due never gets
+		// copied at all rather than being copied and thrown away.
+		const int owed = Due();
+		if (!owed)
+			return;
+
 		if (!Copy(device, (Slot + Queued) % StagingCount))
 			return;
 
@@ -133,9 +176,26 @@ namespace IW3SR
 		if (++Queued < StagingCount)
 			return;
 
-		Read(Slot);
+		Read(Slot, owed);
 		Slot = (Slot + 1) % StagingCount;
 		Queued--;
+	}
+
+	// Off the fixed timestep the game renders far faster than the target rate, so the wall clock
+	// decides which frames reach the encoder. Falling behind repeats the last frame rather than
+	// letting the video slip into slow motion against the audio it is muxed with.
+	int Capture::Due()
+	{
+		if (!Paced)
+			return 1;
+
+		const uint64_t elapsed = GetTickCount64() - Started;
+		const auto expected = static_cast<int>(elapsed * Fps->current.integer / 1000);
+		const int owed = expected - Frames - static_cast<int>(Queued);
+
+		// A long stall, an alt-tab or a map load owes thousands of frames. Writing them all would
+		// stall the capture worse than the gap it is patching, so the timeline takes the hit.
+		return std::clamp(owed, 0, MaxRepeatedFrames);
 	}
 
 	bool Capture::Command(const std::string& command)
@@ -274,7 +334,7 @@ namespace IW3SR
 		return SUCCEEDED(resolved) && SUCCEEDED(device->GetRenderTargetData(Resolve, Staging[slot]));
 	}
 
-	bool Capture::Read(size_t slot)
+	bool Capture::Read(size_t slot, int repeat)
 	{
 		D3DLOCKED_RECT locked = {};
 		if (FAILED(Staging[slot]->LockRect(&locked, nullptr, D3DLOCK_READONLY | D3DLOCK_NOSYSLOCK)))
@@ -304,6 +364,12 @@ namespace IW3SR
 		}
 		Staging[slot]->UnlockRect();
 
+		// Everything past the first is a repeat covering time the game did not render through.
+		for (int copy = 1; copy < repeat; copy++)
+		{
+			Frames++;
+			Submit(CaptureFrame{ frame.pixels });
+		}
 		Frames++;
 		Submit(std::move(frame));
 		return true;
@@ -371,6 +437,63 @@ namespace IW3SR
 			std::lock_guard lock(Mutex);
 			Recycled.push_back(std::move(frame));
 		}
+	}
+
+	// Keeps the target's own container, so muxing only ever copies the video stream rather than
+	// moving it between formats the encoder was not asked for.
+	std::filesystem::path Capture::Intermediate()
+	{
+		std::filesystem::path path = Target;
+		path.replace_filename(Target.stem().string() + ".video" + Target.extension().string());
+
+		return path;
+	}
+
+	// ffmpeg cannot take two pipes from one parent without a named pipe on Windows, and a second
+	// pass costs nothing next to the encode: the video is already compressed and only gets copied.
+	void Capture::Mux()
+	{
+		if (Track.empty())
+			return;
+
+		const std::filesystem::path video = Intermediate();
+		std::error_code ec;
+
+		if (!std::filesystem::exists(video) || !std::filesystem::exists(Track))
+		{
+			Com_PrintMessage(CON_CHANNEL_ERROR, "^1The capture is missing a track, leaving the pieces in place.\n", 0);
+			Track.clear();
+			return;
+		}
+		const std::string executable = Executable();
+		std::string command = std::format(
+			"\"{}\" -hide_banner -loglevel error -y -i \"{}\" -i \"{}\" -c:v copy -c:a aac -b:a 192k -shortest \"{}\"",
+			executable, video.string(), Track.string(), Target.string());
+
+		STARTUPINFOA startup = {};
+		startup.cb = sizeof(startup);
+		startup.dwFlags = STARTF_USESHOWWINDOW;
+		startup.wShowWindow = SW_HIDE;
+
+		PROCESS_INFORMATION process = {};
+		if (CreateProcessA(nullptr, command.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr,
+				&startup, &process))
+		{
+			WaitForSingleObject(process.hProcess, EncoderTimeout);
+			CloseHandle(process.hThread);
+			CloseHandle(process.hProcess);
+		}
+		if (std::filesystem::exists(Target))
+		{
+			std::filesystem::remove(video, ec);
+			std::filesystem::remove(Track, ec);
+		}
+		else
+		{
+			Com_PrintMessage(CON_CHANNEL_ERROR,
+				std::format("^1Muxing failed, the silent video is still at {}.\n", video.string()).c_str(), 0);
+		}
+		Track.clear();
 	}
 
 	void Capture::Hide(bool state)
