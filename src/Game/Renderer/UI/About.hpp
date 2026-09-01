@@ -3,17 +3,18 @@
 
 namespace IW3SR::UC
 {
-	class About : public Frame
+	// The About page and the update check behind it. Lives outside of any one frame because the
+	// HUD reads UpdateAvailable long before the menu is ever opened.
+	class About
 	{
 	public:
 		static inline bool UpdateAvailable = false;
 
-		About();
-		virtual ~About() = default;
-		void OnRender() override;
+		static void Initialize();
+		static void Render();
 
 	private:
-		Ref<Texture> Logo = nullptr;
+		static inline Ref<Texture> Logo = nullptr;
 
 		static inline bool Checking = false;
 		static inline bool Downloading = false;

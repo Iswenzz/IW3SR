@@ -1,4 +1,8 @@
-#include "Modules.hpp"
+#include "Main.hpp"
+
+#include "About.hpp"
+
+#include "Engine/Backend/ImGUI/UI/Themes.hpp"
 
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Patch.hpp"
@@ -8,10 +12,10 @@ namespace IW3SR::UC
 	namespace
 	{
 		constexpr float SidebarRatio = 0.3f;
-		constexpr float DefaultWidth = 460;
-		constexpr float DefaultHeight = 300;
-		constexpr float MinWidth = 400;
-		constexpr float MinHeight = 260;
+		constexpr float DefaultWidth = 560;
+		constexpr float DefaultHeight = 380;
+		constexpr float MinWidth = 460;
+		constexpr float MinHeight = 300;
 
 		constexpr auto Dot = " \xC2\xB7 ";
 
@@ -23,6 +27,7 @@ namespace IW3SR::UC
 		constexpr auto RowColor = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
 		constexpr auto RowHoveredColor = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
 		constexpr auto RowActiveColor = ImVec4(1.00f, 1.00f, 1.00f, 0.14f);
+		constexpr auto HighlightColor = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
 
 		char Lower(char c)
 		{
@@ -92,27 +97,31 @@ namespace IW3SR::UC
 		}
 	}
 
-	Modules::Modules() : Frame("Modules")
+	Main::Main() : Frame(APPLICATION_ID)
 	{
 		Reset();
 		SetFlags(ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
+
+		Open = true;
 	}
 
-	// Runs after the saved layout is restored: the panel needs room, so layouts left over from the
-	// old narrow module list are dropped back to the default rect.
-	void Modules::Initialize()
+	// Runs after the saved layout is restored: the panel needs room, so layouts left over from a
+	// smaller window are dropped back to the default rect.
+	void Main::Initialize()
 	{
+		Open = true;
+
 		if (Size.x < MinWidth || Size.y < MinHeight)
 			Reset();
 	}
 
-	void Modules::Reset()
+	void Main::Reset()
 	{
 		SetRect(DefaultWidth * -0.5f, DefaultHeight * -0.5f, DefaultWidth, DefaultHeight);
 		SetRectAlignment(Horizontal::Center, Vertical::Center);
 	}
 
-	void Modules::OnRender()
+	void Main::OnRender()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		Begin();
@@ -125,13 +134,21 @@ namespace IW3SR::UC
 		Details();
 
 		End();
+
+		// Closing the window closes the menu; the menu key is what brings both back.
+		if (!Open)
+		{
+			Open = true;
+			UI::Open = false;
+		}
 	}
 
-	void Modules::Sidebar(float width)
+	void Main::Sidebar(float width)
 	{
 		const ImGuiStyle& style = ImGui::GetStyle();
-		// Spacing, separator, spacing and the settings row itself; a horizontal separator adds no height.
-		const float footer = RowHeight() + style.ItemSpacing.y * 5.0f;
+		// Spacing, separator, spacing and the three footer rows; a horizontal separator adds no
+		// height of its own.
+		const float footer = RowHeight() * 3.0f + style.ItemSpacing.y * 7.0f;
 
 		BeginPanel("##sidebar", { width, 0 }, SidebarColor, ImGuiChildFlags_AlwaysUseWindowPadding, Fixed);
 
@@ -171,36 +188,29 @@ namespace IW3SR::UC
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		const float height = RowHeight();
-		const vec2 cursor = ImGui::GetCursorPos();
-
-		if (ImGui::Selectable("##settings", ShowSettings, 0, { 0, height }))
-			ShowSettings = true;
-		if (ShowSettings)
-			Accent();
-
-		ImGui::SetCursorPos({ cursor.x + style.FramePadding.x, cursor.y + (height - ImGui::GetFontSize()) * 0.5f });
-		ImGui::TextUnformatted(ICON_FA_GEAR "  Settings");
+		Link(Page::Settings, ICON_FA_GEAR "  Settings");
+		Link(Page::Theme, ICON_FA_PAINTBRUSH "  Theme");
+		Link(Page::About, ICON_FA_CIRCLE_INFO "  About", About::UpdateAvailable);
 
 		ImGui::PopStyleColor(3);
 		ImGui::EndChild();
 	}
 
-	void Modules::Category(const std::string& group)
+	void Main::Category(const std::string& group)
 	{
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetStyle().FramePadding.x);
 		ImGui::TextDisabled("%s", Upper(group).c_str());
 		ImGui::Spacing();
 	}
 
-	void Modules::Entry(const Ref<Module>& entry)
+	void Main::Entry(const Ref<Module>& entry)
 	{
 		const ImGuiStyle& style = ImGui::GetStyle();
 		const vec2 toggle = ToggleSize();
 		const float height = RowHeight();
 		const float width = ImGui::GetContentRegionAvail().x;
 		const vec2 cursor = ImGui::GetCursorPos();
-		const bool selected = !ShowSettings && Selected == entry->ID;
+		const bool selected = Current == Page::Modules && Selected == entry->ID;
 
 		ImGui::PushID(entry->ID.c_str());
 		ImGui::SetNextItemAllowOverlap();
@@ -208,7 +218,7 @@ namespace IW3SR::UC
 		if (ImGui::Selectable("##entry", selected, ImGuiSelectableFlags_AllowOverlap, { 0, height }))
 		{
 			Selected = entry->ID;
-			ShowSettings = false;
+			Current = Page::Modules;
 		}
 		if (selected)
 			Accent();
@@ -226,38 +236,78 @@ namespace IW3SR::UC
 		ImGui::PopID();
 	}
 
-	void Modules::Details()
+	// A footer row: same shape as a module entry, but it switches the panel to a page of its own.
+	void Main::Link(Page page, const std::string& label, bool highlight)
+	{
+		const ImGuiStyle& style = ImGui::GetStyle();
+		const float height = RowHeight();
+		const bool selected = Current == page;
+		// Taken before the row: a selectable draws half an item spacing outside the size asked of
+		// it, so its own rect is not what the label is centred against.
+		const vec2 origin = ImGui::GetCursorScreenPos();
+
+		ImGui::PushID(label.c_str());
+
+		if (ImGui::Selectable("##link", selected, 0, { 0, height }))
+			Current = page;
+		if (selected)
+			Accent();
+
+		// Drawn over the row rather than placed with the cursor: leaving the cursor past the last
+		// row is what grows the panel, and this is the last thing in it.
+		const vec4 color = highlight ? HighlightColor : ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+		ImGui::GetWindowDrawList()->AddText(
+			{ origin.x + style.FramePadding.x, origin.y + (height - ImGui::GetFontSize()) * 0.5f },
+			ImGui::GetColorU32(color), label.c_str());
+
+		ImGui::PopID();
+	}
+
+	void Main::Details()
 	{
 		BeginPanel("##details", { 0, 0 }, PanelColor, ImGuiChildFlags_AlwaysUseWindowPadding, Fixed);
 
-		const auto entry = ShowSettings ? nullptr : Find(Selected);
-
-		if (ShowSettings)
+		switch (Current)
 		{
+		case Page::Settings:
 			Settings();
-		}
-		else if (entry)
-		{
-			ImGui::PushID(entry->ID.c_str());
-			Header(entry->Name, entry->Group + Dot + entry->ID);
+			break;
+		case Page::Theme:
+			Theme();
+			break;
+		case Page::About:
+			Header("About", std::string(APPLICATION_ID) + Dot + "Version " APPLICATION_VERSION);
 
-			BeginPanel("##content", { 0, 0 }, PanelColor);
-			const float cursor = ImGui::GetCursorPosY();
-			entry->Menu();
-
-			if (ImGui::GetCursorPosY() == cursor)
-				ImGui::TextDisabled("This module has no options.");
+			BeginPanel("##about", { 0, 0 }, PanelColor);
+			About::Render();
 			ImGui::EndChild();
-			ImGui::PopID();
-		}
-		else
-		{
-			Placeholder();
+			break;
+		default:
+			if (const auto entry = Find(Selected))
+			{
+				ImGui::PushID(entry->ID.c_str());
+				Header(entry->Name, entry->Group + Dot + entry->ID);
+
+				BeginPanel("##content", { 0, 0 }, PanelColor);
+				const float cursor = ImGui::GetCursorPosY();
+				entry->Menu();
+
+				if (ImGui::GetCursorPosY() == cursor)
+					ImGui::TextDisabled("This module has no options.");
+				ImGui::EndChild();
+				ImGui::PopID();
+			}
+			else
+			{
+				Placeholder();
+			}
+			break;
 		}
 		ImGui::EndChild();
 	}
 
-	void Modules::Header(const std::string& title, const std::string& subtitle)
+	void Main::Header(const std::string& title, const std::string& subtitle)
 	{
 		ImGui::PushFont(ImGui::H3);
 		ImGui::TextUnformatted(title.c_str());
@@ -269,7 +319,7 @@ namespace IW3SR::UC
 		ImGui::Spacing();
 	}
 
-	void Modules::Settings()
+	void Main::Settings()
 	{
 		Header("Settings", std::string("Interface") + Dot + "Input" + Dot + "Client");
 
@@ -293,10 +343,29 @@ namespace IW3SR::UC
 			if (allow != Patch::UseCoD4X)
 				ImGui::TextDisabled("Restart the game to apply.");
 		}
+		if (System::IsDebug() && ImGui::CollapsingHeader("Debug"))
+		{
+			if (ImGui::Button(IsReloading ? "Reloading..." : "Reload Plugins", ImVec2(-1, 0)))
+				Reload();
+			ImGui::Tooltip("Rebuilds the plugins and swaps them in without restarting the game.");
+
+			if (ImGui::Button("Memory Editor", ImVec2(-1, 0)))
+				UI::OpenWindow("Memory");
+		}
 		ImGui::EndChild();
 	}
 
-	void Modules::Placeholder()
+	void Main::Theme()
+	{
+		Header("Theme", std::string("Colors") + Dot + "Style" + Dot + "Plots");
+
+		BeginPanel("##theme", { 0, 0 }, PanelColor);
+		if (const auto themes = std::dynamic_pointer_cast<IzEngine::UC::Themes>(UI::GetWindow("Themes")))
+			themes->Content();
+		ImGui::EndChild();
+	}
+
+	void Main::Placeholder()
 	{
 		constexpr auto text = "Select a module";
 
@@ -314,7 +383,40 @@ namespace IW3SR::UC
 		ImGui::TextDisabled("%s", text);
 	}
 
-	bool Modules::Matches(const Ref<Module>& entry) const
+	void Main::Reload()
+	{
+		if (IsReloading)
+			return;
+
+		IsReloading = true;
+
+		Plugins::Shutdown();
+		Plugins::Free();
+		IW3SR::Modules::Serialize();
+
+		std::thread([this] { Compile(); }).detach();
+	}
+
+	void Main::Compile()
+	{
+		if (!std::filesystem::exists(CMAKE_BINARY_DIR))
+		{
+			IsReloading = false;
+			return;
+		}
+		system("cd /d \"" CMAKE_BINARY_DIR "\" && cmake --build . --config Debug --target Install");
+
+		GRenderer::Tasks.Add(
+			[this]()
+			{
+				IW3SR::Modules::Deserialize();
+				Plugins::Load();
+				Plugins::Initialize();
+				IsReloading = false;
+			});
+	}
+
+	bool Main::Matches(const Ref<Module>& entry) const
 	{
 		if (Filter.empty())
 			return true;

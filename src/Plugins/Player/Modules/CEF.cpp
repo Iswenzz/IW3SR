@@ -7,6 +7,8 @@ namespace IW3SR::Addons
 	void CEF::Initialize()
 	{
 		Instance = Browser::Add("browser", Dvar::Get<char*>("cef_url"), { 20, 20 }, { 500, 300 });
+		Instance->Window->Name = "Browser";
+		Instance->Window->Open = Interactive;
 	}
 
 	void CEF::Release()
@@ -31,6 +33,14 @@ namespace IW3SR::Addons
 		if (Instance)
 		{
 			const bool hasTexture = !!Instance->Texture;
+
+			// The page window closes itself from its title bar, which is the same as unticking it.
+			// Only a window that was on screen last frame can have been closed; before that it is
+			// simply one that was never opened.
+			if (Instance->Show && !Instance->Window->Open)
+				Interactive = false;
+
+			Instance->Window->Open = Interactive;
 			Instance->Show = UI::Open && Interactive;
 
 			if (Instance->Open)

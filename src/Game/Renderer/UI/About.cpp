@@ -11,11 +11,8 @@
 
 namespace IW3SR::UC
 {
-	About::About() : Frame("About")
+	void About::Initialize()
 	{
-		SetRectAlignment(Horizontal::Center, Vertical::Center);
-		SetFlags(ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
-
 		CheckUpdate();
 	}
 
@@ -160,55 +157,45 @@ namespace IW3SR::UC
 		req.Send();
 	}
 
-	void About::OnRender()
+	void About::Render()
 	{
-		constexpr auto title = "IW3SR";
 		constexpr auto description =
-			"A client modification for Call of Duty 4, powered by IzEngine."
+			"A client modification for Call of Duty 4, powered by IzEngine. "
 			"It improves performance and gameplay with an in-game GUI, a runtime plugin system, new movement physics, "
 			"and more.";
 
-		constexpr int logoSize = 250;
-		constexpr int padding = 30;
+		constexpr float padding = 16;
 
-		bool showButton = (!Downloading && !Extracting) && (UpdateAvailable || !Checking);
-		bool showProgress = Downloading || Extracting;
-		bool showStatus = !StatusMessage.empty();
+		const bool showButton = (!Downloading && !Extracting) && (UpdateAvailable || !Checking);
+		const bool showProgress = Downloading || Extracting;
+		const bool showStatus = !StatusMessage.empty();
 
-		SetRect(-200, -150, 400, 0);
+		const float width = ImGui::GetContentRegionAvail().x;
+		const float logoSize = ImClamp(width * 0.35f, 72.0f, 160.0f);
+
 		Logo = Texture::Load("Textures/Logo/sr.jpg");
 
-		Begin();
-		ImGui::Spacing();
-		ImGui::Spacing();
 		if (Logo)
 		{
 			ImGui::Image(std::static_pointer_cast<DX9Texture>(Logo)->Data, ImVec2(logoSize, logoSize));
 			ImGui::SameLine(0.0f, padding);
 		}
-		float rightWidth = ImGui::GetWindowSize().x - logoSize - padding * 3;
 		ImGui::BeginGroup();
-		ImGui::PushFont(ImGui::H2);
-		ImGui::TextUnformatted(title);
-		ImGui::PopFont();
-
-		ImGui::Spacing();
-
-		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + rightWidth);
+		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 		ImGui::TextWrapped("%s", description);
 		ImGui::PopTextWrapPos();
 
 		ImGui::Spacing();
-
-		ImGui::TextUnformatted("Version " APPLICATION_VERSION);
-
+		ImGui::TextDisabled("Version " APPLICATION_VERSION);
 		ImGui::EndGroup();
 
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
 		if (showStatus)
-		{
-			ImGui::Spacing();
 			ImGui::TextDisabled("%s", StatusMessage.c_str());
-		}
+
 		if (showProgress)
 		{
 			ImGui::Spacing();
@@ -225,12 +212,10 @@ namespace IW3SR::UC
 					StartUpdate();
 				ImGui::PopStyleColor(2);
 			}
-			else
+			else if (ImGui::Button("Check for Updates", ImVec2(-1, 0)))
 			{
-				if (ImGui::Button("Check for Updates", ImVec2(-1, 0)))
-					CheckUpdate();
+				CheckUpdate();
 			}
 		}
-		End();
 	}
 }
