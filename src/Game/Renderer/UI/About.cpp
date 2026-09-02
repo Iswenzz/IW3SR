@@ -46,6 +46,7 @@ namespace IW3SR::UC
 						UpdateAvailable = true;
 						LatestVersion = latest;
 						StatusMessage = "Update available: " + LatestVersion;
+						Notifications::Push(StatusMessage, NotificationLevel::Info, 6.0f, 2.0f);
 					});
 			});
 

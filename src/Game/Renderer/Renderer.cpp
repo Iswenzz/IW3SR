@@ -108,11 +108,9 @@ namespace IW3SR
 	{
 		constexpr size_t COD4X_VERSION_OFFSET = 8;
 		constexpr size_t COD4X_VERSION_LENGTH = 4;
-
 		constexpr float VERSION_MARGIN = 10.0f;
 
 		static GText text{ "", FONT_NORMAL, -VERSION_MARGIN, 450, 1.4, vec4(1) };
-		static GText update{ "", FONT_NORMAL, 10, 470, 1.4, vec4(0, 1, 1, 1) };
 
 		if (text.Value.empty())
 		{
@@ -135,13 +133,7 @@ namespace IW3SR
 			text.SetRectAlignment(Horizontal::Right, Vertical::Fullscreen);
 			text.SetAlignment(Alignment::Right, Alignment::Top);
 		}
-		if (update.Value.empty() && UC::About::UpdateAvailable)
-		{
-			update.Value = "IW3SR update available";
-			update.SetRectAlignment(Horizontal::Fullscreen, Vertical::Fullscreen);
-		}
 		text.Render();
-		update.Render();
 	}
 
 	void GRenderer::ExecuteRenderCommandsLoop(void* cmds)
