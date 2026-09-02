@@ -23,6 +23,7 @@ namespace IW3SR
 		static void CoD4X_21_3();
 
 		static void DisablePunkbuster();
+		static void FixDownloadRate();
 		static void TightenFrameLimiter();
 		static void TightenFrameLimiterX();
 		static void SkipImproperQuitPrompt();

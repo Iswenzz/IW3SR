@@ -182,7 +182,10 @@ namespace IW3SR
 			{
 				Disconnect();
 				Com_PrintMessage(CON_CHANNEL_ERROR, "^1The reliable channel dropped.\n", 0);
-				Cmd_ExecuteSingleCommand(0, 0, "disconnect\n");
+
+				// Queued, not run: Frame is outside Com_Frame, so a disconnect that errors longjmps
+				// into a dead frame.
+				Cbuf_AddText(0, "disconnect\n");
 			}
 			else
 				Setup();

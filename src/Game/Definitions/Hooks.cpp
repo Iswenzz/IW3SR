@@ -516,6 +516,28 @@ namespace IW3SR
 		a.ret();
 	}
 
+	// Stands in for the block that turns the elapsed time into a divisor. Reached with the byte count
+	// in ebp and the elapsed milliseconds in ecx, and the caller reads the answer out of edi.
+	ASM_FUNCTION(DownloadRate_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, -0x08)); // (ecx) elapsed milliseconds
+		a.push(x86::dword_ptr(x86::ebp, 0x00));	 // (ebp) bytes received so far
+		a.call(GDownload::Rate);
+		a.add(x86::esp, 0x08);
+
+		// popad takes edi back off the frame it just built, so the answer has to go there rather than
+		// into the register, which would not survive.
+		a.mov(x86::dword_ptr(x86::ebp, -0x20), x86::eax);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
 	ASM_FUNCTION(FrameWait_h)
 	{
 		a.pushad();

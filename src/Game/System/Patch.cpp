@@ -19,6 +19,12 @@ namespace IW3SR
 	// Negative is relative, in hundreds of nanoseconds.
 	constexpr int64_t FrameWaitDue = -500;
 
+	// The download menu draws its transfer rate as bytes divided by the elapsed time, and turns that
+	// time into whole seconds before dividing. Everything from the divide by a thousand to the idiv
+	// that uses it, replaced by a call that keeps the milliseconds.
+	constexpr uintptr_t DownloadRateSite = 0x54A00A;
+	constexpr int DownloadRateSize = 0x1A;
+
 	void Patch::Initialize()
 	{
 		LoadLibraryA_h.Install();
@@ -62,6 +68,8 @@ namespace IW3SR
 		// Kill retail's client autoupdate RCE
 		Memory::NOP(0x46B8D0, 10);
 		Memory::NOP(0x46A919, 5);
+
+		FixDownloadRate();
 
 		RenameConsolePrompt();
 		RecolorConsoleText();
@@ -142,6 +150,23 @@ namespace IW3SR
 			return;
 		}
 		WaitForSingleObject(timer, 1);
+	}
+
+	// Truncating the elapsed time to seconds first means the divisor lags the real one by up to a whole
+	// second, so the rate reads up to double and only lands on the truth as each second turns over. A
+	// download long enough for that to wash out never showed it, which is why it has stood.
+	//
+	// Guarded on both ends of the block rather than its first byte, since what identifies it is the
+	// divide by a thousand at the front and the idiv that consumes the result at the back.
+	void Patch::FixDownloadRate()
+	{
+		if (Memory::Get<uint8_t>(DownloadRateSite) != 0xB8
+			|| Memory::Get<uint32_t>(DownloadRateSite + 1) != 0x10624DD3
+			|| Memory::Get<uint16_t>(DownloadRateSite + 0x16) != 0xF9F7)
+			return;
+
+		Memory::CALL(DownloadRateSite, ASM_LOAD(DownloadRate_h));
+		Memory::NOP(DownloadRateSite + 5, DownloadRateSize - 5);
 	}
 
 	void Patch::TightenFrameLimiter()

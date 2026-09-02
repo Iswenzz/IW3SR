@@ -1,5 +1,6 @@
 #include "Download.hpp"
 
+#include "Engine/Core/Network/HTTP.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Patch.hpp"
 
@@ -7,6 +8,14 @@ namespace IW3SR
 {
 	// Netchan command the reliable stream expects in front of a download subcommand.
 	constexpr int32_t ClcDownload = 5;
+
+	// The download progress menu reads these globals and not the matching fields in cls. Retail's
+	// CL_BeginDownload (0x46AB00) is what fills them, and the takeover below is what skips it.
+	constexpr uintptr_t DownloadNameAddress = 0x14B8C3C;
+	constexpr size_t DownloadNameSize = 64;
+	constexpr uintptr_t DownloadSizeAddress = 0x14B8C30;
+	constexpr uintptr_t DownloadCountAddress = 0x14B8C34;
+	constexpr uintptr_t DownloadTimeAddress = 0x14B8C38;
 
 	// Cursor over one server message. Reads past the end fail instead of running off the buffer.
 	struct DownloadReader
@@ -161,10 +170,30 @@ namespace IW3SR
 
 	void GDownload::Frame()
 	{
+		// Queued rather than run here. Frame is driven from GSystem::MainLoop, which hangs off the
+		// PunkBuster call in WinMain's loop - past the point where Com_Frame returned, so the jmp_buf
+		// the engine's Com_Error longjmps to belongs to a frame that is already gone. Cbuf_AddText
+		// hands the command to the engine to run inside its own frame, where that target is live.
 		if (Dropped)
 		{
 			Dropped = false;
-			Cmd_ExecuteSingleCommand(0, 0, "disconnect\n");
+			Cbuf_AddText(0, "disconnect\n");
+			return;
+		}
+
+		// The transfer thread only publishes bytes and a verdict; every decision stays on this thread.
+		if (State == DownloadState::Web)
+		{
+			if (!Web)
+			{
+				Abort("The web download was dropped from under the client.");
+				return;
+			}
+			Count = static_cast<int>(std::min<int64_t>(Web->Count.load(), Size));
+			Mirror();
+
+			if (Web->Result.load() != 0)
+				FinishWeb();
 			return;
 		}
 
@@ -183,6 +212,14 @@ namespace IW3SR
 
 			Parse(Packet.data(), size);
 		}
+	}
+
+	// A reconnect tears the channel down under whatever was in flight. Without this the transfer keeps
+	// running against the old connection and its answers land on the new one's channel.
+	void GDownload::Disconnected()
+	{
+		Reset();
+		Dropped = false;
 	}
 
 	void GDownload::SetTransport(const DownloadTransport& transport)
@@ -207,6 +244,19 @@ namespace IW3SR
 		return name;
 	}
 
+	// Bytes per second for the download menu, which otherwise divides by the elapsed time truncated to
+	// whole seconds. Zero rather than a guess while there is nothing to divide: the caller reads it as
+	// "no rate yet" and leaves the estimated time left off the screen, which is what it is for.
+	int GDownload::Rate(int count, int elapsed)
+	{
+		if (count < 1 || elapsed < 1)
+			return 0;
+
+		const int64_t rate = static_cast<int64_t>(count) * 1000 / elapsed;
+
+		return rate > INT32_MAX ? INT32_MAX : static_cast<int>(rate);
+	}
+
 	// A server that can write into the update directories can replace the client binary.
 	bool GDownload::IsPathAllowed(std::string_view path)
 	{
@@ -220,18 +270,30 @@ namespace IW3SR
 		return !name.contains("updates") && !name.contains("cod4update") && !name.contains("..");
 	}
 
-	// The svc_download path, which the redirect hook above never sees. CL_NextDownload is the only
-	// caller and it discards the return value, so refusing is simply not running the original.
+	// The svc_download path, which the redirect hook above never sees. Retail's CL_BeginDownload is
+	// the only caller and it discards the return value, so refusing is simply not running the original.
+	//
+	// It is also where the extended protocol has to part company. An extended server ignores the
+	// "download" command retail would put on the netchan and waits for a clc_download on the reliable
+	// channel instead, so the request has to start here or nothing ever asks for the file.
 	int GDownload::AllowBegin(const char* localName, const char* remoteName)
 	{
 		if (!localName || !remoteName)
 			return 0;
 
-		if (IsPathAllowed(localName) && IsPathAllowed(remoteName))
+		if (!IsPathAllowed(localName) || !IsPathAllowed(remoteName))
+		{
+			Com_PrintMessage(CON_CHANNEL_ERROR,
+				std::format("^1Refused '{}': a server may not write into the update directories.\n", localName).c_str(),
+				0);
+			return 0;
+		}
+
+		if (!Takeover())
 			return 1;
 
-		Com_PrintMessage(CON_CHANNEL_ERROR,
-			std::format("^1Refused '{}': a server may not write into the update directories.\n", localName).c_str(), 0);
+		Restarts = 0;
+		Start(localName, remoteName);
 		return 0;
 	}
 
@@ -266,7 +328,7 @@ namespace IW3SR
 			break;
 
 		case DownloadCommand::WebDownload:
-			Abort("The server offered a web download, which the segmented downloader cannot carry.");
+			ParseWeb(data + 1, size - 1);
 			break;
 
 		case DownloadCommand::Failed:
@@ -295,6 +357,188 @@ namespace IW3SR
 			return true;
 		}
 		return false;
+	}
+
+	// Handing the answer back and going idle is the whole refusal: WebFailed and WebChecksumFailed both
+	// make the server clear its web flags and resend the gamestate, and the round after that serves the
+	// file over this channel instead. So a refusal costs a restart, which is why it is the last resort
+	// rather than the way the redirect is normally handled.
+	void GDownload::RefuseWeb(DownloadRequest answer, const std::string& reason)
+	{
+		Com_PrintMessage(CON_CHANNEL_CLIENT, std::format("^3{} Asking the server to send it instead.\n", reason).c_str(),
+			0);
+
+		if (!Transmit(Message(answer).Data))
+		{
+			Abort("The download transport refused the web download answer.");
+			return;
+		}
+		Reset();
+	}
+
+	// The redirect carries the URL, the size the server has, and its sv_wwwDlDisconnected setting.
+	void GDownload::ParseWeb(const uint8_t* data, int size)
+	{
+		if (State == DownloadState::Idle)
+		{
+			Abort("The server redirected a download that was never started.");
+			return;
+		}
+
+		DownloadReader reader{ data, size };
+		const std::string url = reader.String();
+		const int32_t length = reader.Long();
+		const int32_t flags = reader.Long();
+
+		if (reader.Failed || url.empty())
+		{
+			Abort("Truncated web download redirect.");
+			return;
+		}
+		// Bit 2 asks the client to hand the URL to the shell instead of fetching it. That is the stock
+		// autoupdate trick wearing a different hat, so it is refused the same way the paths are.
+		if (flags & 2)
+		{
+			Abort(std::format("The server tried to make the client open '{}'.", url));
+			return;
+		}
+		if (!url.starts_with("http://") && !url.starts_with("https://"))
+		{
+			RefuseWeb(DownloadRequest::WebFailed, std::format("'{}' is not an HTTP redirect.", url));
+			return;
+		}
+		// FileInit normally arrives first and settles this; the redirect's own figure is the fallback.
+		if (Size < 1)
+			Size = length;
+
+		StartWeb(url);
+	}
+
+	void GDownload::StartWeb(const std::string& url)
+	{
+		// The transfer owns the temp file from here, so the segment writer has to let go of it first.
+		if (Output.is_open())
+			Output.close();
+
+		const auto transfer = std::make_shared<WebTransfer>();
+
+		// Both buffers exist to keep the per chunk costs off a file this size: without them curl hands
+		// over 16K at a time and every one of those becomes its own write.
+		transfer->Buffer.resize(DownloadWebBufferSize);
+		transfer->File.rdbuf()->pubsetbuf(transfer->Buffer.data(), static_cast<std::streamsize>(transfer->Buffer.size()));
+		transfer->File.open(Resolve(TempName), std::ios::binary | std::ios::trunc);
+
+		if (!transfer->File)
+		{
+			RefuseWeb(DownloadRequest::WebFailed, std::format("Could not create {}.", TempName));
+			return;
+		}
+		Web = transfer;
+		WebStart = std::chrono::steady_clock::now();
+
+		// The menu divides the byte count by the time since this stamp, so it has to be the moment the
+		// bytes start rather than the one Start set, back when the request went out. Retail never has
+		// to restamp it: its DL_BeginDownload follows CL_BeginDownload directly, while everything the
+		// extended protocol does in between would otherwise be charged to the transfer.
+		if (cls)
+			Memory::Set<int>(DownloadTimeAddress, cls->realtime);
+
+		HTTPRequest request = HTTP::Get(url, nullptr);
+
+		// No deadline: the only honest bound on a file this size is that it keeps arriving.
+		request.TimeoutSeconds = 0;
+		request.LowSpeedLimitBytes = 512;
+		request.LowSpeedTimeSeconds = 30;
+		request.BufferSizeBytes = DownloadWebBufferSize;
+
+		request.OnData = [transfer](const char* data, size_t size)
+		{
+			if (transfer->Cancel.load())
+				return false;
+
+			transfer->File.write(data, static_cast<std::streamsize>(size));
+			if (!transfer->File)
+				return false;
+
+			transfer->Count.fetch_add(static_cast<int64_t>(size));
+			return true;
+		};
+		// Error is written before Result and read after it, which is the whole handshake with Frame.
+		request.Callback = [transfer](const HTTPResponse& response)
+		{
+			transfer->File.close();
+
+			if (transfer->Cancel.load())
+				transfer->Error = "it was cancelled";
+			else if (!response.Success)
+				transfer->Error = response.Error;
+			else if (response.Code != 200 && response.Code != 206)
+				transfer->Error = std::format("the server answered HTTP {}", response.Code);
+
+			transfer->Result = transfer->Error.empty() ? 1 : -1;
+		};
+		request.Send();
+
+		// Start put the remote name in the menu's buffer; while the bytes are coming from a redirect
+		// host, the address they are coming from is the thing worth showing. CoD4X shows it by moving
+		// the URL into cls.downloadName, which is the same field one indirection further along.
+		CopyString(reinterpret_cast<char*>(DownloadNameAddress), DownloadNameSize, url);
+
+		State = DownloadState::Web;
+		Com_PrintMessage(CON_CHANNEL_CLIENT, std::format("Downloading {} from {}.\n", LocalName, url).c_str(), 0);
+	}
+
+	// Reached once the transfer thread has stopped, so the temp file is closed and complete.
+	void GDownload::FinishWeb()
+	{
+		const std::string localName = LocalName;
+		const std::string reason = Web->Error;
+
+		if (Web->Result.load() < 0)
+		{
+			RefuseWeb(DownloadRequest::WebFailed, std::format("The HTTP download of {} failed: {}.", localName,
+				reason.empty() ? "unknown error" : reason));
+			return;
+		}
+		// A redirect host serving a file that no longer matches the server's is the case this catches,
+		// Stopped here rather than at the end: everything below reads the file back off the disk, and
+		// counting that as transfer time is what made the first rate this printed too low to believe.
+		const auto arrived = std::chrono::steady_clock::now();
+
+		// and the answer for it is its own subcommand so the server can warn its owner about the two.
+		if (Checksums.length > 0 && !VerifyFinal())
+		{
+			RefuseWeb(DownloadRequest::WebChecksumFailed,
+				std::format("The HTTP copy of {} has the wrong checksum.", localName));
+			return;
+		}
+
+		std::error_code error;
+		std::filesystem::remove(Resolve(localName), error);
+		std::filesystem::rename(Resolve(TempName), Resolve(localName), error);
+
+		if (error)
+		{
+			RefuseWeb(DownloadRequest::WebFailed,
+				std::format("Could not move {} into place: {}.", localName, error.message()));
+			return;
+		}
+		Transmit(Message(DownloadRequest::WebDone).Data);
+
+		// The two halves are reported apart because they are bound by different things: the transfer by
+		// the redirect host, the checksum by how fast the file reads back.
+		const auto done = std::chrono::steady_clock::now();
+		const double seconds = std::max(std::chrono::duration<double>(arrived - WebStart).count(), 0.001);
+		const double checked = std::chrono::duration<double>(done - arrived).count();
+
+		Com_PrintMessage(CON_CHANNEL_CLIENT,
+			std::format("Download of {} finished, {} bytes in {:.2f}s ({:.1f} MB/s), checksum {:.2f}s.\n", localName,
+				Size, seconds, Size / seconds / (1024.0 * 1024.0), checked)
+				.c_str(),
+			0);
+
+		Reset();
+		NextDownload();
 	}
 
 	void GDownload::Cancel()
@@ -365,6 +609,9 @@ namespace IW3SR
 			CopyString(cls->downloadName, sizeof(cls->downloadName), LocalName);
 			CopyString(cls->downloadTempName, sizeof(cls->downloadTempName), TempName);
 			cls->downloadBlock = 0;
+
+			CopyString(reinterpret_cast<char*>(DownloadNameAddress), DownloadNameSize, RemoteName);
+			Memory::Set<int>(DownloadTimeAddress, cls->realtime);
 		}
 		Mirror();
 
@@ -498,6 +745,14 @@ namespace IW3SR
 
 	void GDownload::Reset()
 	{
+		// Letting go is the cancel: the thread still holds the object it is writing into, notices the
+		// flag at its next chunk, and reports to nobody. Nothing here waits on it.
+		if (Web)
+		{
+			Web->Cancel = true;
+			Web.reset();
+		}
+
 		if (Output.is_open())
 			Output.close();
 		Output.clear();
@@ -518,6 +773,10 @@ namespace IW3SR
 			cls->downloadCount = 0;
 			cls->downloadSize = 0;
 		}
+
+		Memory::Set<char>(DownloadNameAddress, '\0');
+		Memory::Set<int>(DownloadSizeAddress, 0);
+		Memory::Set<int>(DownloadCountAddress, 0);
 	}
 
 	void GDownload::Status()
@@ -607,6 +866,12 @@ namespace IW3SR
 		Count = 0;
 		CacheEof = !Caching();
 		State = DownloadState::Running;
+
+		// Same reason as the web path: the rate on screen starts counting from here, not from the
+		// request Start sent to get this reply.
+		if (cls)
+			Memory::Set<int>(DownloadTimeAddress, cls->realtime);
+
 		Mirror();
 
 		Com_PrintMessage(CON_CHANNEL_CLIENT,
@@ -824,6 +1089,9 @@ namespace IW3SR
 
 		cls->downloadCount = Count;
 		cls->downloadSize = Size;
+
+		Memory::Set<int>(DownloadSizeAddress, Size);
+		Memory::Set<int>(DownloadCountAddress, Count);
 	}
 
 	// Download names are relative to the write path, where the engine's own downloads land.

@@ -4,6 +4,7 @@
 #include "Capture.hpp"
 #include "CdKey.hpp"
 #include "Channel.hpp"
+#include "Console.hpp"
 #include "Demo.hpp"
 #include "Discord.hpp"
 #include "Download.hpp"
@@ -12,6 +13,7 @@
 #include "Mouse.hpp"
 #include "NetSim.hpp"
 #include "Patch.hpp"
+
 #include "Protocol.hpp"
 #include "QoS.hpp"
 #include "Rank.hpp"
@@ -72,6 +74,7 @@ namespace IW3SR
 
 		GChannel::Shutdown();
 		GProtocol::Shutdown();
+		GConsole::Unregister();
 		Dvar::Unregister();
 	}
 
@@ -88,10 +91,11 @@ namespace IW3SR
 		GRank::Frame();
 		GRcon::Frame();
 		GDiscord::Frame();
-		GDownload::Frame();
-		GChannel::Frame();
 
+		GChannel::Frame();
+		GDownload::Frame();
 		GProtocol::Frame();
+
 		GSystem::Tasks.Submit();
 
 		if (ExitRequested)
@@ -244,11 +248,18 @@ namespace IW3SR
 
 	HMODULE GSystem::LoadDLLW(LPCWSTR lpLibFileName)
 	{
-		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
+		if (!lpLibFileName)
+			return LoadLibraryW_h(lpLibFileName);
+
 		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
 
 		if (name == "launcher.dll" && !Patch::AllowCoD4X)
-			FreeLibrary(mod);
+		{
+			SetLastError(ERROR_MOD_NOT_FOUND);
+			return nullptr;
+		}
+		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
+
 		if (name.starts_with("cod4x"))
 			Patch::CoD4X(mod);
 		return mod;

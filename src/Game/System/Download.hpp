@@ -14,6 +14,10 @@ namespace IW3SR
 	constexpr int DownloadPacketMax = 0x10000;
 	constexpr int DownloadMessagesPerFrame = 64;
 
+	// curl clamps its own receive buffer to CURL_MAX_READ_SIZE, so asking for more than it allows
+	// costs nothing; the file buffer takes the same size so one flush covers one chunk.
+	constexpr int DownloadWebBufferSize = 256 * 1024;
+
 	// Subcommand byte the client writes after the clc_download header.
 	enum class DownloadRequest : uint8_t
 	{
@@ -40,7 +44,8 @@ namespace IW3SR
 	{
 		Idle,
 		Waiting,
-		Running
+		Running,
+		Web
 	};
 
 	// Copied straight off the wire, so the layout has to stay byte for byte what the server writes.
@@ -62,6 +67,21 @@ namespace IW3SR
 		std::function<void()> Complete;
 	};
 
+	// One HTTP transfer, owned jointly by the pool thread running it and the frame watching it. A
+	// transfer that is cancelled keeps writing here until curl notices, so its bytes and its verdict
+	// land in the object it started with rather than in whatever replaced it.
+	struct WebTransfer
+	{
+		std::atomic<int> Result = 0;
+		std::atomic<int64_t> Count = 0;
+		std::atomic<bool> Cancel = false;
+		std::string Error;
+
+		// Declared ahead of the stream so it is still there when the stream flushes on the way out.
+		std::vector<char> Buffer;
+		std::ofstream File;
+	};
+
 	// Segmented, resumable, CRC verified file transfer.
 	class GDownload
 	{
@@ -69,8 +89,11 @@ namespace IW3SR
 		static void Initialize();
 		static void Shutdown();
 		static void Frame();
+		static void Disconnected();
 
 		static void SetTransport(const DownloadTransport& transport);
+
+		static int Rate(int count, int elapsed);
 
 		static bool IsPathAllowed(std::string_view path);
 		static int BeginDownload(const char* localName, const char* remoteName);
@@ -93,6 +116,10 @@ namespace IW3SR
 		static void Complete();
 		static void Finish();
 		static void Abort(const std::string& reason);
+		static void ParseWeb(const uint8_t* data, int size);
+		static void StartWeb(const std::string& url);
+		static void FinishWeb();
+		static void RefuseWeb(DownloadRequest answer, const std::string& reason);
 		static void Reset();
 		static void Status();
 
@@ -132,5 +159,13 @@ namespace IW3SR
 		static inline int Restarts = 0;
 		static inline bool CacheEof = false;
 		static inline bool Dropped = false;
+
+		// Null unless a transfer is in flight. The pool thread keeps its own reference, so dropping
+		// this one is all a cancel has to do.
+		static inline std::shared_ptr<WebTransfer> Web;
+
+		// Not cls->realtime: that is stamped once a frame, and the checksum pass this has to time runs
+		// entirely inside one of them.
+		static inline std::chrono::steady_clock::time_point WebStart;
 	};
 }

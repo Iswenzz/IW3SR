@@ -781,11 +781,13 @@ namespace IW3SR
 
 		// ParseGamestateHook cannot disconnect where it fails: it is called from inside
 		// CL_ParseServerMessage, whose loop still holds pointers into the state a disconnect frees.
+		// Queued rather than run here for a second reason: Frame is outside Com_Frame, so a disconnect
+		// that errors longjmps into a dead frame.
 		if (DisconnectPending)
 		{
 			DisconnectPending = false;
 			Com_PrintMessage(CON_CHANNEL_ERROR, "^1The extended gamestate could not be read.\n", 0);
-			Cmd_ExecuteSingleCommand(0, 0, "disconnect\n");
+			Cbuf_AddText(0, "disconnect\n");
 			return;
 		}
 		if (Mirror())

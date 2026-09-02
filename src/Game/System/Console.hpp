@@ -12,10 +12,18 @@ namespace IW3SR
 		static void Initialize();
 		static void Shutdown();
 
+		static void Register(const char* name);
+		static void Unregister();
+
 		static void Write(ConChannel channel, const char* msg, int type);
 		static std::string Q3(const std::string& msg);
 
 		static void OnExecute(EventConsoleCommand& event);
 		static void Dispatch(Event& event);
+
+	private:
+		static cmd_function_s* Find(const char* name);
+
+		static std::list<cmd_function_s> Registered;
 	};
 }

@@ -4,6 +4,8 @@
 #include "Game/System/Capture.hpp"
 #include "Game/System/CdKey.hpp"
 #include "Game/System/Channel.hpp"
+#include "Game/System/Console.hpp"
+#include "Game/System/Download.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Net.hpp"
 #include "Game/System/Protocol.hpp"
@@ -13,6 +15,11 @@
 
 namespace IW3SR
 {
+	constexpr std::array ConsoleCommands = { "replayDemo", "sr_assets", "sr_assets_usage", "sr_capture", "sr_demo",
+		"sr_download_cancel", "sr_download_status", "sr_openurl", "sr_render", "sr_serverfilter_list",
+		"sr_serverfilter_refresh", "sr_serverinfo", "sr_serverlist", "sr_shell_register", "sr_shell_unregister",
+		"snd_pause", "snd_stopambient", "snd_unpause" };
+
 	void Client::Initialize(int localClientNum)
 	{
 		CL_InitCGame_h(localClientNum);
@@ -29,24 +36,11 @@ namespace IW3SR
 			Console::AddCommand(dvars[i]->name);
 
 		Console::AddCommand("unset");
-		Console::AddCommand("replayDemo");
-		Console::AddCommand("sr_assets");
-		Console::AddCommand("sr_assets_usage");
-		Console::AddCommand("sr_capture");
-		Console::AddCommand("sr_demo");
-		Console::AddCommand("sr_download_cancel");
-		Console::AddCommand("sr_download_status");
-		Console::AddCommand("sr_openurl");
-		Console::AddCommand("sr_render");
-		Console::AddCommand("sr_serverfilter_list");
-		Console::AddCommand("sr_serverfilter_refresh");
-		Console::AddCommand("sr_serverinfo");
-		Console::AddCommand("sr_serverlist");
-		Console::AddCommand("sr_shell_register");
-		Console::AddCommand("sr_shell_unregister");
-		Console::AddCommand("snd_pause");
-		Console::AddCommand("snd_stopambient");
-		Console::AddCommand("snd_unpause");
+		for (const char* name : ConsoleCommands)
+		{
+			Console::AddCommand(name);
+			GConsole::Register(name);
+		}
 	}
 
 	void Client::Connect()
@@ -78,6 +72,7 @@ namespace IW3SR
 		Timestep::Reset();
 		Capture::Disconnected();
 		GQoS::Disconnected();
+		GDownload::Disconnected();
 		GChannel::Disconnect();
 
 		EventClientDisconnect event;
