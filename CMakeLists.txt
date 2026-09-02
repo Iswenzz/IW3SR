@@ -18,7 +18,6 @@ find_package(implot CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(PolyHook_2 CONFIG REQUIRED)
-find_package(sentry CONFIG REQUIRED)
 
 # Tests
 if(BUILD_TESTING)
