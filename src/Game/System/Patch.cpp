@@ -38,10 +38,10 @@ namespace IW3SR
 		if (AllowCoD4X)
 			return;
 
+		DisablePunkbuster();
 		SkipImproperQuitPrompt();
 		SkipOptimalSettingsPrompt();
 		WidenColorEscapes();
-		DisablePunkbuster();
 	}
 
 	void Patch::Base()
@@ -192,6 +192,9 @@ namespace IW3SR
 		Memory::CALL(site + 7, reinterpret_cast<uintptr_t>(&Patch::FrameWait));
 	}
 
+	// CoD4X calls the retail loaders and initializers at these same addresses, so the one patch covers
+	// both WinMains. What raises MPUI_NOPUNKBUSTER is the initializer answering failure, and CoD4X
+	// raises it whenever cl_punkbuster or sv_punkbuster is set, which an archived config leaves on.
 	void Patch::DisablePunkbuster()
 	{
 		// Each loader returns its own error code instead of running.
@@ -204,8 +207,9 @@ namespace IW3SR
 			Memory::Set<uint8_t>(address + 5, 0xC3);
 		}
 
-		// jnz to jmp, so startup takes the branch that skips it.
-		for (uintptr_t address : { uintptr_t(0x5776C3), uintptr_t(0x5776D6) })
+		// jnz to jmp inside PbClientInitialize and PbServerInitialize, over the failure report and onto
+		// the mov al, 1 both of them end on.
+		for (uintptr_t address : { uintptr_t(0x5C031F), uintptr_t(0x5C15B8) })
 			Memory::Set<uint8_t>(address, 0xEB);
 	}
 
