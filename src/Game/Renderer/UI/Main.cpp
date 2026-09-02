@@ -3,6 +3,7 @@
 #include "About.hpp"
 
 #include "Engine/Backend/ImGUI/UI/Themes.hpp"
+#include "Engine/Core/System/Crash.hpp"
 
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Patch.hpp"
@@ -342,6 +343,14 @@ namespace IW3SR::UC
 			ImGui::Tooltip("Applies on the next launch.");
 			if (allow != Patch::UseCoD4X)
 				ImGui::TextDisabled("Restart the game to apply.");
+
+			if (Crash::Available())
+			{
+				bool reports = Crash::Sending();
+				if (ImGui::Checkbox("Crash Reports", &reports))
+					Crash::Consent(reports);
+				ImGui::Tooltip("Sends a report when the game crashes. Dumps are kept on disk either way.");
+			}
 		}
 		if (System::IsDebug() && ImGui::CollapsingHeader("Debug"))
 		{
@@ -351,6 +360,11 @@ namespace IW3SR::UC
 
 			if (ImGui::Button("Memory Editor", ImVec2(-1, 0)))
 				UI::OpenWindow("Memory");
+
+			if (ImGui::Button("Crash", ImVec2(-1, 0)))
+				*reinterpret_cast<volatile int*>(0) = 0;
+			ImGui::Tooltip("Faults on purpose, to check the handler end to end: dump written, report\n"
+						   "uploaded if consent was given, copy in Reports on the next launch.");
 		}
 		ImGui::EndChild();
 	}

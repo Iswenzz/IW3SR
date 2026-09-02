@@ -33,7 +33,8 @@
 		"implot",
 		"libzippp",
 		"nlohmann-json",
-		"polyhook2"
+		"polyhook2",
+		"sentry-native"
 	],
 	"overrides": [
 		{ "name": "cef", "version": "149.0.6" },
@@ -45,6 +46,7 @@
         { "name": "implot", "version": "0.16#1" },
 		{ "name": "libzippp", "version": "7.1-1.10.1"},
         { "name": "nlohmann-json", "version": "3.11.3" },
-        { "name": "polyhook2", "version": "2024-02-08" }
+        { "name": "polyhook2", "version": "2024-02-08" },
+        { "name": "sentry-native", "version": "0.12.1" }
     ]
 }

@@ -18,6 +18,7 @@ find_package(implot CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(PolyHook_2 CONFIG REQUIRED)
+find_package(sentry CONFIG REQUIRED)
 
 # Tests
 if(BUILD_TESTING)
@@ -43,6 +44,7 @@ file(TO_CMAKE_PATH $ENV{COD4} COD4)
 # Application
 set(APPLICATION_ID "IW3SR")
 set(APPLICATION_VERSION ${CMAKE_PROJECT_VERSION})
+set(SENTRY_DSN "https://549fb8644c528d116b01e65a61214004@o4512017499815936.ingest.de.sentry.io/4512017504206928" CACHE STRING "Sentry DSN crash reports are uploaded to; empty disables uploading")
 
 # Build
 add_subdirectory(engine)
@@ -72,3 +74,8 @@ install(DIRECTORY
 install(DIRECTORY
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>bin/
 	DESTINATION ${COD4}/iw3sr/Bin FILES_MATCHING PATTERN "*.json")
+
+install(FILES
+	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/sentry-native/crashpad_handler.exe
+	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/zlib1.dll
+	DESTINATION ${COD4}/iw3sr/Bin)

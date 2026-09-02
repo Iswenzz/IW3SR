@@ -6,13 +6,13 @@
 
 void Application::Prepare()
 {
-	Crash::Setup();
 	Environment::Binary();
 	Patch::Initialize();
 }
 
 void Application::Initialize()
 {
+	Crash::Initialize();
 	Browser::Initialize(true);
 	ThreadPool::Initialize();
 	GConsole::Initialize();
@@ -24,6 +24,7 @@ void Application::Shutdown()
 	Plugins::Free();
 	GConsole::Shutdown();
 	ThreadPool::Shutdown();
+	Crash::Shutdown();
 }
 
 void Application::Dispatch(Event& event)

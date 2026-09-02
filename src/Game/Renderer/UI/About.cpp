@@ -18,6 +18,7 @@ namespace IW3SR::UC
 
 	void About::CheckUpdate()
 	{
+		static bool notified = false;
 		Checking = true;
 		StatusMessage = "Checking for updates...";
 
@@ -38,7 +39,7 @@ namespace IW3SR::UC
 							StatusMessage = "Failed to check for updates.";
 							return;
 						}
-						if (latest == APPLICATION_VERSION)
+						if (latest <= APPLICATION_VERSION)
 						{
 							StatusMessage = "You are up to date.";
 							return;
@@ -46,7 +47,12 @@ namespace IW3SR::UC
 						UpdateAvailable = true;
 						LatestVersion = latest;
 						StatusMessage = "Update available: " + LatestVersion;
-						Notifications::Push(StatusMessage, NotificationLevel::Info, 6.0f, 2.0f);
+
+						if (!notified)
+						{
+							notified = true;
+							Notifications::Push(StatusMessage, NotificationLevel::Info, 6.0f, 2.0f);
+						}
 					});
 			});
 
