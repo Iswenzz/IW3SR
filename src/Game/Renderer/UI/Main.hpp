@@ -5,8 +5,6 @@
 
 namespace IW3SR::UC
 {
-	// What the panel on the right shows. Modules follows the sidebar selection, the rest are the
-	// pages reached from the footer.
 	enum class Page
 	{
 		Modules,

@@ -12,9 +12,9 @@ namespace IW3SR::UC
 	namespace
 	{
 		constexpr float SidebarRatio = 0.3f;
-		constexpr float DefaultWidth = 560;
-		constexpr float DefaultHeight = 380;
-		constexpr float MinWidth = 460;
+		constexpr float DefaultWidth = 416;
+		constexpr float DefaultHeight = 300;
+		constexpr float MinWidth = 416;
 		constexpr float MinHeight = 300;
 
 		constexpr auto Dot = " \xC2\xB7 ";
