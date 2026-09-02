@@ -335,7 +335,7 @@ namespace IW3SR::UC
 				"edges of the screen, and stays smooth and stable on the frame rate at\n"
 				"high polling rates, where 1000 Hz and above used to stutter and flicker.");
 
-			bool allow = UI::Serialized.value("CoD4X", true);
+			bool allow = UI::Serialized.empty() ? true : UI::Serialized.value("CoD4X", true);
 
 			if (ImGui::Checkbox("CoD4X", &allow))
 				UI::Serialized["CoD4X"] = allow;

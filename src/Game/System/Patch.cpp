@@ -33,7 +33,7 @@ namespace IW3SR
 
 		nlohmann::json settings;
 		Environment::Load(settings, "ui.json");
-		AllowCoD4X = settings.value("CoD4X", true);
+		AllowCoD4X = settings.empty() ? true : settings.value("CoD4X", true);
 
 		if (AllowCoD4X)
 			return;
@@ -138,8 +138,8 @@ namespace IW3SR
 	// is bounded so a timer that never signals cannot stall the frame.
 	void Patch::FrameWait()
 	{
-		static const HANDLE timer
-			= CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+		static const HANDLE timer =
+			CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
 
 		LARGE_INTEGER due = {};
 		due.QuadPart = FrameWaitDue;
@@ -160,8 +160,7 @@ namespace IW3SR
 	// divide by a thousand at the front and the idiv that consumes the result at the back.
 	void Patch::FixDownloadRate()
 	{
-		if (Memory::Get<uint8_t>(DownloadRateSite) != 0xB8
-			|| Memory::Get<uint32_t>(DownloadRateSite + 1) != 0x10624DD3
+		if (Memory::Get<uint8_t>(DownloadRateSite) != 0xB8 || Memory::Get<uint32_t>(DownloadRateSite + 1) != 0x10624DD3
 			|| Memory::Get<uint16_t>(DownloadRateSite + 0x16) != 0xF9F7)
 			return;
 
@@ -263,8 +262,7 @@ namespace IW3SR
 
 	void Patch::RecolorConsoleText()
 	{
-		const auto recolor = [](float* at, const vec4& color)
-		{ Memory::Set(reinterpret_cast<uintptr_t>(at), color); };
+		const auto recolor = [](float* at, const vec4& color) { Memory::Set(reinterpret_cast<uintptr_t>(at), color); };
 
 		recolor(con_versionColor, { 0.0f, 0.9f, 1.0f, 1.0f });
 		recolor(con_matchtxtColor_currentDvar, { 0.7f, 0.95f, 1.0f, 1.0f });
