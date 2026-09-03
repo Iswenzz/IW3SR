@@ -98,6 +98,7 @@ namespace IW3SR
 		CL_InitCGame_h.Install();
 		CL_Shutdown_h.Install();
 		Dvar_Shutdown_h.Install();
+		Sys_Quit_h.Install();
 		CL_Connect_h.Install();
 		CL_ConnectionlessPacket_h.Install();
 		CL_PacketEvent_h.Install();
@@ -306,6 +307,8 @@ namespace IW3SR
 		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? ?? ?? ?? ?? C7 44 24 08 64 2F 00 00 83 C0 0C C7"));
 		MainWndProc_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 7C C7 04 24 02 00 00 00"));
 		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 44 24 1C 0F B7 00 8D 5C 24 1C"));
+		Sys_Quit_h.Update(Signature(COD4X_BIN,
+			"83 EC 1C A1 ?? ?? ?? ?? 83 C0 30 89 04 24 FF 15 ?? ?? ?? ?? 83 EC 04 C7 04 24 01 00 00 00 FF 15"));
 		XAssetsInitStdCount_h.Update(COD4X_BASE + 0x3325E);
 
 		ReallocXAssetPoolsX();

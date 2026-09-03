@@ -69,6 +69,9 @@ namespace IW3SR
 		Dvar_Shutdown_h(0x56B7D0, Dvar::Shutdown);
 
 	Hook<void()>
+		Sys_Quit_h(0x576B70, GSystem::Quit);
+
+	Hook<void()>
 		CL_Connect_h(0x471050, Client::Connect);
 
 	Hook<void(netadr_t from, void* msg)>

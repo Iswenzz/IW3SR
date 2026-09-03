@@ -21,9 +21,9 @@ void Application::Initialize()
 
 void Application::Shutdown()
 {
+	ThreadPool::Shutdown();
 	Plugins::Free();
 	GConsole::Shutdown();
-	ThreadPool::Shutdown();
 	Crash::Shutdown();
 }
 

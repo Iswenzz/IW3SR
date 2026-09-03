@@ -78,6 +78,12 @@ namespace IW3SR
 		Dvar::Unregister();
 	}
 
+	void GSystem::Quit()
+	{
+		Shutdown(0);
+		Sys_Quit_h();
+	}
+
 	void GSystem::MainLoop(int tickRate)
 	{
 		PbServerProcessEvents_h(tickRate);

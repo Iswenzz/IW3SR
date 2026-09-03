@@ -49,6 +49,9 @@ namespace IW3SR
 		Dvar_Shutdown_h;
 
 	extern Hook<void()>
+		Sys_Quit_h;
+
+	extern Hook<void()>
 		CL_Connect_h;
 
 	extern Hook<void(netadr_t from, void* msg)>
