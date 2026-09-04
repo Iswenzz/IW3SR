@@ -66,7 +66,7 @@ namespace IW3SR::Addons
 		static const auto r_filmTweakDarkTint = Dvar::Find("r_filmTweakDarkTint");
 		static const auto r_glowTweakRadius0 = Dvar::Find("r_glowTweakRadius0");
 		static const auto r_glowTweakBloomDesaturation = Dvar::Find("r_glowTweakBloomDesaturation");
-		static const auto r_glowTweakBloomIntensity = Dvar::Find("r_glowTweakBloomIntensity");
+		static const auto r_glowTweakBloomIntensity0 = Dvar::Find("r_glowTweakBloomIntensity0");
 		static const auto r_glowTweakBloomCutoff = Dvar::Find("r_glowTweakBloomCutoff");
 		static const auto r_envMapSunIntensity = Dvar::Find("r_envMapSunIntensity");
 		static const auto r_lightTweakSunColor = Dvar::Find("r_lightTweakSunColor");
@@ -84,7 +84,7 @@ namespace IW3SR::Addons
 		r_filmTweakDarkTint->current.vector = vec4(TweakDarkTint, 1);
 		r_glowTweakRadius0->current.value = GlowRadius;
 		r_glowTweakBloomDesaturation->current.value = GlowBloomDesaturation;
-		r_glowTweakBloomIntensity->current.value = GlowBloomIntensity;
+		r_glowTweakBloomIntensity0->current.value = GlowBloomIntensity;
 		r_glowTweakBloomCutoff->current.value = GlowBloomCutoff;
 		r_envMapSunIntensity->current.value = SunIntensity;
 		r_lightTweakSunColor->current.vector = SunColor;
