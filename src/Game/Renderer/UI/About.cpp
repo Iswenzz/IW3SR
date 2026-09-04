@@ -180,11 +180,11 @@ namespace IW3SR::UC
 		const float width = ImGui::GetContentRegionAvail().x;
 		const float logoSize = ImClamp(width * 0.35f, 72.0f, 160.0f);
 
-		Logo = Texture::Load("Textures/Logo/sr.jpg");
+		const Ref<Texture> logo = Texture::Load("Textures/Logo/sr.jpg");
 
-		if (Logo)
+		if (logo)
 		{
-			ImGui::Image(std::static_pointer_cast<DX9Texture>(Logo)->Data, ImVec2(logoSize, logoSize));
+			ImGui::Image(std::static_pointer_cast<DX9Texture>(logo)->Data, ImVec2(logoSize, logoSize));
 			ImGui::SameLine(0.0f, padding);
 		}
 		ImGui::BeginGroup();

@@ -14,8 +14,6 @@ namespace IW3SR::UC
 		static void Render();
 
 	private:
-		static inline Ref<Texture> Logo = nullptr;
-
 		static inline bool Checking = false;
 		static inline bool Downloading = false;
 		static inline bool Extracting = false;
