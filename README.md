@@ -70,6 +70,9 @@ The client requires the following runtimes to be installed.
 In order to use this client, download the archived file down below, and extract it to your cod4 directory.
 To remove the client you can delete ddraw.dll and optionally every other files extracted from the archive.
 
+## Reports
+IW3SR sends a crash report when the game crashes, so the cause can be found and fixed. The report contains a memory snapshot of the crashed process and basic details about your system. Reports go to Sentry (EU). This is on by default and can be turned off in Settings → General → Crash Reports; the report is saved to your iw3sr/Reports folder either way.
+
 ## Building
 
 _Pre-Requisites:_
