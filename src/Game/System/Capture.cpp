@@ -38,6 +38,8 @@ namespace IW3SR
 		Fps = Dvar::RegisterInt("sr_capture_fps", DVAR_SAVED, "Frame rate of the recorded video", 60, 1, 1000);
 		Quality = Dvar::RegisterInt("sr_capture_quality", DVAR_SAVED,
 			"Constant rate factor handed to the encoder, lower is better", 18, 0, 51);
+		Bitrate = Dvar::RegisterInt("sr_capture_bitrate", DVAR_SAVED,
+			"Video bitrate in kbit/s. Zero keeps the constant rate factor instead", 0, 0, 500000);
 		Encoder = Dvar::RegisterString("sr_capture_encoder", DVAR_SAVED, "Video encoder used by ffmpeg", "libx264");
 		Preset = Dvar::RegisterString("sr_capture_preset", DVAR_SAVED, "Encoder preset used by ffmpeg", "ultrafast");
 		Binary = Dvar::RegisterString("sr_capture_ffmpeg", DVAR_SAVED, "Path to ffmpeg, empty to search for it", "");
@@ -614,11 +616,17 @@ namespace IW3SR
 
 	std::string Capture::Arguments(const std::string& output)
 	{
+		// A bitrate and a rate factor are two ways to ask for the same thing, so only one of them
+		// reaches ffmpeg. The rate factor stays the default, the bitrate is for anyone who needs
+		// the file to land on a size.
+		const std::string rate = Bitrate->current.integer
+			? std::format("-b:v {}k", Bitrate->current.integer)
+			: std::format("-crf {}", Quality->current.integer);
+
 		return std::format(
 			"-hide_banner -loglevel error -y -f rawvideo -pixel_format bgra -video_size {}x{} -framerate {} -i - "
-			"-an -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -c:v {} -preset {} -crf {} -pix_fmt yuv420p \"{}\"",
-			Width, Height, Fps->current.integer, Encoder->current.string, Preset->current.string,
-			Quality->current.integer, output);
+			"-an -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -c:v {} -preset {} {} -pix_fmt yuv420p \"{}\"",
+			Width, Height, Fps->current.integer, Encoder->current.string, Preset->current.string, rate, output);
 	}
 
 	std::string Capture::Resolved(const std::string& output)

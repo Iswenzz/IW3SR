@@ -52,6 +52,7 @@ namespace IW3SR
 	private:
 		static inline dvar_s* Fps = nullptr;
 		static inline dvar_s* Quality = nullptr;
+		static inline dvar_s* Bitrate = nullptr;
 		static inline dvar_s* Encoder = nullptr;
 		static inline dvar_s* Preset = nullptr;
 		static inline dvar_s* Binary = nullptr;
