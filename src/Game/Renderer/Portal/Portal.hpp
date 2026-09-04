@@ -46,6 +46,7 @@ namespace IW3SR
 		static inline std::vector<PortalSurface> Surfaces;
 		static inline GfxWorld* KnownWorld = nullptr;
 		static inline int Missed = 0;
+		static inline int Rendered[2] = { -1, -1 };
 
 		static inline dvar_s* Enabled = nullptr;
 		static inline dvar_s* Scale = nullptr;
@@ -64,6 +65,7 @@ namespace IW3SR
 		static bool Ready();
 		static void Discover();
 		static bool Collect(PortalEndpoint (&pair)[2]);
+		static bool Paired();
 		static void BeginCommandList();
 		static void Render(int index, const PortalEndpoint& into, const PortalEndpoint& out);
 		static bool Resize(int index, PortalTarget& target, const vec2& size);

@@ -8,6 +8,9 @@ namespace IW3SR
 	constexpr std::string_view PORTAL_MODEL_PREFIX = "portal_dummy_";
 	constexpr std::string_view PORTAL_TECHNIQUE_SET = "portal_view";
 
+	// Half diagonal of the 70x110 quad, so a reach that covers it whatever way it is turned.
+	constexpr float PORTAL_RADIUS = 66.0f;
+
 	// The linker binds a vertex-format variant of the technique set per material: xmodels get
 	// "mc_portal_view", world surfaces "wc_portal_view". Match the stem rather than the asset name.
 	static bool IsPortalTechniqueSet(const MaterialTechniqueSet* techniques)
@@ -96,12 +99,21 @@ namespace IW3SR
 
 				Bind(Targets[0], pair[0]);
 				Bind(Targets[1], pair[1]);
+
+				Rendered[0] = pair[0].Entity;
+				Rendered[1] = pair[1].Entity;
 			}
-			// A quad can drop out of the entity list for a frame or two while the snapshot updates.
-			// Blanking on the first miss makes that flicker black, so let the last view stand briefly.
-			else if (++Missed > 5)
+			// A quad can drop out for a frame or two while the snapshot updates, so the last view is
+			// allowed to stand briefly rather than flickering black.
+			//
+			// Only while both portals it was drawn from still exist, though. Re-firing deletes a
+			// portal and respawns it, and portalFX waits 0.05s before giving the new one its model --
+			// so for those few frames the surviving portal was still showing a view taken from where
+			// its old partner used to be. Black for that moment is better than somewhere else.
+			else if (++Missed > 5 || !Paired())
 			{
 				Blank();
+				Rendered[0] = Rendered[1] = -1;
 			}
 		}
 		R_BeginFrame_h();
@@ -267,6 +279,28 @@ namespace IW3SR
 		return position ? out.Origin + result : result;
 	}
 
+	// Whether both entities the current view was drawn from are still in the snapshot.
+	bool GPortal::Paired()
+	{
+		const snapshot_s* snap = cgs->snap;
+		if (!snap)
+			return false;
+
+		for (const int entity : Rendered)
+		{
+			if (entity < 0)
+				return false;
+
+			bool present = false;
+			for (int n = 0; n < snap->numEntities && !present; n++)
+				present = snap->entities[n].number == entity;
+
+			if (!present)
+				return false;
+		}
+		return true;
+	}
+
 	void GPortal::Render(int index, const PortalEndpoint& into, const PortalEndpoint& out)
 	{
 		const auto& frame = gfx_renderTargets[R_RENDERTARGET_FRAME_BUFFER];
@@ -300,14 +334,22 @@ namespace IW3SR
 
 		// The camera ends up as far behind the exit portal as the player is in front of the entry one,
 		// and the wall it is mounted on is solid geometry with no hole cut in it. Left alone the pass
-		// renders the back of that wall, filling the opening with brickwork -- more of it the further
-		// away the player stands, which is why it only looked right up close.
+		// renders the back of that wall, filling the opening with brickwork.
 		//
-		// Pushing the near plane out to the exit portal clips the wall away. It sits exactly on the
-		// portal only while looking straight through; at a glancing angle some wall survives, which
-		// wants an oblique frustum rather than a symmetric one.
-		const float toPortal = glm::dot(out.Origin - view.vieworg, vec3(view.viewaxis[0]));
-		view.zNear = std::max(toPortal, 1.0f);
+		// Putting the near plane at the portal's centre only clips all of that while looking straight
+		// through. The plane is a slab perpendicular to the view axis, so as the angle opens up the
+		// portal tilts across it and the half of the wall lying further along the axis survives --
+		// the dark strip that creeps in from the edge of the opening.
+		//
+		// Pushing out by the quad's reach times the sine of that angle puts the whole of the portal
+		// plane at or beyond the slab. The cost is a sliver of floor right at the opening being cut
+		// instead, which reads far better than brickwork. An oblique frustum would be exact.
+		const vec3 forward = view.viewaxis[0];
+		const float toPortal = glm::dot(out.Origin - view.vieworg, forward);
+		const float facing = std::abs(glm::dot(out.Forward, forward));
+		const float tilt = std::sqrt(std::max(0.0f, 1.0f - facing * facing));
+
+		view.zNear = std::max(toPortal + PORTAL_RADIUS * tilt, 1.0f);
 
 		Rendering = true;
 		R_SyncRenderThread();
