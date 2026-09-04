@@ -82,6 +82,12 @@ namespace IW3SR
 		text.Render();
 	}
 
+	void GRenderer::CalculateFPS()
+	{
+		if (!GPortal::Rendering)
+			CG_CalculateFPS_h();
+	}
+
 	void GRenderer::Draw2D(int localClientNum)
 	{
 		CG_DrawCrosshair_h(localClientNum);

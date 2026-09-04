@@ -41,6 +41,9 @@ namespace IW3SR
 	Hook<void(int localClientNum)>
 		CG_CalcViewValues_h(0x451990, Timestep::CalcViewValues);
 
+	Hook<void()>
+		CG_CalculateFPS_h(0x42B6B0, GRenderer::CalculateFPS);
+
 	Hook<void(int localClientNum)>
 		CG_DrawCrosshair_h(0x4311A0, GRenderer::Draw2D);
 

@@ -32,9 +32,14 @@ namespace IW3SR
 		static inline bool CursorHidden = false;
 		static inline bool Overridden = false;
 
+		static inline bool EngineInput = true;
+		static inline bool EngineInitialized = false;
+
 		static bool IsGameplay();
+		static void SetEngineInput(bool state);
 		static void SetLooking(bool state);
 		static void Confine();
+		static void Reseed();
 		static void SetCursorHidden(bool state);
 	};
 }

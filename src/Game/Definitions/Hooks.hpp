@@ -21,6 +21,9 @@ namespace IW3SR
 	extern Hook<void(int localClientNum)>
 		CG_CalcViewValues_h;
 
+	extern Hook<void()>
+		CG_CalculateFPS_h;
+
 	extern Hook<void(int localClientNum)>
 		CG_DrawCrosshair_h;
 

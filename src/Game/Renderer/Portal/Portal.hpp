@@ -58,6 +58,7 @@ namespace IW3SR
 		static inline int DebugModels = 0;
 		static inline int DebugMatched = 0;
 		static inline int DebugCaptured = 0;
+		static inline int DebugViews = 0;
 		static inline std::string DebugStage;
 		static inline std::string DebugMaterial = "-";
 		static inline std::string DebugTechniques = "-";
@@ -66,6 +67,7 @@ namespace IW3SR
 		static void Discover();
 		static bool Collect(PortalEndpoint (&pair)[2]);
 		static bool Paired();
+		static bool Visible(const PortalEndpoint& endpoint);
 		static void BeginCommandList();
 		static void Render(int index, const PortalEndpoint& into, const PortalEndpoint& out);
 		static bool Resize(int index, PortalTarget& target, const vec2& size);

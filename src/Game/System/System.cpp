@@ -187,12 +187,8 @@ namespace IW3SR
 			UI::Open = false;
 			break;
 		}
-		if (UI::KeyOpen.IsPressed())
-			return true;
-		if (UI::Open && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-			return true;
-		if (UI::Active)
-			s_wmv->mouseInitialized = !UI::Open;
+		if (Window::Intercept(hWnd, msg, wParam, lParam))
+			return false;
 		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 

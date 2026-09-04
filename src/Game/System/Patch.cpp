@@ -90,6 +90,7 @@ namespace IW3SR
 		FS_RegisterDvars_h.Install();
 		Com_PrintMessage_h.Install();
 		CG_CalcViewValues_h.Install();
+		CG_CalculateFPS_h.Install();
 		CG_DrawCrosshair_h.Install();
 		CG_PredictPlayerState_Internal_h.Install();
 		CG_RegisterItems_h.Install();

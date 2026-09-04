@@ -78,24 +78,39 @@ namespace IW3SR
 				return;
 			}
 
+			DebugViews = 0;
+
 			PortalEndpoint pair[2];
 			if (Collect(pair))
 			{
 				Missed = 0;
-				Blank();
 
-				// R_HandOffToBackend queues the pass on the render thread when r_smp_backend is set,
-				// so R_IssueRenderCommands returns before anything has drawn and the copy picks up
-				// whatever the frame buffer still held -- the last presented frame, HUD included.
-				const bool threaded = Threaded && Threaded->current.enabled;
-				if (threaded)
-					Threaded->current.enabled = false;
+				// Each view is a whole extra scene, so a linked pair in sight costs three of them a
+				// frame. Only the ones that can actually be seen are drawn; the rest keep the texture
+				// they last captured, which nothing is sampling while they are off screen.
+				const bool draw[2] = { Visible(pair[0]), Visible(pair[1]) };
+				DebugViews = draw[0] + draw[1];
 
-				Render(0, pair[0], pair[1]);
-				Render(1, pair[1], pair[0]);
+				if (draw[0] || draw[1])
+				{
+					Blank();
 
-				if (threaded)
-					Threaded->current.enabled = true;
+					// R_HandOffToBackend queues the pass on the render thread when r_smp_backend is
+					// set, so R_IssueRenderCommands returns before anything has drawn and the copy
+					// picks up whatever the frame buffer still held -- the last presented frame, HUD
+					// included.
+					const bool threaded = Threaded && Threaded->current.enabled;
+					if (threaded)
+						Threaded->current.enabled = false;
+
+					if (draw[0])
+						Render(0, pair[0], pair[1]);
+					if (draw[1])
+						Render(1, pair[1], pair[0]);
+
+					if (threaded)
+						Threaded->current.enabled = true;
+				}
 
 				Bind(Targets[0], pair[0]);
 				Bind(Targets[1], pair[1]);
@@ -301,6 +316,49 @@ namespace IW3SR
 		return true;
 	}
 
+	// Whether this portal's quad can appear on screen, and so whether its view is worth drawing.
+	//
+	// The main view is the only place a portal shows up. Each texture is rendered from a camera
+	// sitting at the other portal, where that other quad falls behind the near plane, and a quad only
+	// ever samples its own texture -- so nothing here can be visible through anything else.
+	bool GPortal::Visible(const PortalEndpoint& endpoint)
+	{
+		const refdef_s& view = cgs->refdef;
+		const vec3 offset = endpoint.Origin - view.vieworg;
+
+		// Nothing shows through the back of a portal, so standing on the far side of the wall it is
+		// mounted on costs no render. The slack is a quad's reach, so a camera roughly in the plane
+		// still draws rather than flickering on and off along it.
+		if (glm::dot(offset, endpoint.Forward) > PORTAL_RADIUS)
+			return false;
+
+		// Widened by a portal, so the view is already live by the time the quad reaches the edge of
+		// the screen instead of popping in a frame late.
+		const float radius = PORTAL_RADIUS * 2.0f;
+		const float distance = Distance->current.value;
+
+		if (distance > 0.0f && glm::length(offset) - radius > distance)
+			return false;
+
+		// Sphere against the four side planes of the frustum. Which way viewaxis[1] and [2] point does
+		// not matter: each pair of planes is tested together, on the absolute value.
+		const float z = glm::dot(offset, view.viewaxis[0]);
+		if (z < -radius)
+			return false;
+
+		const float x = std::abs(glm::dot(offset, view.viewaxis[1]));
+		const float y = std::abs(glm::dot(offset, view.viewaxis[2]));
+		const float tanX = view.tanHalfFovX;
+		const float tanY = view.tanHalfFovY;
+
+		if (x - z * tanX > radius * std::sqrt(1.0f + tanX * tanX))
+			return false;
+		if (y - z * tanY > radius * std::sqrt(1.0f + tanY * tanY))
+			return false;
+
+		return true;
+	}
+
 	void GPortal::Render(int index, const PortalEndpoint& into, const PortalEndpoint& out)
 	{
 		const auto& frame = gfx_renderTargets[R_RENDERTARGET_FRAME_BUFFER];
@@ -317,16 +375,20 @@ namespace IW3SR
 		// Everything but the camera is inherited, so fov, vision set, primary lights and scene time
 		// stay identical to the main view.
 		//
-		// The pass covers the whole frame buffer rather than a corner of it. A smaller viewport left
-		// the rest of the captured region holding whatever the last frame drew there, which showed up
-		// as a hard seam with the wall behind the portal on one side of it. The saving is not worth
-		// depending on exactly which stage of the backend honours refdef's viewport.
+		// The pass draws into a corner of the frame buffer at sr_portal_scale, and Capture copies back
+		// exactly that rectangle -- the two have to describe the same region or the rest of the copy
+		// picks up whatever the last frame left there, which shows as a hard seam across the opening.
+		// Same fov and same aspect, so the corner holds the identical image at lower resolution.
+		//
+		// The engine takes a viewport smaller than the display for splitscreen and skips the late post
+		// effects on it, which costs the portal view its glow and is most of the saving on top of the
+		// pixels. At scale 1 the viewport is the display again and the full path runs, as before.
 		static refdef_s view;
 		view = cgs->refdef;
 		view.x = 0;
 		view.y = 0;
-		view.width = frame.width;
-		view.height = frame.height;
+		view.width = static_cast<uint32_t>(size.x);
+		view.height = static_cast<uint32_t>(size.y);
 		view.vieworg = Through(into, out, cgs->refdef.vieworg, true);
 
 		for (int i = 0; i < 3; i++)
@@ -408,10 +470,9 @@ namespace IW3SR
 		// what is bound where stays true.
 		uint32_t bound = Unbind(texture->Data);
 
-		// Whole frame buffer into the whole target: the pass renders full screen and the shader reads
-		// this by screen position, so the two have to describe the same rectangle. sr_portal_scale
-		// only decides how much resolution is kept.
-		const RECT source = { 0, 0, static_cast<LONG>(frame.width), static_cast<LONG>(frame.height) };
+		// The corner the pass drew into, which is the target's own size, into the whole target. The
+		// shader reads this by screen position, so the two have to describe the same view.
+		const RECT source = { 0, 0, static_cast<LONG>(target.Size.x), static_cast<LONG>(target.Size.y) };
 		const bool copied =
 			SUCCEEDED(dx->device->StretchRect(frame.surface.color, &source, texture->Surface, nullptr, D3DTEXF_LINEAR));
 
@@ -491,10 +552,10 @@ namespace IW3SR
 		// left of the screen is usually covered by one of them.
 		static GText text{ "", FONT_NORMAL, 10, 120, 1.2f, vec4(1, 0, 1, 1) };
 
-		text.Value =
-			std::format("portal: {}\nframes {}  mats {}  surfaces {}\nquads {}  paired {}  captured {}\n{}  {}",
-				DebugStage, DebugFrames, rgp ? rgp->materialCount : -1, Surfaces.size(), DebugModels, DebugMatched,
-				DebugCaptured, DebugMaterial, DebugTechniques);
+		text.Value = std::format(
+			"portal: {}\nframes {}  mats {}  surfaces {}\nquads {}  paired {}  views {}  captured {}\n{}  {}",
+			DebugStage, DebugFrames, rgp ? rgp->materialCount : -1, Surfaces.size(), DebugModels, DebugMatched,
+			DebugViews, DebugCaptured, DebugMaterial, DebugTechniques);
 		text.Render();
 	}
 

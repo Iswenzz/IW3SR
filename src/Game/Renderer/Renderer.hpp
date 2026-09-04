@@ -11,6 +11,7 @@ namespace IW3SR
 		static void Initialize();
 		static void Shutdown(int window);
 
+		static void CalculateFPS();
 		static void Draw2D(int localClientNum);
 		static void Draw3D(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf);
 		static void DrawVersion();

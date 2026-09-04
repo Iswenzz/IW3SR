@@ -30,11 +30,14 @@ namespace IW3SR
 	void GMouse::Shutdown()
 	{
 		SetLooking(false);
+		SetEngineInput(true);
 	}
 
 	// Drives the mouse ownership state machine, once per frame on the main thread.
 	void GMouse::Frame()
 	{
+		SetEngineInput(!UI::Open);
+
 		if (!RawInputDvar)
 			return;
 
@@ -146,6 +149,38 @@ namespace IW3SR
 		return !UI::Open && g_wv->recenterMouse;
 	}
 
+	// IN_Frame is what warps the pointer back to the middle of the window every frame, and one flag
+	// is what decides whether it runs at all. Clearing it for as long as the overlay is up is what
+	// leaves the pointer free for the overlay to use.
+	//
+	// It has to be written once a frame rather than from the window procedure: an idle window sends
+	// no messages, so a menu raised between two of them used to leave the engine dragging the
+	// pointer back to the centre underneath a window already drawn over it, with no way to reach a
+	// button.
+	void GMouse::SetEngineInput(bool state)
+	{
+		if (!s_wmv || EngineInput == state)
+			return;
+		EngineInput = state;
+
+		// in_mouse is the engine's own answer to the flag, so it is handed back rather than forced.
+		if (state)
+		{
+			s_wmv->mouseInitialized = EngineInitialized;
+			return;
+		}
+
+		EngineInitialized = s_wmv->mouseInitialized;
+		s_wmv->mouseInitialized = false;
+
+		// Whatever was holding the pointer up to here, the overlay is what uses it now. The system
+		// cursor stays hidden: the overlay draws one of its own.
+		SetLooking(false);
+		ClipCursor(nullptr);
+		ReleaseCapture();
+		Reseed();
+	}
+
 	void GMouse::SetLooking(bool state)
 	{
 		if (Looking == state)
@@ -169,6 +204,19 @@ namespace IW3SR
 		// The engine remembers where the pointer was, and a stale position snaps the view.
 		if (s_wmv)
 			GetCursorPos(&s_wmv->oldPos);
+	}
+
+	// ImGui is handed the last position a WM_MOUSEMOVE reported, and the engine leaves the pointer
+	// wherever its last recenter put it. Reading it back out of the OS puts the two in one place.
+	void GMouse::Reseed()
+	{
+		const HWND hwnd = reinterpret_cast<HWND>(Window::Handle);
+		POINT cursor;
+
+		if (!hwnd || !GetCursorPos(&cursor) || !ScreenToClient(hwnd, &cursor))
+			return;
+
+		Mouse::Position = vec2(cursor.x, cursor.y);
 	}
 
 	// Pins the pointer to the center of the window. It cannot click through to another application,
