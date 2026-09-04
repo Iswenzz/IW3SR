@@ -36,6 +36,8 @@ namespace IW3SR
 
 	void Timestep::Initialize()
 	{
+		ComMaxFps = Dvar::Find("com_maxfps");
+
 		// Movement here is not proven identical to a client actually running at com_maxfps, so it stays
 		// out of a release build entirely rather than sitting behind a dvar someone could turn on.
 		if (!System::IsDebug())
@@ -53,7 +55,6 @@ namespace IW3SR
 		Pace.Sleep = MeasureSleep();
 		Pace.Work = FrameWork;
 
-		ComMaxFps = Dvar::Find("com_maxfps");
 		const auto limiter = reinterpret_cast<dvar_s**>(ComMaxFpsRef);
 
 		// Leave the limiter alone rather than guess if the engine no longer keeps it here.

@@ -37,23 +37,22 @@ namespace IW3SR::Addons
 
 	void FPS::DrawTimestep()
 	{
+		if (!System::IsDebug())
+			return;
+
 		const auto timestep = Dvar::Find("sr_timestep");
 		const auto maxfps = Dvar::Find("sr_maxfps");
 
 		if (!timestep || !maxfps)
 			return;
 
-		// The config is written from the latched value, so an edit that only lands on the current
-		// one is forgotten by the next restart.
 		if (ImGui::Checkbox("Enable Timestep", &timestep->current.enabled))
 			timestep->latched.enabled = timestep->current.enabled;
-		ImGui::Tooltip("Step movement at com_maxfps instead of at the frame rate.");
 
+		ImGui::Tooltip("Step movement at com_maxfps instead of at the frame rate.");
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(-1);
 
-		// Typing a cap applies it a digit at a time, so the floor has to be a frame rate the game is
-		// still usable at. Clamped, or the first digit of 144 caps the game at 1 while you finish it.
 		if (ImGui::SliderInt("##sr_maxfps", &maxfps->current.integer, 60, 1000, "%d fps", ImGuiSliderFlags_AlwaysClamp))
 		{
 			maxfps->latched.integer = maxfps->current.integer;
