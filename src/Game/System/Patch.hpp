@@ -21,6 +21,7 @@ namespace IW3SR
 
 	private:
 		static void CoD4X_21_3();
+		static void WarnUnsupportedCoD4X();
 
 		static void DisablePunkbuster();
 		static void FixDownloadRate();

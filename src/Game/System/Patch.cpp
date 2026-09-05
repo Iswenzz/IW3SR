@@ -4,6 +4,8 @@
 #include "PMem.hpp"
 #include "Profile.hpp"
 
+#include "Game/Renderer/Renderer.hpp"
+
 #ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
 	#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
 #endif
@@ -18,6 +20,12 @@ namespace IW3SR
 
 	// Negative is relative, in hundreds of nanoseconds.
 	constexpr int64_t FrameWaitDue = -500;
+
+	// CoD4X moves the functions IW3SR hooks between releases, so only the one release the signatures
+	// were taken against is patched at all.
+	constexpr int SupportedCoD4XVersion = 213;
+	constexpr float UnsupportedCoD4XDelay = 5.0f;
+	constexpr float UnsupportedCoD4XDuration = 20.0f;
 
 	// The download menu draws its transfer rate as bytes divided by the elapsed time, and turns that
 	// time into whole seconds before dividing. Everything from the divide by a thousand to the idiv
@@ -75,8 +83,10 @@ namespace IW3SR
 		RecolorConsoleText();
 		TightenFrameLimiter();
 
-		if (COD4X_VERSION == 213)
+		if (COD4X_VERSION == SupportedCoD4XVersion)
 			CoD4X_21_3();
+		else
+			WarnUnsupportedCoD4X();
 
 		Autocomplete::Initialize();
 		GHuffman::Initialize();
@@ -313,6 +323,33 @@ namespace IW3SR
 		XAssetsInitStdCount_h.Update(COD4X_BASE + 0x3325E);
 
 		ReallocXAssetPoolsX();
+	}
+
+	std::string FormatCoD4XVersion(int version)
+	{
+		if (version <= 0)
+			return "(unknown version)";
+
+		const std::string digits = std::to_string(version);
+		return digits.size() < 2 ? digits : digits.substr(0, digits.size() - 1) + "." + digits.back();
+	}
+
+	void Patch::WarnUnsupportedCoD4X()
+	{
+		if (!COD4X_BASE || COD4X_VERSION == SupportedCoD4XVersion)
+			return;
+
+		const std::string message = std::format("CoD4X {} is not supported by IW3SR.\nInstall CoD4X {} or "
+												"remove CoD4X to play on retail.",
+			FormatCoD4XVersion(COD4X_VERSION), FormatCoD4XVersion(SupportedCoD4XVersion));
+
+		Log::WriteLine(Channel::Error, "{}", message);
+		GRenderer::Tasks.Add(
+			[message]()
+			{
+				Notifications::Push(message, NotificationLevel::Warning, UnsupportedCoD4XDuration,
+					UnsupportedCoD4XDelay);
+			});
 	}
 
 	int Patch::GetCoD4XVersion()
