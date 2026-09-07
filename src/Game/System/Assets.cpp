@@ -1,5 +1,6 @@
 #include "Assets.hpp"
 
+#include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Zones.hpp"
 
@@ -81,6 +82,8 @@ namespace IW3SR
 	void Assets::LoadXAssets(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync)
 	{
 		const bool ignore = !IgnoreMissingZones || IgnoreMissingZones->current.enabled;
+
+		GPortal::Shutdown();
 
 		if (!zoneInfo)
 		{

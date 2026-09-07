@@ -157,6 +157,8 @@ namespace IW3SR
 			IDirect3DDevice9_EndScene_h(device);
 			return;
 		}
+		GPortal::EndFrame(); // the world has been drawn, so the borrowed colour maps go back here
+
 		if (PendingMaterialUpdate)
 		{
 			PendingMaterialUpdate = false;

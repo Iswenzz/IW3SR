@@ -59,6 +59,10 @@ namespace IW3SR
 			R_BeginFrame_h();
 			return;
 		}
+
+		// EndFrame normally hands the colour maps back, but it hangs off EndScene and a frame that
+		// loses the device never gets there. Start clean either way.
+		Restore();
 		DebugFrames++;
 
 		if (Ready())
@@ -134,6 +138,18 @@ namespace IW3SR
 		R_BeginFrame_h();
 	}
 
+	// The swap has to be undone before the frame ends, not merely before the renderer shuts down.
+	// R_FreeImage releases whatever sits in GfxImage::texture.map, and everything that frees the
+	// level's images does it between frames: retail through R_Shutdown and DB_LoadXAssets, CoD4X
+	// also straight out of its own map restart, which passes through no hook of ours at all. A
+	// render target of ours left in an image there is released by the engine and again by us; the
+	// black map Blank hands out is released once per surface it was aliased into. Either way the
+	// refcount reaches zero early and the next release faults inside d3d9.
+	void GPortal::EndFrame()
+	{
+		Restore();
+	}
+
 	bool GPortal::Ready()
 	{
 		DebugStage = "ok";
@@ -175,7 +191,7 @@ namespace IW3SR
 			if (!image)
 				continue;
 
-			Surfaces.push_back({ material, image, image->texture.map });
+			Surfaces.push_back({ material, image, nullptr }); // Swap fills Original, per frame
 		}
 	}
 
@@ -514,6 +530,7 @@ namespace IW3SR
 		if (!black)
 			return;
 
+		Swap();
 		for (auto& surface : Surfaces)
 			surface.Image->texture.map = black;
 	}
@@ -527,6 +544,7 @@ namespace IW3SR
 
 	void GPortal::Assign(Material* material, IDirect3DTexture9* texture)
 	{
+		Swap();
 		for (auto& surface : Surfaces)
 		{
 			if (surface.Material == material)
@@ -534,8 +552,25 @@ namespace IW3SR
 		}
 	}
 
+	// Takes down what each surface is holding right now, so Restore hands back this frame's colour
+	// maps rather than ones Discover read before a zone reload recycled the images behind them.
+	void GPortal::Swap()
+	{
+		if (Swapped || Surfaces.empty())
+			return;
+
+		for (auto& surface : Surfaces)
+			surface.Original = surface.Image ? surface.Image->texture.map : nullptr;
+
+		Swapped = true;
+	}
+
 	void GPortal::Restore()
 	{
+		if (!Swapped)
+			return;
+
+		Swapped = false;
 		for (auto& surface : Surfaces)
 		{
 			if (surface.Image && surface.Original)

@@ -22,8 +22,11 @@ namespace IW3SR
 		vec2 Size{};
 	};
 
-	// A material in the loaded world that draws through the portal_view technique set, with the
-	// colour map it shipped with so it can be handed back untouched.
+	// A material in the loaded world that draws through the portal_view technique set. Original is
+	// whatever colour map the image was holding when this frame's swap went in, read fresh each
+	// frame rather than kept from Discover: a zone can be unloaded and its images recycled while
+	// the list still stands, and handing back a pointer out of the old one would have the engine
+	// release a texture that is already gone.
 	struct PortalSurface
 	{
 		Material* Material = nullptr;
@@ -39,12 +42,14 @@ namespace IW3SR
 		static void Initialize();
 		static void Shutdown();
 		static void BeginFrame();
+		static void EndFrame();
 		static void DrawDebug();
 
 	private:
 		static inline PortalTarget Targets[2];
 		static inline std::vector<PortalSurface> Surfaces;
 		static inline GfxWorld* KnownWorld = nullptr;
+		static inline bool Swapped = false;
 		static inline int Missed = 0;
 		static inline int Rendered[2] = { -1, -1 };
 
@@ -76,6 +81,7 @@ namespace IW3SR
 		static void Blank();
 		static void Bind(const PortalTarget& target, const PortalEndpoint& endpoint);
 		static void Assign(Material* material, IDirect3DTexture9* texture);
+		static void Swap();
 		static void Restore();
 		static vec3 Through(const PortalEndpoint& into, const PortalEndpoint& out, const vec3& v, bool position);
 	};
