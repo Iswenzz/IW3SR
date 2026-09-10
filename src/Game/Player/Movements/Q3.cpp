@@ -50,8 +50,8 @@ namespace IW3SR
 		ClipVelocity(pml->forward, pml->groundTrace.normal, pml->forward, OVERCLIP);
 		ClipVelocity(pml->right, pml->groundTrace.normal, pml->right, OVERCLIP);
 
-		pml->forward = glm::normalize(pml->forward);
-		pml->right = glm::normalize(pml->right);
+		pml->forward = CoD4::Normalize(pml->forward);
+		pml->right = CoD4::Normalize(pml->right);
 
 		float speed = static_cast<float>(pm->ps->speed);
 
@@ -62,7 +62,7 @@ namespace IW3SR
 		vec3 wishdir = wishvel;
 		float wishspeed = glm::length(wishdir) * scale;
 		if (wishspeed > 0.0f)
-			wishdir = glm::normalize(wishdir);
+			wishdir = CoD4::Normalize(wishdir);
 
 		// Clamp the speed lower if ducking
 		if ((pm->ps->pm_flags & PMF_DUCKED) && (wishspeed > speed * pm_duck_scale))
@@ -94,7 +94,7 @@ namespace IW3SR
 
 		// Don't decrease velocity when going up or down a slope
 		if (vel > 0.0f)
-			pm->ps->velocity = glm::normalize(pm->ps->velocity) * vel;
+			pm->ps->velocity = CoD4::Normalize(pm->ps->velocity) * vel;
 
 		// Don't do anything if standing still
 		if (pm->ps->velocity[0] == 0.0f && pm->ps->velocity[1] == 0.0f)
@@ -120,8 +120,8 @@ namespace IW3SR
 		pml->forward[2] = 0.0f;
 		pml->right[2] = 0.0f;
 
-		pml->forward = glm::normalize(pml->forward);
-		pml->right = glm::normalize(pml->right);
+		pml->forward = CoD4::Normalize(pml->forward);
+		pml->right = CoD4::Normalize(pml->right);
 
 		// Determine x and y parts of velocity
 		for (int i = 0; i < 2; i++)
@@ -131,7 +131,7 @@ namespace IW3SR
 		wishdir = wishvel;
 		wishspeed = glm::length(wishdir) * scale;
 		if (wishspeed > 0.0f)
-			wishdir = glm::normalize(wishdir);
+			wishdir = CoD4::Normalize(wishdir);
 
 		float accel = pm_airaccelerate;
 		const float wishspeed2 = wishspeed;

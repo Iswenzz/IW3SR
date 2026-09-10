@@ -39,8 +39,8 @@ namespace IW3SR
 		ClipVelocity(pml->forward, pml->groundTrace.normal, pml->forward, OVERCLIP);
 		ClipVelocity(pml->right, pml->groundTrace.normal, pml->right, OVERCLIP);
 
-		pml->forward = glm::normalize(pml->forward);
-		pml->right = glm::normalize(pml->right);
+		pml->forward = CoD4::Normalize(pml->forward);
+		pml->right = CoD4::Normalize(pml->right);
 
 		vec3 wishvel;
 		for (int i = 0; i < 2; i++)
@@ -50,7 +50,7 @@ namespace IW3SR
 		vec3 wishdir = wishvel;
 		float wishspeed = glm::length(wishdir);
 		if (wishspeed > 0.0f)
-			wishdir = glm::normalize(wishdir);
+			wishdir = CoD4::Normalize(wishdir);
 
 		if (wishspeed > sv_maxspeed)
 		{
@@ -69,8 +69,8 @@ namespace IW3SR
 
 		pml->forward[2] = 0.0f;
 		pml->right[2] = 0.0f;
-		pml->forward = glm::normalize(pml->forward);
-		pml->right = glm::normalize(pml->right);
+		pml->forward = CoD4::Normalize(pml->forward);
+		pml->right = CoD4::Normalize(pml->right);
 
 		// Determine x and y parts of velocity
 		vec3 wishvel;

@@ -8,6 +8,7 @@ namespace IW3SR
 	public:
 		static float CmdScale(playerState_s* ps, usercmd_s* cmd);
 		static void ProjectVelocity(const vec3& in, const vec3& normal, vec3& out);
+		static vec3 Normalize(const vec3& v);
 		static void JumpClearState(playerState_s* ps);
 		static bool InKnockback(playerState_s* ps);
 	};
