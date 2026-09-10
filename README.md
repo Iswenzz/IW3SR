@@ -71,7 +71,7 @@ In order to use this client, download the archived file down below, and extract 
 To remove the client you can delete ddraw.dll and optionally every other files extracted from the archive.
 
 ## Reports
-IW3SR sends a crash report when the game crashes, so the cause can be found and fixed. The report contains a memory snapshot of the crashed process and basic details about your system. Reports go to Sentry (EU). This is on by default and can be turned off in Settings → General → Crash Reports; the report is saved to your iw3sr/Reports folder either way.
+When the game crashes, a window opens with what happened and a Send button, and the report only leaves your machine when you click it. The report contains a memory snapshot of the crashed process and basic details about your system, and goes to Sentry (EU). The dump is saved to your iw3sr/Reports folder either way.
 
 ## Building
 

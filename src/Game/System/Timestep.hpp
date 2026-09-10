@@ -19,6 +19,9 @@ namespace IW3SR
 		static void CalcViewValues(int localClientNum);
 		static void StartTest();
 		static void Status();
+		static void Sample(const usercmd_s& cmd);
+		static void Step(const pmove_t* pm, const pml_t* pml);
+		static void Bounce(const pmove_t* pm, const pml_t* pml, const trace_t& trace, float before);
 
 		static int MovementFps();
 		static int RenderFps();
@@ -45,6 +48,12 @@ namespace IW3SR
 
 		static inline dvar_s** Limiter = nullptr;
 		static inline dvar_s Limit = {};
+
+		// The command as the engine built it, before any module had a say in it.
+		static inline usercmd_s Raw = {};
+
+		static inline std::ofstream Trace;
+		static inline int Stepped = 0;
 
 		static inline std::ofstream Journal;
 		static inline int Logged = 0;

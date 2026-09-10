@@ -2,6 +2,7 @@
 
 #include "Game/Player/Movements/CS.hpp"
 #include "Game/Player/Movements/Q3.hpp"
+#include "Game/System/Timestep.hpp"
 
 namespace IW3SR
 {
@@ -23,10 +24,11 @@ namespace IW3SR
 
 	void PMove::FinishMove(usercmd_s* cmd)
 	{
-		if (cgs->predictedPlayerState.pm_type != PM_NORMAL)
-			return CL_FinishMove_h(cmd);
-
 		CL_FinishMove_h(cmd);
+		Timestep::Sample(*cmd);
+
+		if (cgs->predictedPlayerState.pm_type != PM_NORMAL)
+			return;
 
 		EventPMoveFinish event(cmd, &cgs->predictedPlayerState);
 		Application::Dispatch(event);
@@ -89,6 +91,8 @@ namespace IW3SR
 			CS::GroundTrace(pm, pml);
 			break;
 		}
+		Timestep::Step(pm, pml);
+
 		EventPMoveGroundTrace event(pm, pml);
 		Application::Dispatch(event);
 	}

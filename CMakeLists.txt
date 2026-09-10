@@ -50,7 +50,7 @@ add_subdirectory(engine)
 add_subdirectory(src)
 
 # Install
-install(TARGETS CEF RUNTIME
+install(TARGETS CEF CrashReporter RUNTIME
 	DESTINATION ${COD4}/iw3sr/Bin)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources/

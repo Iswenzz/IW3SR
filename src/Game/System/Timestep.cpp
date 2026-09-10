@@ -1,5 +1,6 @@
 #include "Timestep.hpp"
 
+#include "Game/System/Client.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Schedule.hpp"
 #include "Game/System/System.hpp"
@@ -80,6 +81,7 @@ namespace IW3SR
 	{
 		Time = 0;
 		Vanilla = {};
+		Stepped = 0;
 	}
 
 	// What the audit has seen so far, so the absence of a warning can be read as evidence rather
@@ -124,6 +126,76 @@ namespace IW3SR
 			0);
 	}
 
+	// Taken at CL_FinishMove, which is the last thing the engine does to a command and the first
+	// chance a module gets at it, so the log can tell the two apart.
+	void Timestep::Sample(const usercmd_s& cmd)
+	{
+		Raw = cmd;
+	}
+
+	// Opens the per pmove step log on demand and closes it when logging stops, so the two files
+	// share one dvar. Returns false while there is nothing to write to.
+	static bool OpenTrace(std::ofstream& trace, bool logging, bool timestep)
+	{
+		if (!logging)
+		{
+			if (trace.is_open())
+				trace.close();
+			return false;
+		}
+		if (trace.is_open())
+			return true;
+
+		const std::filesystem::path path = Environment::Path(Directory::App) / "Logs";
+
+		std::error_code ec;
+		std::filesystem::create_directories(path, ec);
+
+		trace.open(path / (timestep ? "timestep_steps_on.csv" : "timestep_steps_off.csv"), std::ios::trunc);
+		if (!trace.is_open())
+			return false;
+
+		trace << "kind,commandTime,msec,originZ,speed,velZ,ground,pmFlags,jumpTime,jumpOriginZ,normalZ,walkable\n";
+		return true;
+	}
+
+	// One row per pmove step, taken at the ground trace, which runs first in a step and so reports
+	// the state the move is about to be run from. Prediction replays the same commands every frame,
+	// so a step is only written the first time it is stepped over.
+	void Timestep::Step(const pmove_t* pm, const pml_t* pml)
+	{
+		if (!Log || !OpenTrace(Trace, Log->current.enabled, Enabled && Enabled->current.enabled))
+			return;
+
+		// pml->msec is the width pmove really stepped, which is not the spacing of the commands
+		// whenever the command clock has drifted from what the playerState was last predicted to.
+		if (pm->cmd.serverTime <= Stepped)
+			return;
+		Stepped = pm->cmd.serverTime;
+
+		const playerState_s& ps = *pm->ps;
+
+		Trace << "step," << pm->cmd.serverTime << ',' << pml->msec << ',' << ps.origin[2] << ','
+			  << glm::length(vec2(ps.velocity)) << ',' << ps.velocity[2] << ','
+			  << (ps.groundEntityNum != ENTITYNUM_NONE ? 1 : 0) << ',' << ps.pm_flags << ',' << ps.jumpTime << ','
+			  << ps.jumpOriginZ << ",,\n";
+	}
+
+	// The CoD4 bounce, which turns the speed of a fall into speed along the ground. Written with the
+	// surface it fired against, because on flat walkable ground it should never fire at all.
+	void Timestep::Bounce(const pmove_t* pm, const pml_t* pml, const trace_t& trace, float before)
+	{
+		if (!Log || !Trace.is_open())
+			return;
+
+		const playerState_s& ps = *pm->ps;
+
+		Trace << "bounce," << pm->cmd.serverTime << ',' << pml->msec << ',' << ps.origin[2] << ',' << before << ','
+			  << ps.velocity[2] << ',' << (ps.groundEntityNum != ENTITYNUM_NONE ? 1 : 0) << ',' << ps.pm_flags << ','
+			  << ps.jumpTime << ',' << ps.jumpOriginZ << ',' << trace.normal[2] << ',' << (trace.walkable ? 1 : 0)
+			  << '\n';
+	}
+
 	// Writes the commands as they leave for the server, so a run with the timestep on and one with it
 	// off can be compared on what pmove was actually handed rather than on how the two felt.
 	void Timestep::Record(const usercmd_s& cmd)
@@ -154,12 +226,15 @@ namespace IW3SR
 			if (!Journal.is_open())
 				return;
 
-			Journal << "serverTime,msec,forwardmove,rightmove,buttons,yaw,frameTime,sysMsgTime,speed,ground\n";
+			Journal << "serverTime,msec,forwardmove,rightmove,buttons,rawForward,rawRight,rawButtons,cmdNumber,"
+					   "psCommandTime,yaw,frameTime,sysMsgTime,speed,ground\n";
 			Logged = 0;
 			Previous = cmd.serverTime;
 		}
 		Journal << cmd.serverTime << ',' << cmd.serverTime - Previous << ',' << int(cmd.forwardmove) << ','
-				<< int(cmd.rightmove) << ',' << cmd.buttons << ',' << cmd.angles[1] << ',' << com_frameTime << ','
+				<< int(cmd.rightmove) << ',' << cmd.buttons << ',' << int(Raw.forwardmove) << ',' << int(Raw.rightmove)
+				<< ',' << Raw.buttons << ',' << clients->cmdNumber << ','
+				<< cgs->predictedPlayerState.commandTime << ',' << cmd.angles[1] << ',' << com_frameTime << ','
 				<< (g_wv ? g_wv->sysMsgTime : 0) << ','
 				<< static_cast<int>(glm::length(vec2(cgs->predictedPlayerState.velocity))) << ','
 				<< (cgs->predictedPlayerState.groundEntityNum != ENTITYNUM_NONE ? 1 : 0) << '\n';
@@ -390,6 +465,16 @@ namespace IW3SR
 
 			CL_CreateNewCommands_h(localClientNum);
 			Record(clients->cmds[clients->cmdNumber & 0x7F]);
+
+			// A client really running at this rate predicts between one command and the next, so
+			// anything that reads the predicted state while a command is being built - the bhop
+			// deciding whether it is standing on something, the strafe helpers - sees it advance.
+			// Left to the engine's one call a frame, every command in a frame is built against the
+			// state the frame started in, and a landing lands on the wrong command. The last step
+			// is skipped because the engine predicts right after this returns, which keeps the
+			// predictions per second the same as the client being imitated pays.
+			if (i < count)
+				Client::Predict(localClientNum);
 
 			// Vanilla steps wander by the millisecond the engine walks the clock. Wider than that is
 			// jitter of our own making, and a step com_maxfps never produces.

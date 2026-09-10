@@ -1,7 +1,6 @@
-// What is left here is what src/Tools/TimestepSim cannot reach. The simulator runs the cadence
-// end to end against the real pmove and covers rate, carried time and overshoot far better than a
-// unit test could; its clock is monotonic and smooth, so it never produces a stale clock or
-// saturates a packet. Those two paths, and the one invariant they both rest on, live here.
+// A stale clock, a saturated packet, and the invariant both rest on: that the widths a frame is
+// handed always add up to the time it covered. Everything else about the cadence is a property of
+// running it against a real pmove, which a unit test cannot do.
 #include <gtest/gtest.h>
 
 #include "Game/System/Schedule.hpp"

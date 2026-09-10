@@ -1,5 +1,7 @@
 #include "Q3.hpp"
 
+#include "Game/System/Timestep.hpp"
+
 #define pm_friction 6.0f
 #define pm_friction_cpm 8.0f
 #define pm_duck_scale 0.25f
@@ -652,6 +654,8 @@ namespace IW3SR
 			if (!trace.walkable && trace.normal[2] >= 0.30000001f && (pm->ps->pm_flags & PMF_JUMPING)
 				&& pm->ps->jumpOriginZ > pm->ps->origin[2])
 			{
+				Timestep::Bounce(pm, pml, trace, glm::length(vec2(pm->ps->velocity)));
+
 				pm->ps->velocity[2] *= 0.9f; // Tweak bounce velocity
 				CoD4::ProjectVelocity(pm->ps->velocity, trace.normal, pm->ps->velocity);
 				CoD4::JumpClearState(pm->ps); // Prevent double bounce
