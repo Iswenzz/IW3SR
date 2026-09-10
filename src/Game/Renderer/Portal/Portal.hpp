@@ -37,7 +37,7 @@ namespace IW3SR
 	class API GPortal
 	{
 	public:
-		static inline bool Rendering = false;
+		static inline std::atomic<bool> Rendering = false;
 
 		static void Initialize();
 		static void Shutdown();

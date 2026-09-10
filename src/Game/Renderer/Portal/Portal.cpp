@@ -429,8 +429,11 @@ namespace IW3SR
 
 		view.zNear = std::max(toPortal + PORTAL_RADIUS * tilt, 1.0f);
 
-		Rendering = true;
+		// Read on the backend thread by the EndScene and RB_EndSceneRendering hooks. Raised before the
+		// sync it makes the backend skip the overlay for the frame it is still drawing, and with the
+		// backend behind every frame the overlay never ticks, so the menu key stops working.
 		R_SyncRenderThread();
+		Rendering = true;
 		R_BeginFrame_h();
 		BeginCommandList();
 		R_ClearScene(0);
