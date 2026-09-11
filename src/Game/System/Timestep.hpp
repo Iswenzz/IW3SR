@@ -33,6 +33,7 @@ namespace IW3SR
 		static int MeasureSleep();
 		static void Record(const usercmd_s& cmd);
 		static void Audit();
+		static void AuditClock();
 		static void TestFrame();
 		static void Send(const char* command, int key, int time);
 
@@ -68,5 +69,8 @@ namespace IW3SR
 		static inline int Test = 0;
 		static inline int Beat = 0;
 		static inline int Peak = 0;
+		static inline int Clock = 0;
+		static inline int Held = 0;
+		static inline bool Frozen = false;
 	};
 }

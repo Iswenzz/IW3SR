@@ -2,6 +2,7 @@
 
 #include "Game/System/Client.hpp"
 #include "Game/System/Dvar.hpp"
+#include "Game/System/Patch.hpp"
 #include "Game/System/Schedule.hpp"
 #include "Game/System/System.hpp"
 
@@ -24,16 +25,27 @@ namespace IW3SR
 	// Gap between the three keys going down, so the hop starts the way a player starts one.
 	constexpr int TestStagger = 200;
 
-	// What a frame at com_maxfps would spend on its own work, before the limiter is consulted.
-	// Not measurable from a client rendering at sr_maxfps, so it is a constant rather than a knob:
-	// a knob here would let someone dial the movement rate back up to one no vanilla client reaches.
+	// What a frame at com_maxfps spends on its own work before the limiter is consulted, used when
+	// the measurement is turned off. Low enough that the cadence comes out an even grid.
 	constexpr int FrameWork = 500;
 
-	// How many times a one millisecond sleep is timed at startup to find what it really costs.
+	// How many times the limiter's wait is timed at startup to find what it really costs.
 	constexpr int SleepSamples = 33;
 
 	// Past this the movement clock is stale, from a map change or a server time correction.
 	constexpr int MaxDrift = 500;
+
+	// Counter ticks as microseconds. The frequency is fixed for the life of the process, so it is
+	// read once.
+	static int64_t Micros(int64_t ticks)
+	{
+		static const int64_t frequency = []
+		{
+			LARGE_INTEGER value = {};
+			return QueryPerformanceFrequency(&value) ? value.QuadPart : 0;
+		}();
+		return frequency ? ticks * 1000000 / frequency : 0;
+	}
 
 	void Timestep::Initialize()
 	{
@@ -55,6 +67,16 @@ namespace IW3SR
 
 		Pace.Sleep = MeasureSleep();
 		Pace.Work = FrameWork;
+
+		// The whole of the limiter's overshoot is this number, and a step is only ever exact while
+		// it stays under what is left of the millisecond. Printed because there is no other way to
+		// tell a high resolution timer that is working from one that is quietly costing a
+		// millisecond, and the two give different movement rates.
+		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
+			std::format("Timestep: the frame limiter's wait costs {} us.{}\n", Pace.Sleep,
+				Pace.Sleep > 500 ? " Over 500, so steps will widen where they should not." : "")
+				.c_str(),
+			0);
 
 		const auto limiter = reinterpret_cast<dvar_s**>(ComMaxFpsRef);
 
@@ -104,8 +126,37 @@ namespace IW3SR
 		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
 			std::format("Timestep: com_maxfps {} is a {} ms step, drawing at {} fps.\n"
 						"Reaching {} steps a second, which is what a vanilla client here would.\n"
-						"A one millisecond sleep costs {} us. Steps on cadence: {}, off: {}.\n",
+						"The frame limiter's wait costs {} us. Steps on cadence: {}, off: {}.\n",
 				movement, step, RenderFps(), reached, Pace.Sleep, Steady, Wobble)
+				.c_str(),
+			0);
+	}
+
+	// The engine walks serverTimeDelta a millisecond at a time toward the server, once per snapshot,
+	// and every walk lands on a step as one that is a millisecond wide or narrow. A client that has
+	// stopped walking it emits a rigid grid, which is a cadence no connected client has - so a clock
+	// that has not moved across thousands of steps is reported rather than left to be measured as a
+	// jump height weeks later.
+	void Timestep::AuditClock()
+	{
+		if (Frozen || !Active())
+			return;
+
+		if (clients->serverTimeDelta != Clock)
+		{
+			Clock = clients->serverTimeDelta;
+			Held = 0;
+			return;
+		}
+		// A second of steps at any rate the timestep supports, and several snapshots' worth.
+		if (++Held < 1000)
+			return;
+
+		Frozen = true;
+		Com_PrintMessage(CON_CHANNEL_ERROR,
+			std::format("^1Timestep: the server time delta has not moved in {} steps, so every step is "
+						"exactly {} ms and movement is stiffer than a real client's. Please report this.\n",
+				Held, 1000 / std::max(1, MovementFps()))
 				.c_str(),
 			0);
 	}
@@ -114,6 +165,8 @@ namespace IW3SR
 	// someone to go looking for it.
 	void Timestep::Audit()
 	{
+		AuditClock();
+
 		if (Warned || Steady + Wobble < 600 || Wobble * 8 < Steady)
 			return;
 
@@ -155,7 +208,8 @@ namespace IW3SR
 		if (!trace.is_open())
 			return false;
 
-		trace << "kind,commandTime,msec,originZ,speed,velZ,ground,pmFlags,jumpTime,jumpOriginZ,normalZ,walkable\n";
+		trace << "kind,commandTime,msec,originZ,speed,velZ,ground,pmFlags,jumpTime,jumpOriginZ,normalZ,walkable,"
+				 "delta,active,snap,oldSnap,realtime,newSnaps\n";
 		return true;
 	}
 
@@ -178,7 +232,9 @@ namespace IW3SR
 		Trace << "step," << pm->cmd.serverTime << ',' << pml->msec << ',' << ps.origin[2] << ','
 			  << glm::length(vec2(ps.velocity)) << ',' << ps.velocity[2] << ','
 			  << (ps.groundEntityNum != ENTITYNUM_NONE ? 1 : 0) << ',' << ps.pm_flags << ',' << ps.jumpTime << ','
-			  << ps.jumpOriginZ << ",,\n";
+			  << ps.jumpOriginZ << ",,," << clients->serverTimeDelta << ',' << (Active() ? 1 : 0) << ','
+			  << clients->snap.serverTime << ',' << clients->oldSnapServerTime << ',' << cls->realtime << ','
+			  << clients->newSnapshots << '\n';
 	}
 
 	// The CoD4 bounce, which turns the speed of a fall into speed along the ground. Written with the
@@ -373,15 +429,16 @@ namespace IW3SR
 	// what a client really running at com_maxfps does, and it has to be done this way round rather
 	// than by copying one command: CL_KeyState divides a key's held time by frame_msec, so a long
 	// frame yields a weaker forwardmove and rightmove than the same keys held at com_maxfps would.
-	// What a one millisecond sleep really costs here. Vanilla's limiter overshoot is entirely this
-	// number, so it is measured once rather than assumed. Sleep stands in for the engine's
-	// NET_Sleep(1): both are bounded by the same timer granularity.
+	// What one turn of the limiter's wait really costs here, which is the whole of its overshoot.
+	// It has to be Patch::FrameWait, because that is what the limiter calls once IW3SR is loaded -
+	// a fifty microsecond high resolution timer replacing the millisecond sleep stock CoD4 spun on,
+	// and CoD4X's hot usleep with it. Timing ::Sleep(1) instead modelled a client nobody is running:
+	// at com_maxfps 333 it turned an even 3 ms cadence into a 3/4 ms mix, which is a seventh of the
+	// movement rate and, through Sys_SnapVector rounding the velocity every step, three units of
+	// jump height. Measuring the real wait also picks up the Sleep(0) fallback on Windows before
+	// 1803, where the high resolution timer does not exist.
 	int Timestep::MeasureSleep()
 	{
-		LARGE_INTEGER frequency = {};
-		if (!QueryPerformanceFrequency(&frequency) || !frequency.QuadPart)
-			return 1000;
-
 		int samples[SleepSamples] = {};
 		for (int i = 0; i < SleepSamples; i++)
 		{
@@ -389,15 +446,15 @@ namespace IW3SR
 			LARGE_INTEGER after = {};
 
 			QueryPerformanceCounter(&before);
-			::Sleep(1);
+			Patch::FrameWait();
 			QueryPerformanceCounter(&after);
 
-			samples[i] = static_cast<int>((after.QuadPart - before.QuadPart) * 1000000 / frequency.QuadPart);
+			samples[i] = static_cast<int>(Micros(after.QuadPart - before.QuadPart));
 		}
 		std::sort(std::begin(samples), std::end(samples));
 
 		// The median, so one descheduled sample cannot decide the movement rate.
-		return std::clamp(samples[SleepSamples / 2], 1000, 8000);
+		return std::clamp(samples[SleepSamples / 2], 1, 8000);
 	}
 
 	void Timestep::Split(int localClientNum)

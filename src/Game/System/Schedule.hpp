@@ -3,11 +3,11 @@
 
 namespace IW3SR
 {
-	// A vanilla frame limiter kept running on a clock of its own. Com_Frame leaves NET_Sleep(1) the
-	// moment the elapsed millisecond count reaches 1000/com_maxfps, so a sleep costing more than a
-	// millisecond overshoots and real frames come out a mix of widths just at and just over the
-	// target. Replaying that here is what keeps the movement rate one a client at that com_maxfps
-	// could actually have reached, rather than the rate the number names.
+	// The frame limiter this client really runs, kept going on a clock of its own. Com_Frame leaves
+	// its wait the moment the elapsed millisecond count reaches 1000/com_maxfps, so a wait costing
+	// more than what is left of the millisecond overshoots and real frames come out a mix of widths
+	// just at and just over the target. Replaying that here is what keeps the movement rate one the
+	// client could actually have reached, rather than the rate the number names.
 	struct Cadence
 	{
 		int64_t Micros = 0;
@@ -16,8 +16,9 @@ namespace IW3SR
 		bool Started = false;
 	};
 
-	// Microseconds a one millisecond sleep and a frame's own work cost. The overshoot is entirely
-	// these two numbers, so they are measured rather than assumed.
+	// Microseconds the limiter's wait and a frame's own work cost. The overshoot is entirely these
+	// two numbers, so the wait is measured rather than assumed - and it has to be measured against
+	// the wait this client performs, which IW3SR replaces, not against the one stock CoD4 shipped.
 	struct Pacing
 	{
 		int Sleep = 1000;
