@@ -43,7 +43,7 @@ file(TO_CMAKE_PATH $ENV{COD4} COD4)
 # Application
 set(APPLICATION_ID "IW3SR")
 set(APPLICATION_VERSION ${CMAKE_PROJECT_VERSION})
-set(SENTRY_DSN "https://549fb8644c528d116b01e65a61214004@o4512017499815936.ingest.de.sentry.io/4512017504206928" CACHE STRING "Sentry DSN crash reports are uploaded to; empty disables uploading")
+set(SENTRY_DSN "https://549fb8644c528d116b01e65a61214004@o4512017499815936.ingest.de.sentry.io/4512017504206928")
 
 # Build
 add_subdirectory(engine)
