@@ -189,6 +189,7 @@ namespace IW3SR
 	ASM_FUNCTION(CL_PacketEvent_h);
 	ASM_FUNCTION(CL_BeginDownload_h);
 	ASM_FUNCTION(CL_RestartForDemo_h);
+	ASM_FUNCTION(CL_RestartForDemoCdecl_h);
 	ASM_FUNCTION(CG_Respawn_h);
 	ASM_FUNCTION(PM_CrashLand_h);
 	ASM_FUNCTION(R_AddCmdDrawText_h);

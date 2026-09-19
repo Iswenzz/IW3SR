@@ -21,9 +21,9 @@ namespace IW3SR
 	// Negative is relative, in hundreds of nanoseconds.
 	constexpr int64_t FrameWaitDue = -500;
 
-	// CoD4X moves the functions IW3SR hooks between releases, so only the one release the signatures
-	// were taken against is patched at all.
-	constexpr int SupportedCoD4XVersion = 213;
+	// CoD4X moves the functions IW3SR hooks between releases, so only the releases the signatures
+	// were taken against are patched at all.
+	constexpr int SupportedCoD4XVersions[] = { 213, 214 };
 	constexpr float UnsupportedCoD4XDelay = 5.0f;
 	constexpr float UnsupportedCoD4XDuration = 20.0f;
 
@@ -83,10 +83,18 @@ namespace IW3SR
 		RecolorConsoleText();
 		TightenFrameLimiter();
 
-		if (COD4X_VERSION == SupportedCoD4XVersion)
+		switch (COD4X_VERSION)
+		{
+		case 213:
 			CoD4X_21_3();
-		else
+			break;
+		case 214:
+			CoD4X_21_4();
+			break;
+		default:
 			WarnUnsupportedCoD4X();
+			break;
+		}
 
 		Autocomplete::Initialize();
 		GHuffman::Initialize();
@@ -286,7 +294,7 @@ namespace IW3SR
 
 	void Patch::CoD4X(HMODULE mod)
 	{
-		if (UseCoD4X || !mod)
+		if (!mod || reinterpret_cast<uintptr_t>(mod) == COD4X_BASE)
 			return;
 		UseCoD4X = true;
 
@@ -325,6 +333,32 @@ namespace IW3SR
 		ReallocXAssetPoolsX();
 	}
 
+	void Patch::CoD4X_21_4()
+	{
+		// Increase fps cap for menus and loadscreen
+		Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
+
+		bg_weaponNames = Signature(0x402D8C).DeRef();
+		db_xassetPool = Signature(0x488F05).DeRef();
+		g_poolSize = Signature(0x488F0F).DeRef();
+		XAssetStdCount = Signature(COD4X_BASE + 0x43E41C0);
+		s_wmv = Signature(COD4X_BASE + 0x44107B0);
+
+		CL_RestartForDemo_h.Callback = ASM_LOAD(CL_RestartForDemoCdecl_h);
+		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 60 E8 ?? ?? ?? ?? 83 F8 02 74 ?? C7 44 24 04"));
+		CL_FinishMove_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 15 ?? ?? ?? ?? 8B 44 24 10 88 50 14 8B 15"));
+		CL_RestartForDemo_h.Update(Signature(COD4X_BIN,
+			"55 57 56 53 81 EC 4C 09 00 00 C7 04 24 ?? ?? ?? ?? 8B 9C 24 60 09 00 00"));
+		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? ?? ?? ?? ?? C7 44 24 08 64 2F 00 00 83 C0 0C C7"));
+		MainWndProc_h.Update(Signature(COD4X_BIN, "55 57 56 53 83 EC 7C 8B AC 24 90 00 00 00"));
+		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 44 24 1C 0F B7 00 8D 5C 24 1C"));
+		Sys_Quit_h.Update(Signature(COD4X_BIN,
+			"83 EC 1C A1 ?? ?? ?? ?? 83 C0 30 89 04 24 FF 15 ?? ?? ?? ?? 83 EC 04 C7 04 24 01 00 00 00 FF 15"));
+		XAssetsInitStdCount_h.Update(COD4X_BASE + 0x35300);
+
+		ReallocXAssetPoolsX();
+	}
+
 	std::string FormatCoD4XVersion(int version)
 	{
 		if (version <= 0)
@@ -336,12 +370,16 @@ namespace IW3SR
 
 	void Patch::WarnUnsupportedCoD4X()
 	{
-		if (!COD4X_BASE || COD4X_VERSION == SupportedCoD4XVersion)
+		if (!COD4X_BASE || std::ranges::contains(SupportedCoD4XVersions, COD4X_VERSION))
 			return;
+
+		std::string supported;
+		for (int version : SupportedCoD4XVersions)
+			supported += (supported.empty() ? "" : " or ") + FormatCoD4XVersion(version);
 
 		const std::string message = std::format("CoD4X {} is not supported by IW3SR.\nInstall CoD4X {} or "
 												"remove CoD4X to play on retail.",
-			FormatCoD4XVersion(COD4X_VERSION), FormatCoD4XVersion(SupportedCoD4XVersion));
+			FormatCoD4XVersion(COD4X_VERSION), supported);
 
 		Log::WriteLine(Channel::Error, "{}", message);
 		GRenderer::Tasks.Add(

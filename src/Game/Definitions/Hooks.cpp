@@ -267,7 +267,8 @@ namespace IW3SR
 		a.ret();
 	}
 
-	ASM_FUNCTION(CL_RestartForDemo_h)
+	// The protocol is wherever the release keeps it: eax before 21.4, the first stack argument since.
+	static void RestartForDemo(arch::Assembler& a, const x86::Mem& protocol)
 	{
 		Label restart = a.newLabel();
 
@@ -275,7 +276,7 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (eax) protocol
+		a.push(protocol);
 		a.call(Capture::RestartForDemo);
 		a.add(x86::esp, 0x04);
 
@@ -291,6 +292,16 @@ namespace IW3SR
 		a.popad();
 		a.pop(x86::ebp);
 		a.jmp(ASM_TRAMPOLINE(CL_RestartForDemo_h));
+	}
+
+	ASM_FUNCTION(CL_RestartForDemo_h)
+	{
+		RestartForDemo(a, x86::dword_ptr(x86::ebp, -0x04)); // (eax) protocol
+	}
+
+	ASM_FUNCTION(CL_RestartForDemoCdecl_h)
+	{
+		RestartForDemo(a, x86::dword_ptr(x86::ebp, 0x08)); // (stack) protocol
 	}
 
 	ASM_FUNCTION(CL_BeginDownload_h)
