@@ -8,6 +8,7 @@
 #include "Game/System/Capture.hpp"
 #include "Game/System/Channel.hpp"
 #include "Game/System/Client.hpp"
+#include "Game/System/CoD4X.hpp"
 #include "Game/System/Colors.hpp"
 #include "Game/System/Console.hpp"
 #include "Game/System/Demo.hpp"
@@ -198,7 +199,7 @@ namespace IW3SR
 		Vsnprintf_h(0x6706F5, GSystem::Vsnprintf);
 
 	Hook<void()>
-		XAssetsInitStdCount_h(Patch::ReallocXAssetPoolsX);
+		XAssetsInitStdCount_h(GCoD4X::ReallocXAssetPools);
 }
 // clang-format on
 namespace IW3SR

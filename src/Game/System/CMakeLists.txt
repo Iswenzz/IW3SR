@@ -13,6 +13,8 @@ target_sources(IW3SR PRIVATE
 	CdKey.cpp
 	Channel.hpp
 	Channel.cpp
+	CoD4X.hpp
+	CoD4X.cpp
 	Colors.hpp
 	Colors.cpp
 	Profile.hpp

@@ -1,4 +1,5 @@
 #include "Patch.hpp"
+#include "CoD4X.hpp"
 #include "Autocomplete.hpp"
 #include "Huffman.hpp"
 #include "PMem.hpp"
@@ -20,12 +21,6 @@ namespace IW3SR
 
 	// Negative is relative, in hundreds of nanoseconds.
 	constexpr int64_t FrameWaitDue = -500;
-
-	// CoD4X moves the functions IW3SR hooks between releases, so only the releases the signatures
-	// were taken against are patched at all.
-	constexpr int SupportedCoD4XVersions[] = { 213, 214 };
-	constexpr float UnsupportedCoD4XDelay = 5.0f;
-	constexpr float UnsupportedCoD4XDuration = 20.0f;
 
 	// The download menu draws its transfer rate as bytes divided by the elapsed time, and turns that
 	// time into whole seconds before dividing. Everything from the divide by a thousand to the idiv
@@ -83,18 +78,7 @@ namespace IW3SR
 		RecolorConsoleText();
 		TightenFrameLimiter();
 
-		switch (COD4X_VERSION)
-		{
-		case 213:
-			CoD4X_21_3();
-			break;
-		case 214:
-			CoD4X_21_4();
-			break;
-		default:
-			WarnUnsupportedCoD4X();
-			break;
-		}
+		GCoD4X::Install();
 
 		Autocomplete::Initialize();
 		GHuffman::Initialize();
@@ -195,23 +179,6 @@ namespace IW3SR
 		Memory::NOP(FrameSleepSite + 5, 1);
 	}
 
-	// CoD4X's own spin yields where it means to wait. Its usleep is mingw's, which is
-	// Sleep(useconds / 1000) - the 0x10624DD3 multiply and shr 6 in the DLL - so usleep(50) is Sleep(0)
-	// and the loop spins hot, at the mercy of whatever the scheduler does next. The timer wait costs
-	// the same wall clock without holding the core, so its loop gets it too.
-	void Patch::TightenFrameLimiterX()
-	{
-		const uintptr_t site = Signature(COD4X_BIN, "C7 04 24 32 00 00 00 E8");
-		if (!site)
-		{
-			Log::WriteLine(Channel::Error, "The CoD4X frame limiter is not where {} puts it.", COD4X_BIN);
-			return;
-		}
-		// usleep is cdecl and the argument is already written into the frame rather than pushed, so
-		// the call goes straight to a function that takes none and the stack is untouched either way.
-		Memory::CALL(site + 7, reinterpret_cast<uintptr_t>(&Patch::FrameWait));
-	}
-
 	// CoD4X calls the retail loaders and initializers at these same addresses, so the one patch covers
 	// both WinMains. What raises MPUI_NOPUNKBUSTER is the initializer answering failure, and CoD4X
 	// raises it whenever cl_punkbuster or sv_punkbuster is set, which an archived config leaves on.
@@ -292,129 +259,6 @@ namespace IW3SR
 		recolor(con_matchtxtColor_currentDvar, { 0.7f, 0.95f, 1.0f, 1.0f });
 	}
 
-	void Patch::CoD4X(HMODULE mod)
-	{
-		if (!mod || reinterpret_cast<uintptr_t>(mod) == COD4X_BASE)
-			return;
-		UseCoD4X = true;
-
-		char path[MAX_PATH];
-		GetModuleFileName(mod, path, MAX_PATH);
-
-		COD4X_BIN = std::filesystem::path(path).filename().string();
-		COD4X_BASE = reinterpret_cast<uintptr_t>(mod);
-		COD4X_VERSION = GetCoD4XVersion();
-
-		Crash::Patch(COD4X_BASE);
-		TightenFrameLimiterX();
-	}
-
-	void Patch::CoD4X_21_3()
-	{
-		// Increase fps cap for menus and loadscreen
-		Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
-
-		bg_weaponNames = Signature(0x402D8C).DeRef();
-		db_xassetPool = Signature(0x488F05).DeRef();
-		g_poolSize = Signature(0x488F0F).DeRef();
-		XAssetStdCount = Signature(COD4X_BASE + 0x43161C0);
-		s_wmv = Signature(COD4X_BASE + 0x43427C0);
-
-		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 60 E8 ?? ?? ?? ?? 83 F8 02 74 ?? C7 44 24 04"));
-		CL_FinishMove_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 15 ?? ?? ?? ?? 8B 44 24 10 88 50 14 8B 15"));
-		CL_RestartForDemo_h.Update(Signature(COD4X_BIN, "55 57 56 53 89 C3 81 EC 3C 09 00 00"));
-		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? ?? ?? ?? ?? C7 44 24 08 64 2F 00 00 83 C0 0C C7"));
-		MainWndProc_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? EC 7C C7 04 24 02 00 00 00"));
-		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 44 24 1C 0F B7 00 8D 5C 24 1C"));
-		Sys_Quit_h.Update(Signature(COD4X_BIN,
-			"83 EC 1C A1 ?? ?? ?? ?? 83 C0 30 89 04 24 FF 15 ?? ?? ?? ?? 83 EC 04 C7 04 24 01 00 00 00 FF 15"));
-		XAssetsInitStdCount_h.Update(COD4X_BASE + 0x3325E);
-
-		ReallocXAssetPoolsX();
-	}
-
-	void Patch::CoD4X_21_4()
-	{
-		// Increase fps cap for menus and loadscreen
-		Memory::NOP(Signature(COD4X_BIN, "72 ?? 83 ?? 00 F9 C5 00 07"), 2);
-
-		bg_weaponNames = Signature(0x402D8C).DeRef();
-		db_xassetPool = Signature(0x488F05).DeRef();
-		g_poolSize = Signature(0x488F0F).DeRef();
-		XAssetStdCount = Signature(COD4X_BASE + 0x43E41C0);
-		s_wmv = Signature(COD4X_BASE + 0x44107B0);
-
-		CL_RestartForDemo_h.Callback = ASM_LOAD(CL_RestartForDemoCdecl_h);
-		CL_Connect_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 60 E8 ?? ?? ?? ?? 83 F8 02 74 ?? C7 44 24 04"));
-		CL_FinishMove_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 15 ?? ?? ?? ?? 8B 44 24 10 88 50 14 8B 15"));
-		CL_RestartForDemo_h.Update(Signature(COD4X_BIN,
-			"55 57 56 53 81 EC 4C 09 00 00 C7 04 24 ?? ?? ?? ?? 8B 9C 24 60 09 00 00"));
-		CG_Respawn_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? ?? ?? ?? ?? C7 44 24 08 64 2F 00 00 83 C0 0C C7"));
-		MainWndProc_h.Update(Signature(COD4X_BIN, "55 57 56 53 83 EC 7C 8B AC 24 90 00 00 00"));
-		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, "?? ?? ?? ?? ?? 44 24 1C 0F B7 00 8D 5C 24 1C"));
-		Sys_Quit_h.Update(Signature(COD4X_BIN,
-			"83 EC 1C A1 ?? ?? ?? ?? 83 C0 30 89 04 24 FF 15 ?? ?? ?? ?? 83 EC 04 C7 04 24 01 00 00 00 FF 15"));
-		XAssetsInitStdCount_h.Update(COD4X_BASE + 0x35300);
-
-		ReallocXAssetPoolsX();
-	}
-
-	std::string FormatCoD4XVersion(int version)
-	{
-		if (version <= 0)
-			return "(unknown version)";
-
-		const std::string digits = std::to_string(version);
-		return digits.size() < 2 ? digits : digits.substr(0, digits.size() - 1) + "." + digits.back();
-	}
-
-	void Patch::WarnUnsupportedCoD4X()
-	{
-		if (!COD4X_BASE || std::ranges::contains(SupportedCoD4XVersions, COD4X_VERSION))
-			return;
-
-		std::string supported;
-		for (int version : SupportedCoD4XVersions)
-			supported += (supported.empty() ? "" : " or ") + FormatCoD4XVersion(version);
-
-		const std::string message = std::format("CoD4X {} is not supported by IW3SR.\nInstall CoD4X {} or "
-												"remove CoD4X to play on retail.",
-			FormatCoD4XVersion(COD4X_VERSION), supported);
-
-		Log::WriteLine(Channel::Error, "{}", message);
-		GRenderer::Tasks.Add(
-			[message]()
-			{
-				Notifications::Push(message, NotificationLevel::Warning, UnsupportedCoD4XDuration,
-					UnsupportedCoD4XDelay);
-			});
-	}
-
-	int Patch::GetCoD4XVersion()
-	{
-		const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(COD4X_BASE);
-		const auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS*>(COD4X_BASE + dos->e_lfanew);
-		const char* base = reinterpret_cast<const char*>(COD4X_BASE);
-		const size_t size = nt->OptionalHeader.SizeOfImage;
-
-		const std::string_view image{ base, size };
-		const std::string_view prefix = "CoD4 MP ";
-
-		const size_t pos = image.find(prefix);
-		if (pos == std::string_view::npos)
-			return 0;
-
-		const char* versionStart = base + pos + prefix.size();
-		const char* versionEnd = base + size;
-
-		std::string versionStr(versionStart, std::find(versionStart, versionEnd, ' '));
-		versionStr.erase(std::remove(versionStr.begin(), versionStr.end(), '.'), versionStr.end());
-
-		int version{};
-		const auto [ptr, ec] = std::from_chars(versionStr.data(), versionStr.data() + versionStr.size(), version);
-		return ec == std::errc{} ? version : 0;
-	}
-
 	void Patch::ReallocXAssetPools()
 	{
 		const auto ReallocXAssetPool = [](XAssetType type, int size)
@@ -445,22 +289,5 @@ namespace IW3SR
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_WEAPON, 2400);
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_XANIMPARTS, 8192);
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_XMODEL, 5125);
-	}
-
-	void Patch::ReallocXAssetPoolsX()
-	{
-		XAssetStdCount[XAssetType::ASSET_TYPE_FX] = 1200;
-		XAssetStdCount[XAssetType::ASSET_TYPE_GAMEWORLD_SP] = 1;
-		XAssetStdCount[XAssetType::ASSET_TYPE_IMAGE] = 7168;
-		XAssetStdCount[XAssetType::ASSET_TYPE_LOADED_SOUND] = 2700;
-		XAssetStdCount[XAssetType::ASSET_TYPE_LOCALIZE_ENTRY] = 14000;
-		XAssetStdCount[XAssetType::ASSET_TYPE_MATERIAL] = 8192;
-		XAssetStdCount[XAssetType::ASSET_TYPE_MENU] = 1280;
-		XAssetStdCount[XAssetType::ASSET_TYPE_MENULIST] = 256;
-		XAssetStdCount[XAssetType::ASSET_TYPE_PHYSPRESET] = 128;
-		XAssetStdCount[XAssetType::ASSET_TYPE_STRINGTABLE] = 800;
-		XAssetStdCount[XAssetType::ASSET_TYPE_WEAPON] = 2400;
-		XAssetStdCount[XAssetType::ASSET_TYPE_XANIMPARTS] = 8192;
-		XAssetStdCount[XAssetType::ASSET_TYPE_XMODEL] = 5125;
 	}
 }

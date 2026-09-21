@@ -4,6 +4,7 @@
 #include "Capture.hpp"
 #include "CdKey.hpp"
 #include "Channel.hpp"
+#include "CoD4X.hpp"
 #include "Console.hpp"
 #include "Demo.hpp"
 #include "Discord.hpp"
@@ -263,7 +264,7 @@ namespace IW3SR
 		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
 
 		if (name.starts_with("cod4x"))
-			Patch::CoD4X(mod);
+			GCoD4X::Attach(mod);
 		return mod;
 	}
 
@@ -273,7 +274,7 @@ namespace IW3SR
 		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
 
 		if (name.starts_with("cod4x"))
-			Patch::CoD4X(mod);
+			GCoD4X::Attach(mod);
 		return mod;
 	}
 
