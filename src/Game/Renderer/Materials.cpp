@@ -14,7 +14,6 @@ namespace IW3SR
 	constexpr uintptr_t ClearGlobalsSite = 0x5F4E1F;
 	constexpr uintptr_t StockMemset = 0x67C4A0;
 
-
 	// One rewritten operand: where it sits, how wide it is, and the value the stock image must
 	// still hold there.
 	struct MaterialPatch

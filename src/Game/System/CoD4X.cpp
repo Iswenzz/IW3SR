@@ -6,13 +6,17 @@
 
 namespace IW3SR
 {
-	constexpr int TestedVersions[] = { 213, 214, 215 };
+	constexpr int LastTestedVersion = 216;
 	constexpr int MinimumVersion = 213;
 	constexpr float UntestedNoticeDelay = 5.0f;
 	constexpr float UntestedNoticeDuration = 20.0f;
 
 	constexpr uintptr_t XAssetStdCountOperand = 2;
 	constexpr uintptr_t WinMouseVarsOperand = 23;
+
+	constexpr uintptr_t WndClassSizeDisplacement = 3;
+	constexpr uintptr_t WndClassProcDisplacement = 15;
+	constexpr uintptr_t WndClassProcOperand = 16;
 
 	constexpr const char* MenuFpsCapSignature = "72 ?? 83 ?? 00 F9 C5 00 07";
 	constexpr const char* FrameLimiterSignature = "C7 04 24 32 00 00 00 E8";
@@ -26,6 +30,7 @@ namespace IW3SR
 		"C7 05 ?? ?? ?? ?? 40 00 00 00 C7 05 ?? ?? ?? ?? 40 00 00 00 C7 05 ?? ?? ?? ?? 00 10 00 00";
 	constexpr const char* WinMouseVarsSignature =
 		"89 15 ?? ?? ?? ?? 89 54 24 04 FF 15 ?? ?? ?? ?? A1 ?? ?? ?? ?? C6 05 ?? ?? ?? ?? 01";
+	constexpr const char* WndClassSignature = "C7 44 24 ?? 30 00 00 00 89 ?? F3 AB C7 44 24 ?? ?? ?? ?? ??";
 	constexpr const char* MainWndProcSignature = "55 57 56 53 83 EC 7C 8B AC 24 90 00 00 00";
 	constexpr const char* MainWndProcSignatureEax = "?? ?? ?? ?? ?? EC 7C C7 04 24 02 00 00 00";
 	constexpr const char* RestartForDemoSignature =
@@ -59,7 +64,8 @@ namespace IW3SR
 			return;
 
 		// Increase fps cap for menus and loadscreen
-		Memory::NOP(Signature(COD4X_BIN, MenuFpsCapSignature), 2);
+		if (const uintptr_t menuFpsCap = Signature(COD4X_BIN, MenuFpsCapSignature))
+			Memory::NOP(menuFpsCap, 2);
 
 		bg_weaponNames = Signature(0x402D8C).DeRef();
 		db_xassetPool = Signature(0x488F05).DeRef();
@@ -79,8 +85,21 @@ namespace IW3SR
 		ReallocXAssetPools();
 	}
 
+	// Found through the "CoD4" class registration rather than the proc's own prologue: 21.6
+	// recompiled the proc with different registers, while the code storing its address into the
+	// WNDCLASSEXA has not changed since 21.3. The two displacements have to be cbSize and
+	// lpfnWndProc, eight bytes apart, or the match is some other struct.
 	uintptr_t GCoD4X::FindMainWndProc()
 	{
+		if (const uintptr_t site = Signature(COD4X_BIN, WndClassSignature))
+		{
+			const auto size = *reinterpret_cast<const uint8_t*>(site + WndClassSizeDisplacement);
+			const auto proc = *reinterpret_cast<const uint8_t*>(site + WndClassProcDisplacement);
+
+			if (proc == size + offsetof(WNDCLASSEXA, lpfnWndProc))
+				return *reinterpret_cast<const uintptr_t*>(site + WndClassProcOperand);
+		}
+
 		if (const uintptr_t address = Signature(COD4X_BIN, MainWndProcSignature))
 			return address;
 		return Signature(COD4X_BIN, MainWndProcSignatureEax);
@@ -104,13 +123,26 @@ namespace IW3SR
 		return address;
 	}
 
+	// win_input.c sets mouseInitialized from three places with the same instruction, so the
+	// signature matches three times by design. They all have to agree on where s_wmv is.
 	WinMouseVars_t* GCoD4X::FindWinMouseVars()
 	{
-		const uintptr_t address = Signature(COD4X_BIN, WinMouseVarsSignature);
-		if (!address)
-			return nullptr;
+		uint8_t* field = nullptr;
 
-		auto* field = *reinterpret_cast<uint8_t**>(address + WinMouseVarsOperand);
+		for (const uintptr_t hit : Signature::ScanAll(COD4X_BIN, WinMouseVarsSignature))
+		{
+			auto* candidate = *reinterpret_cast<uint8_t**>(hit + WinMouseVarsOperand);
+			if (field && candidate != field)
+			{
+				Log::WriteLine(Channel::Error, "CoD4X {}: the s_wmv writes disagree; leaving it unresolved.",
+					FormatVersion(COD4X_VERSION));
+				return nullptr;
+			}
+			field = candidate;
+		}
+
+		if (!field)
+			return nullptr;
 		return reinterpret_cast<WinMouseVars_t*>(field - offsetof(WinMouseVars_t, mouseInitialized));
 	}
 
@@ -147,15 +179,11 @@ namespace IW3SR
 
 	void GCoD4X::WarnUntested()
 	{
-		if (std::ranges::contains(TestedVersions, COD4X_VERSION))
+		if (COD4X_VERSION >= MinimumVersion && COD4X_VERSION <= LastTestedVersion)
 			return;
 
-		std::string tested;
-		for (int version : TestedVersions)
-			tested += (tested.empty() ? "" : ", ") + FormatVersion(version);
-
-		const std::string message = std::format("CoD4X {} has not been tested with IW3SR.\nTested releases are {}.",
-			FormatVersion(COD4X_VERSION), tested);
+		const std::string message = std::format("CoD4X {} has not been tested with IW3SR.\nLast tested release is {}.",
+			FormatVersion(COD4X_VERSION), FormatVersion(LastTestedVersion));
 
 		Log::WriteLine(Channel::Warning, "{}", message);
 		GRenderer::Tasks.Add([message]()
