@@ -153,15 +153,8 @@ namespace IW3SR
 		for (int version : TestedVersions)
 			tested += (tested.empty() ? "" : ", ") + FormatVersion(version);
 
-		const bool patched = COD4X_VERSION >= MinimumVersion;
-		const std::string message = std::format(
-			"CoD4X {} has not been tested with IW3SR.\n{}\nTested "
-			"releases are {}.",
-			FormatVersion(COD4X_VERSION),
-			patched ? "It is patched anyway, so expect rough edges."
-					: "It is too old to patch; CoD4X "
-					  "features stay off.",
-			tested);
+		const std::string message = std::format("CoD4X {} has not been tested with IW3SR.\nTested releases are {}.",
+			FormatVersion(COD4X_VERSION), tested);
 
 		Log::WriteLine(Channel::Warning, "{}", message);
 		GRenderer::Tasks.Add([message]()
