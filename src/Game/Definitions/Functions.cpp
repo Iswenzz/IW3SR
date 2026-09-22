@@ -145,6 +145,9 @@ namespace IW3SR
 	Function<Material*(const char* material, int size)>
 		Material_RegisterHandle = ASM_LOAD(Material_RegisterHandle);
 
+	Function<bool(Material* a, Material* b)>
+		Material_SortLess = 0x621250;
+
 	Function<int(const uint8_t* input, uint8_t* output, int readsize)>
 		MSG_ReadBitsCompress = ASM_LOAD(MSG_ReadBitsCompress);
 

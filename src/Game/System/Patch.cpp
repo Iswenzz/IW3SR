@@ -5,6 +5,7 @@
 #include "PMem.hpp"
 #include "Profile.hpp"
 
+#include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Renderer.hpp"
 
 #ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
@@ -55,6 +56,7 @@ namespace IW3SR
 
 		Application::Initialize();
 
+		GMaterials::Initialize();
 		ReallocXAssetPools();
 
 		// Increase hunkTotal
@@ -281,7 +283,7 @@ namespace IW3SR
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_IMAGE, 7168);
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_LOADED_SOUND, 2700);
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_LOCALIZE_ENTRY, 14000);
-		ReallocXAssetPool(XAssetType::ASSET_TYPE_MATERIAL, 8192);
+		ReallocXAssetPool(XAssetType::ASSET_TYPE_MATERIAL, GMaterials::PoolSize());
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_MENU, 1280);
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_MENULIST, 256);
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_PHYSPRESET, 128);

@@ -2,6 +2,7 @@
 
 #include "Game/Renderer/Drawing/Draw2D.hpp"
 #include "Game/Renderer/Drawing/Draw3D.hpp"
+#include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/UI/About.hpp"
@@ -202,12 +203,16 @@ namespace IW3SR
 
 	void GRenderer::UpdateMaterials()
 	{
+		GMaterials::WarnOnOverflow();
+
 		if (!rgp->world)
 			return;
 
+		Material** const sorted = GMaterials::Sorted();
+
 		for (int i = 0; i < rgp->materialCount; i++)
 		{
-			const auto material = rgp->sortedMaterials[i];
+			const auto material = sorted[i];
 			if (!material || !material->info.name)
 				continue;
 

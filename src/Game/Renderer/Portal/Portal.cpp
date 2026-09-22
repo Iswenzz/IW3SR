@@ -1,6 +1,7 @@
 #include "Portal.hpp"
 
 #include "Game/Renderer/Drawing/Text.hpp"
+#include "Game/Renderer/Materials.hpp"
 #include "Game/System/Dvar.hpp"
 
 namespace IW3SR
@@ -178,9 +179,11 @@ namespace IW3SR
 		Surfaces.clear();
 		KnownWorld = rgp->world;
 
+		Material** const sorted = GMaterials::Sorted();
+
 		for (int i = 0; i < rgp->materialCount; i++)
 		{
-			Material* material = rgp->sortedMaterials[i];
+			Material* material = sorted[i];
 			if (!material || !material->textureCount || !material->textureTable)
 				continue;
 

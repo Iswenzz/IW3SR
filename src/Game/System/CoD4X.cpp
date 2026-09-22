@@ -1,6 +1,7 @@
 #include "CoD4X.hpp"
 #include "Patch.hpp"
 
+#include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Renderer.hpp"
 
 namespace IW3SR
@@ -205,7 +206,7 @@ namespace IW3SR
 		XAssetStdCount[XAssetType::ASSET_TYPE_IMAGE] = 7168;
 		XAssetStdCount[XAssetType::ASSET_TYPE_LOADED_SOUND] = 2700;
 		XAssetStdCount[XAssetType::ASSET_TYPE_LOCALIZE_ENTRY] = 14000;
-		XAssetStdCount[XAssetType::ASSET_TYPE_MATERIAL] = 8192;
+		XAssetStdCount[XAssetType::ASSET_TYPE_MATERIAL] = GMaterials::PoolSize();
 		XAssetStdCount[XAssetType::ASSET_TYPE_MENU] = 1280;
 		XAssetStdCount[XAssetType::ASSET_TYPE_MENULIST] = 256;
 		XAssetStdCount[XAssetType::ASSET_TYPE_PHYSPRESET] = 128;

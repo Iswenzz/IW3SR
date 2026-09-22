@@ -149,6 +149,9 @@ namespace IW3SR
 	API extern Function<Material*(const char* material, int size)>
 		Material_RegisterHandle;
 
+	extern Function<bool(Material* a, Material* b)>
+		Material_SortLess;
+
 	extern Function<int(const uint8_t* input, uint8_t* output, int readsize)>
 		MSG_ReadBitsCompress;
 
