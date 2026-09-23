@@ -11,6 +11,27 @@
 
 namespace IW3SR::UC
 {
+	static std::optional<std::array<int, 3>> ParseVersion(std::string_view text)
+	{
+		std::array<int, 3> version = {};
+		const char* cursor = text.data();
+		const char* const end = text.data() + text.size();
+
+		for (size_t i = 0; i < version.size(); i++)
+		{
+			if (i && (cursor == end || *cursor++ != '.'))
+				return std::nullopt;
+
+			const auto [next, error] = std::from_chars(cursor, end, version[i]);
+			if (error != std::errc{})
+				return std::nullopt;
+			cursor = next;
+		}
+		if (cursor != end)
+			return std::nullopt;
+		return version;
+	}
+
 	void About::Initialize()
 	{
 		CheckUpdate();
@@ -25,13 +46,17 @@ namespace IW3SR::UC
 		auto req = HTTP::Get("https://iswenzz.com/static/updates/iw3sr/version.txt",
 			[](const HTTPResponse& response)
 			{
-				const bool ok = response.Code == 200;
 				std::string latest = response.Body;
-				latest.erase(std::remove(latest.begin(), latest.end(), '\n'), latest.end());
-				latest.erase(std::remove(latest.begin(), latest.end(), '\r'), latest.end());
+				const auto space = [](unsigned char c) { return std::isspace(c); };
+				latest.erase(latest.begin(), std::ranges::find_if_not(latest, space));
+				latest.erase(std::find_if_not(latest.rbegin(), latest.rend(), space).base(), latest.end());
+
+				const auto remote = ParseVersion(latest);
+				const bool ok = response.Code == 200 && remote;
+				const bool newer = ok && *remote > *ParseVersion(APPLICATION_VERSION);
 
 				GRenderer::Tasks.Add(
-					[ok, latest]()
+					[ok, newer, latest]()
 					{
 						Checking = false;
 						if (!ok)
@@ -39,7 +64,7 @@ namespace IW3SR::UC
 							StatusMessage = "Failed to check for updates.";
 							return;
 						}
-						if (latest <= APPLICATION_VERSION)
+						if (!newer)
 						{
 							StatusMessage = "You are up to date.";
 							return;
@@ -71,6 +96,7 @@ namespace IW3SR::UC
 		std::string gameDir = Environment::Path(Directory::Base).string();
 
 		std::error_code ec;
+		std::filesystem::remove_all(filesDir, ec);
 		std::filesystem::create_directories(tempDir, ec);
 		std::filesystem::create_directories(filesDir, ec);
 
@@ -92,7 +118,8 @@ namespace IW3SR::UC
 						});
 				};
 
-				if (response.Code != 200)
+				// The code is the one in the headers, which a transfer cut off halfway still carries.
+				if (!response.Success || response.Code != 200)
 					return fail("Download failed.");
 
 				{
@@ -160,6 +187,9 @@ namespace IW3SR::UC
 					});
 			});
 
+		req.TimeoutSeconds = 0;
+		req.LowSpeedLimitBytes = 512;
+		req.LowSpeedTimeSeconds = 30;
 		req.OnProgress = [](float progress) { Progress = progress; };
 		req.Send();
 	}

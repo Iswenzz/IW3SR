@@ -96,9 +96,6 @@ namespace IW3SR::Addons
 
 	void Movements::Bhop(playerState_s* ps, usercmd_s* cmd)
 	{
-		if (UseBhopToggle && KeyBhopToggle.IsPressed())
-			BhopToggled = !BhopToggled;
-
 		if (UseBhop && KeyBhop.IsDown())
 		{
 			bool inMantle = ps->pm_flags & PMF_MANTLE;
@@ -107,8 +104,9 @@ namespace IW3SR::Addons
 
 			if (PMove::OnGround())
 			{
-				// Set jump only when 500ms cooldown has expired, otherwise Jump_Check returns
-				if (ps->commandTime - ps->jumpTime >= 500)
+				// Set jump only when 500ms cooldown has expired, otherwise Jump_Check returns. Against this
+				// command's time, as Jump_Check measures it, not the older commandTime.
+				if (cmd->serverTime - ps->jumpTime >= 500)
 				{
 					clients->stance = CL_STANCE_STAND;
 					cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD | BUTTON_PRONE | BUTTON_PRONE_HOLD);
@@ -157,6 +155,9 @@ namespace IW3SR::Addons
 
 	void Movements::OnRender()
 	{
+		if (UseBhopToggle && KeyBhopToggle.IsPressed())
+			BhopToggled = !BhopToggled;
+
 		if (BhopToggled)
 			BhopText.Render();
 	}

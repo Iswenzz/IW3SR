@@ -1,6 +1,7 @@
 #include "Assets.hpp"
 
 #include "Game/Renderer/Portal/Portal.hpp"
+#include "Game/Renderer/Renderer.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Zones.hpp"
 
@@ -84,6 +85,7 @@ namespace IW3SR
 		const bool ignore = !IgnoreMissingZones || IgnoreMissingZones->current.enabled;
 
 		GPortal::Shutdown();
+		GRenderer::ReleaseMaterials();
 
 		if (!zoneInfo)
 		{
@@ -230,8 +232,10 @@ namespace IW3SR
 		if (name.empty())
 			return false;
 
+		// Non throwing: the path comes from the server's fs_game and this runs inside the zone load.
+		std::error_code error;
 		if (name == "mod")
-			return std::filesystem::exists(ModZonePath());
+			return std::filesystem::exists(ModZonePath(), error);
 
 		return DB_FileExists(name.c_str(), DB_PATH_ZONE) || DB_FileExists(name.c_str(), DB_PATH_MAIN)
 			|| DB_FileExists(name.c_str(), DB_PATH_USERMAPS);

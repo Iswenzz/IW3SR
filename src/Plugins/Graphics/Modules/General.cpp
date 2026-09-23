@@ -61,7 +61,7 @@ namespace IW3SR::Addons
 		if (sr_portal_view)
 		{
 			if (ImGui::Checkbox("Portal View", &sr_portal_view->current.enabled))
-				sr_portal_view->latched.enabled = sr_portal_view->current.enabled;
+				Dvar::SetBool(sr_portal_view, sr_portal_view->current.enabled);
 			ImGui::Tooltip(
 				"Draw the far side of a linked portal pair into their surfaces.\n"
 				"Each portal on screen costs a second scene render.");
@@ -106,7 +106,10 @@ namespace IW3SR::Addons
 				cmd.Size = vec2(textSize.y * 1.1);
 				cmd.Position = { position.x + textSize.x, position.y - cmd.Size.y };
 				cmd.Color = vec4(1, 1, 1, color.w);
-				EmojiCommands.push_back(cmd);
+				{
+					std::scoped_lock lock(EmojiMutex);
+					EmojiCommands.push_back(cmd);
+				}
 
 				i += 8;
 			}
@@ -123,13 +126,19 @@ namespace IW3SR::Addons
 			ProcessText(event.text, event.font, event.position, event.size, event.color);
 	}
 
+	// Text is queued from the main thread's draw calls while this runs on the render thread, so the
+	// list is taken whole under the lock rather than walked in place.
 	void General::OnRender()
 	{
+		std::vector<EmojiCommand> commands;
+		{
+			std::scoped_lock lock(EmojiMutex);
+			commands.swap(EmojiCommands);
+		}
 		if (UseEmojis)
 		{
-			for (const auto& command : EmojiCommands)
+			for (const auto& command : commands)
 				Draw2D::DrawQuad(vec3(command.Position, 0), command.Size, 0, command.Emoji, command.Color);
-			EmojiCommands.clear();
 		}
 	}
 }

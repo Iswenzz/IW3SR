@@ -70,7 +70,11 @@ namespace IW3SR
 
 			if (entry.Severity == FilterRedirect && entry.Redirect.type == NA_IP)
 			{
+				// A destination written without a port keeps the one the player asked for.
+				const uint16_t port = address.port;
 				address = entry.Redirect;
+				if (!address.port)
+					address.port = port;
 				return false;
 			}
 			return entry.Severity >= severity;

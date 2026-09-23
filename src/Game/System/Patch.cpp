@@ -4,6 +4,7 @@
 #include "Huffman.hpp"
 #include "PMem.hpp"
 #include "Profile.hpp"
+#include "Shell.hpp"
 
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Renderer.hpp"
@@ -31,13 +32,16 @@ namespace IW3SR
 
 	void Patch::Initialize()
 	{
+		GShell::GuardCommandLine();
+
 		LoadLibraryA_h.Install();
 		LoadLibraryW_h.Install();
 		LoadLibraryExW_h.Install();
 
 		nlohmann::json settings;
 		Environment::Load(settings, "ui.json");
-		AllowCoD4X = settings.empty() ? true : settings.value("CoD4X", true);
+		const auto cod4x = settings.is_object() ? settings.find("CoD4X") : settings.end();
+		AllowCoD4X = cod4x == settings.end() || !cod4x->is_boolean() || cod4x->get<bool>();
 
 		if (AllowCoD4X)
 			return;

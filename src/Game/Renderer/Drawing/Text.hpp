@@ -38,10 +38,11 @@ namespace IW3SR
 
 	private:
 		Font_s* Font = nullptr;
+		float FontUISize = 0.0f;
 
 		void ComputeAlignment(vec2& position);
 
 		SERIALIZE_POLY_BASE(GText, Value, Position, Color, HorizontalAlign, VerticalAlign, AlignX, AlignY, FontName,
-			FontSize)
+			FontSize, FontResponsive)
 	};
 }

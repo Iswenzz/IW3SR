@@ -34,6 +34,6 @@ namespace IW3SR::Addons
 		void Build(float accel);
 		void DrawZones(float yaw);
 
-		SERIALIZE_POLY(Snap, Module, ColorPrimary, ColorAlternate, ColorActive, UseActiveZone)
+		SERIALIZE_POLY(Snap, Module, Y, Height, ColorPrimary, ColorAlternate, ColorActive, UseActiveZone)
 	};
 }

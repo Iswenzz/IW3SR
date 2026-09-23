@@ -35,18 +35,6 @@ namespace IW3SR::Addons
 
 	void KMOV::Initialize()
 	{
-		if (!glm::length2(CurrentOffset))
-		{
-			NodeLT.OriginalPosition = NodeLT.Element.Position;
-			NodeLB.OriginalPosition = NodeLB.Element.Position;
-			NodeRT.OriginalPosition = NodeRT.Element.Position;
-			NodeRB.OriginalPosition = NodeRB.Element.Position;
-		}
-		NodeLT.Element.Position = NodeLT.OriginalPosition;
-		NodeLB.Element.Position = NodeLB.OriginalPosition;
-		NodeRT.Element.Position = NodeRT.OriginalPosition;
-		NodeRB.Element.Position = NodeRB.OriginalPosition;
-
 		CurrentOffset = { 0, 0 };
 	}
 
@@ -289,8 +277,14 @@ namespace IW3SR::Addons
 			break;
 		}
 		}
-		node.Element.Position = node.OriginalPosition + CurrentOffset;
+		// The shake is only lent to the position for the draw, so a drag in the menu or on screen sticks
+		// and the saved position never carries it.
+		const vec2 base = node.Element.Position;
+		const vec2 shaken = base + CurrentOffset;
+
+		node.Element.Position = shaken;
 		node.Element.Render();
+		node.Element.Position = base + (node.Element.Position - shaken);
 	}
 
 	void KMOV::OnSpawn(EventClientSpawn& event)
@@ -301,6 +295,10 @@ namespace IW3SR::Addons
 
 	void KMOV::OnRender()
 	{
+		// Active can come before the first prediction has pointed pmove at a player state.
+		if (!pmove || !pmove->ps)
+			return;
+
 		Compute();
 
 		const auto fire = Fire();

@@ -37,7 +37,7 @@ namespace IW3SR
 		Resolve();
 
 		int cleared = 0;
-		for (const dvar_s* dvar : Fragments)
+		for (dvar_s* dvar : Fragments)
 			cleared += Blank(dvar);
 
 		if (cleared)
@@ -62,7 +62,7 @@ namespace IW3SR
 
 		Resolve();
 
-		for (const dvar_s* dvar : Fragments)
+		for (dvar_s* dvar : Fragments)
 			Blank(dvar);
 	}
 
@@ -85,24 +85,37 @@ namespace IW3SR
 
 	// current, latched and reset normally share one allocation, so each distinct pointer is wiped
 	// once. The reset value matters too: a "reset cdkey1" would otherwise hand the fragment back.
-	bool GCdKey::Blank(const dvar_s* dvar)
+	//
+	// Zeroing alone is not enough: dvar strings are interned and FreeString finds the entry again by
+	// content, so a zeroed value would later drop a reference off "" instead of its own. Pointing the
+	// value at the empty reset string takes it off that path, as the engine never frees a value that
+	// shares the reset pointer. The zeroed entry is left to leak.
+	bool GCdKey::Blank(dvar_s* dvar)
 	{
 		if (!dvar || dvar->type != DvarType::STRING)
 			return false;
 
-		bool cleared = Wipe(dvar->current.string);
+		const char* current = dvar->current.string;
+		const char* latched = dvar->latched.string;
+		const char* reset = dvar->reset.string;
 
-		if (dvar->latched.string != dvar->current.string && Wipe(dvar->latched.string))
+		bool cleared = false;
+		if (current != reset && Wipe(current))
 			cleared = true;
-		if (dvar->reset.string != dvar->current.string && dvar->reset.string != dvar->latched.string
-			&& Wipe(dvar->reset.string))
+		if (latched != current && latched != reset && Wipe(latched))
+			cleared = true;
+		if (reset != current && reset != latched && Wipe(reset))
 			cleared = true;
 
+		if (cleared && reset && !*reset)
+		{
+			dvar->current.string = reset;
+			dvar->latched.string = reset;
+		}
 		return cleared;
 	}
 
-	// Zeroed where it lies rather than repointed: no pointer changes hands, so the engine's own free
-	// path keeps working and no copy of the key is left behind.
+	// Zeroed where it lies so no copy of the key is left behind.
 	bool GCdKey::Wipe(const char* string)
 	{
 		if (!string || !*string)

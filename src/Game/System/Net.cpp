@@ -8,6 +8,9 @@
 
 namespace IW3SR
 {
+	// SIO_UDP_CONNRESET, from mstcpip.h.
+	constexpr DWORD SioUdpConnReset = _WSAIOW(IOC_VENDOR, 12);
+
 	bool Net::Startup()
 	{
 		if (Started)
@@ -158,6 +161,12 @@ namespace IW3SR
 		if (handle == INVALID_SOCKET)
 			return InvalidSocket;
 
+		// Otherwise one host answering with ICMP port unreachable fails the next recvfrom with
+		// WSAECONNRESET, which reads as the socket dying and ends a whole batch of queries.
+		BOOL reset = FALSE;
+		DWORD returned = 0;
+		WSAIoctl(handle, SioUdpConnReset, &reset, sizeof(reset), nullptr, 0, &returned, nullptr, nullptr);
+
 		return static_cast<NetSocket>(handle);
 	}
 
@@ -292,8 +301,15 @@ namespace IW3SR
 		timeout.tv_sec = timeoutMs / 1000;
 		timeout.tv_usec = (timeoutMs % 1000) * 1000;
 
-		const int ready = select(0, write ? nullptr : &set, write ? &set : nullptr, nullptr, &timeout);
+		// Winsock reports a refused connect in the exception set and never in the write set, so without
+		// it a refusal would wait out the whole timeout.
+		fd_set failed;
+		FD_ZERO(&failed);
+		if (write)
+			FD_SET(static_cast<SOCKET>(socket), &failed);
 
-		return ready > 0;
+		const int ready = select(0, write ? nullptr : &set, write ? &set : nullptr, write ? &failed : nullptr, &timeout);
+
+		return ready > 0 && !FD_ISSET(static_cast<SOCKET>(socket), &failed);
 	}
 }

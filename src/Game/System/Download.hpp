@@ -11,7 +11,8 @@ namespace IW3SR
 	// Past this the file itself is the problem, not the resume.
 	constexpr int DownloadRestartMax = 2;
 
-	constexpr int DownloadPacketMax = 0x10000;
+	// Subcommand, offset and length ahead of the largest block the server's buffer holds.
+	constexpr int DownloadPacketMax = 1 + 4 + 2 + 0xFFFF;
 	constexpr int DownloadMessagesPerFrame = 64;
 
 	// curl clamps its own receive buffer to CURL_MAX_READ_SIZE, so asking for more than it allows

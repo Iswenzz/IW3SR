@@ -81,12 +81,15 @@ namespace IW3SR
 	static bool Announced = false;
 	static bool FormatApplied = false;
 
-	// A real stats_t is sparse, so a block without many zeroes was never filled in.
+	// A real stats_t is sparse, so a block without many zeroes was never filled in. Nor was one that is
+	// nothing but zeroes, and that one would otherwise replace the backup the moment it is needed.
 	static bool LooksLikeStats(const saveStatData_t& data)
 	{
+		constexpr size_t MinFilled = 16;
+
 		const auto* bytes = reinterpret_cast<const byte*>(&data.stats);
-		const auto zeros = std::count(bytes, bytes + sizeof(data.stats), 0);
-		return static_cast<size_t>(zeros) > sizeof(data.stats) / 2;
+		const auto zeros = static_cast<size_t>(std::count(bytes, bytes + sizeof(data.stats), 0));
+		return zeros > sizeof(data.stats) / 2 && sizeof(data.stats) - zeros >= MinFilled;
 	}
 
 	// Every profile and mod directory, because which pair is active is not known this early. A file
@@ -95,8 +98,14 @@ namespace IW3SR
 	{
 		std::error_code error;
 
-		for (const auto& entry : std::filesystem::recursive_directory_iterator(profiles, error))
+		// Stepped by hand: the range-for's increment throws on an unreadable folder, and this runs
+		// inside the engine's dvar registration where nothing would catch it.
+		std::filesystem::recursive_directory_iterator it(profiles,
+			std::filesystem::directory_options::skip_permission_denied, error);
+
+		for (; !error && it != std::filesystem::recursive_directory_iterator(); it.increment(error))
 		{
+			const auto& entry = *it;
 			if (entry.path().filename() != "mpdata")
 				continue;
 
@@ -106,8 +115,10 @@ namespace IW3SR
 			if (!file.read(reinterpret_cast<char*>(&data), sizeof(data)) || !LooksLikeStats(data))
 				continue;
 
+			// Its own error, so one profile that cannot be copied does not end the walk for the rest.
+			std::error_code copy;
 			std::filesystem::copy_file(entry.path(), entry.path().parent_path() / "mpdata.bak",
-				std::filesystem::copy_options::overwrite_existing, error);
+				std::filesystem::copy_options::overwrite_existing, copy);
 		}
 	}
 

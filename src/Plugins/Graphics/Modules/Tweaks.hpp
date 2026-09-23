@@ -9,6 +9,7 @@ namespace IW3SR::Addons
 		bool DrawTweaks;
 		bool DrawGlow;
 		bool DrawSun;
+		bool SunOverride;
 
 		float TweakBrightness;
 		float TweakContrast;
@@ -28,7 +29,15 @@ namespace IW3SR::Addons
 		Tweaks();
 		virtual ~Tweaks() = default;
 
+		void Release() override;
 		void Menu() override;
 		void OnRender() override;
+
+	private:
+		void ApplySun();
+
+		SERIALIZE_POLY(Tweaks, Module, DrawTweaks, DrawGlow, DrawSun, SunOverride, TweakBrightness, TweakContrast,
+			TweakDesaturation, TweakLightTint, TweakDarkTint, GlowRadius, GlowBloomDesaturation, GlowBloomIntensity,
+			GlowBloomCutoff, SunIntensity, SunColor, SunDirection)
 	};
 }

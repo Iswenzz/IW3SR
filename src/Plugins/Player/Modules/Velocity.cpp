@@ -62,7 +62,7 @@ namespace IW3SR::Addons
 	void Velocity::Compute()
 	{
 		static bool prevOnGround = true;
-		int prevVelocity = glm::length(vec2(pmove->ps->oldVelocity));
+		const int prevVelocity = Value;
 
 		bool onGround = PMove::OnGround();
 		bool landed = onGround && !prevOnGround;
@@ -71,12 +71,13 @@ namespace IW3SR::Addons
 		{
 			Averages.Add(prevVelocity);
 			Average = Averages.Average();
-			GroundAverages.Add(GroundTime);
+			GroundAverages.Add(static_cast<int>(GroundTime));
 			GroundAverage = GroundAverages.Average();
 			GroundTime = 0;
 		}
+		// Whole milliseconds a frame would drop 4 to 14 percent at common frame rates.
 		if (onGround)
-			GroundTime += UI::DeltaTimeMS();
+			GroundTime += UI::DeltaTime() * 1000.0f;
 
 		Value = glm::length(vec2(pmove->ps->velocity));
 		BufferValues.Add(Value);
@@ -85,7 +86,7 @@ namespace IW3SR::Addons
 		Max = Value > Max ? Value : Max;
 		BufferMaxs.Add(Max);
 
-		Ground = ShowGroundTime ? GroundTime : GroundAverage;
+		Ground = ShowGroundTime ? static_cast<int>(GroundTime) : GroundAverage;
 		Ground = Ground < 1000 ? Ground : 1000;
 		BufferGrounds.Add(Ground < Max ? Ground : Max);
 
@@ -114,6 +115,9 @@ namespace IW3SR::Addons
 
 	void Velocity::OnRender()
 	{
+		if (!pmove || !pmove->ps)
+			return;
+
 		Compute();
 
 		if (KeyReset.IsPressed())

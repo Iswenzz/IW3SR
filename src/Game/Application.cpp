@@ -1,5 +1,7 @@
 #include "Base.hpp"
 
+#include "Engine/Core/Network/HTTP.hpp"
+
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/System/Console.hpp"
 #include "Game/System/Patch.hpp"
@@ -21,6 +23,7 @@ void Application::Initialize()
 
 void Application::Shutdown()
 {
+	HTTP::Abort();
 	ThreadPool::Shutdown();
 	Plugins::Free();
 	GConsole::Shutdown();

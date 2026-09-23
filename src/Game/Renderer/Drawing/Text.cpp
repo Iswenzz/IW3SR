@@ -72,9 +72,15 @@ namespace IW3SR
 		if (ImGui::InputFloat("Font Size", &FontSize, 0.1))
 			SetFont(FontName);
 
+		if (ImGui::Checkbox("Responsive Font", &FontResponsive))
+			FontUISize = 0.0f;
+
 		const auto& fonts = GDraw2D::FontNames;
 		if (ImGui::Combo("Font", &FontIndex, fonts))
+		{
+			FontResponsive = false;
 			SetFont(fonts[FontIndex]);
+		}
 
 		ImGui::ComboAlign(&AlignX, &AlignY);
 		ImGui::ComboAlignRect(&HorizontalAlign, &VerticalAlign);
@@ -87,8 +93,11 @@ namespace IW3SR
 		if (!Font)
 			SetFont(FontName);
 
-		if (FontResponsive)
+		if (FontResponsive && FontUISize != UI::Size)
+		{
+			FontUISize = UI::Size;
 			SetResponsiveFont();
+		}
 
 		RenderSize = GDraw2D::TextSize(Value, Font) * FontSize;
 		Size = UI::Screen.RealToVirtual * RenderSize;

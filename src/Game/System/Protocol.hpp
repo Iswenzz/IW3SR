@@ -40,7 +40,7 @@ namespace IW3SR
 
 		static void Connect();
 		static void Demo(int protocol);
-		static bool Inspect(const netadr_t* from, const char* packet);
+		static bool Inspect(const netadr_t* from, const msg_t* msg);
 
 		static Protocol Negotiated();
 		static bool IsLegacy();
@@ -93,7 +93,7 @@ namespace IW3SR
 		static bool ChallengeResponse(const netadr_t* from, const std::vector<std::string>& args);
 
 		static const char* ConfigString(int index);
-		static std::vector<std::string> Tokenize(const char* packet);
+		static std::vector<std::string> Tokenize(const char* packet, size_t size = SIZE_MAX);
 		static bool Equals(std::string_view a, std::string_view b);
 		static bool SameBaseAddress(const netadr_t& a, const netadr_t& b);
 	};

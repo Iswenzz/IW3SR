@@ -11,7 +11,7 @@ namespace IW3SR::Addons
 		int Max = 0;
 		int Ground = 0;
 		int GroundAverage = 0;
-		int GroundTime = 0;
+		float GroundTime = 0;
 
 		CircularBuffer<int, 1000> Averages;
 		CircularBuffer<int, 1000> GroundAverages;
@@ -47,6 +47,6 @@ namespace IW3SR::Addons
 		void Reset();
 
 		SERIALIZE_POLY(Velocity, Module, VelocityText, AverageText, MaxText, GroundText, Graph, KeyReset, ShowVelocity,
-			ShowAverage, ShowMax, ShowGround, ShowGraph)
+			ShowAverage, ShowMax, ShowGround, ShowGroundTime, ShowGraph)
 	};
 }

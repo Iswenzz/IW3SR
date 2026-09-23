@@ -20,6 +20,7 @@ namespace IW3SR
 	{
 	public:
 		static void Initialize();
+		static void GuardCommandLine();
 
 		static bool Command(const std::string& command);
 

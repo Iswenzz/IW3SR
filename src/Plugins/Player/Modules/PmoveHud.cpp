@@ -28,7 +28,9 @@ namespace IW3SR::Addons
 		if (!pmove || !pmove->ps)
 			return false;
 
+		ps = *pmove->ps;
 		pm = *pmove;
+		pm.ps = &ps;
 
 		if ((pm.ps->pm_flags & PMF_DUCKED) || !glm::length(vec2(pm.ps->velocity)))
 			return false;
@@ -45,8 +47,7 @@ namespace IW3SR::Addons
 		if (!pm.cmd.forwardmove && !pm.cmd.rightmove)
 			pm.cmd.forwardmove = 127;
 
-		// Trace
-		PM_GroundTrace(&pm, &pml);
+		PMove::TraceGround(&pm, &pml);
 
 		if (pml.walking && !forceAir)
 			WalkMove();

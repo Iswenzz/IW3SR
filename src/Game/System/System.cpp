@@ -249,21 +249,31 @@ namespace IW3SR
 		return mod;
 	}
 
+	static std::wstring ModuleName(LPCWSTR path)
+	{
+		if (!path)
+			return {};
+
+		std::wstring name = std::filesystem::path(path).filename().wstring();
+		std::ranges::transform(name, name.begin(), [](wchar_t c) { return static_cast<wchar_t>(towlower(c)); });
+		return name;
+	}
+
 	HMODULE GSystem::LoadDLLW(LPCWSTR lpLibFileName)
 	{
 		if (!lpLibFileName)
 			return LoadLibraryW_h(lpLibFileName);
 
-		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
+		const std::wstring name = ModuleName(lpLibFileName);
 
-		if (name == "launcher.dll" && !Patch::AllowCoD4X)
+		if (name == L"launcher.dll" && !Patch::AllowCoD4X)
 		{
 			SetLastError(ERROR_MOD_NOT_FOUND);
 			return nullptr;
 		}
 		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
 
-		if (name.starts_with("cod4x"))
+		if (name.starts_with(L"cod4x"))
 			GCoD4X::Attach(mod);
 		return mod;
 	}
@@ -271,9 +281,9 @@ namespace IW3SR
 	HMODULE GSystem::LoadDLLExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 	{
 		const HMODULE mod = LoadLibraryExW_h(lpLibFileName, hFile, dwFlags);
-		const std::string name = std::filesystem::path(lpLibFileName).filename().string();
+		const std::wstring name = ModuleName(lpLibFileName);
 
-		if (name.starts_with("cod4x"))
+		if (name.starts_with(L"cod4x"))
 			GCoD4X::Attach(mod);
 		return mod;
 	}

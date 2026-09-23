@@ -26,7 +26,6 @@ namespace IW3SR::Addons
 		int Hook = 0;
 		std::string HookString;
 		bool HookFloat = false;
-		vec2 OriginalPosition;
 
 		SERIALIZE(Node, Element, Type, Hook, HookString, HookFloat)
 	};
@@ -56,7 +55,7 @@ namespace IW3SR::Addons
 	private:
 		vec2 CurrentOffset;
 
-		int StartTime = 0;
+		double StartTime = 0;
 		float LandingOrigin = 0;
 		float JumpOrigin = 0;
 		vec3 AnglesDelta;

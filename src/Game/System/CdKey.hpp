@@ -18,7 +18,7 @@ namespace IW3SR
 
 		static bool IsEnabled();
 		static void Resolve();
-		static bool Blank(const dvar_s* dvar);
+		static bool Blank(dvar_s* dvar);
 		static bool Wipe(const char* string);
 		static bool Writable(const void* address, size_t size);
 	};

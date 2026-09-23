@@ -33,6 +33,17 @@ namespace IW3SR
 			|| (path.size() > 2 && path[1] == ':' && (path[2] == '\\' || path[2] == '/'));
 	}
 
+	// A server's setclientdvar reaches any dvar, so what ends up on ffmpeg's command line has to be a
+	// single bare word rather than whatever extra arguments it smuggles in.
+	const char* Token(const dvar_s* dvar, const char* fallback)
+	{
+		const std::string_view value = dvar->current.string ? dvar->current.string : "";
+		const bool plain = !value.empty() && std::ranges::all_of(value, [](char c) {
+			return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-';
+		});
+		return plain ? dvar->current.string : fallback;
+	}
+
 	void Capture::Initialize()
 	{
 		Fps = Dvar::RegisterInt("sr_capture_fps", DVAR_SAVED, "Frame rate of the recorded video", 60, 1, 1000);
@@ -468,32 +479,47 @@ namespace IW3SR
 			return;
 		}
 		const std::string executable = Executable();
+
+		// WebM only takes Vorbis or Opus, and refuses the whole mux over an AAC track.
+		const char* audio = Target.extension() == ".webm" ? "libopus" : "aac";
 		std::string command = std::format(
-			"\"{}\" -hide_banner -loglevel error -y -i \"{}\" -i \"{}\" -c:v copy -c:a aac -b:a 192k -shortest \"{}\"",
-			executable, video.string(), Track.string(), Target.string());
+			"\"{}\" -hide_banner -loglevel error -y -i \"{}\" -i \"{}\" -c:v copy -c:a {} -b:a 192k -shortest \"{}\"",
+			executable, video.string(), Track.string(), audio, Target.string());
 
 		STARTUPINFOA startup = {};
 		startup.cb = sizeof(startup);
 		startup.dwFlags = STARTF_USESHOWWINDOW;
 		startup.wShowWindow = SW_HIDE;
 
+		// ffmpeg creates the output before it can fail writing the header, so only its exit code tells
+		// a finished file from an empty one.
+		bool muxed = false;
 		PROCESS_INFORMATION process = {};
 		if (CreateProcessA(nullptr, command.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr,
 				&startup, &process))
 		{
-			WaitForSingleObject(process.hProcess, EncoderTimeout);
+			DWORD code = 1;
+			if (WaitForSingleObject(process.hProcess, EncoderTimeout) == WAIT_OBJECT_0)
+				muxed = GetExitCodeProcess(process.hProcess, &code) && code == 0;
+			else
+				TerminateProcess(process.hProcess, 1);
+
 			CloseHandle(process.hThread);
 			CloseHandle(process.hProcess);
 		}
-		if (std::filesystem::exists(Target))
+		if (muxed && std::filesystem::exists(Target, ec))
 		{
 			std::filesystem::remove(video, ec);
 			std::filesystem::remove(Track, ec);
 		}
 		else
 		{
+			std::filesystem::remove(Target, ec);
 			Com_PrintMessage(CON_CHANNEL_ERROR,
-				std::format("^1Muxing failed, the silent video is still at {}.\n", video.string()).c_str(), 0);
+				std::format("^1Muxing failed, the video is still at {} and the audio at {}.\n", video.string(),
+					Track.string())
+					.c_str(),
+				0);
 		}
 		Track.clear();
 	}
@@ -595,8 +621,22 @@ namespace IW3SR
 
 	std::string Capture::Executable()
 	{
+		// The dvar is server settable, so it only ever names a local ffmpeg.exe, never a share or another program.
 		if (Binary && Binary->current.string && Binary->current.string[0])
-			return Binary->current.string;
+		{
+			const std::filesystem::path path = Binary->current.string;
+			const std::string drive = path.root_name().string();
+			const std::string name = path.filename().string();
+			std::error_code ec;
+
+			if (drive.size() == 2 && drive[1] == ':' && path.has_root_directory() && !_stricmp(name.c_str(), "ffmpeg.exe")
+				&& std::filesystem::is_regular_file(path, ec))
+				return path.string();
+
+			Com_PrintMessage(CON_CHANNEL_ERROR,
+				"^1sr_capture_ffmpeg must be the full path of a local ffmpeg.exe.\n", 0);
+			return {};
+		}
 
 		const std::array<std::filesystem::path, 2> candidates = {
 			Environment::Path(Directory::Bin) / "ffmpeg.exe",
@@ -626,7 +666,7 @@ namespace IW3SR
 		return std::format(
 			"-hide_banner -loglevel error -y -f rawvideo -pixel_format bgra -video_size {}x{} -framerate {} -i - "
 			"-an -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -c:v {} -preset {} {} -pix_fmt yuv420p \"{}\"",
-			Width, Height, Fps->current.integer, Encoder->current.string, Preset->current.string, rate, output);
+			Width, Height, Fps->current.integer, Token(Encoder, "libx264"), Token(Preset, "ultrafast"), rate, output);
 	}
 
 	std::string Capture::Resolved(const std::string& output)

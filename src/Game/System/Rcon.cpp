@@ -80,7 +80,8 @@ namespace IW3SR
 			return false;
 
 		const std::string_view line = Trim(command);
-		if (!line.starts_with("rcon"))
+		// The engine matches command names without case, so "RCON" would slip past to its own rcon.
+		if (line.size() < 4 || !Equals(line.substr(0, 4), "rcon"))
 			return false;
 		if (line.size() > 4 && !std::isspace(static_cast<unsigned char>(line[4])))
 			return false;

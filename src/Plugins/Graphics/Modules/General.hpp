@@ -26,6 +26,7 @@ namespace IW3SR::Addons
 
 	private:
 		std::vector<EmojiCommand> EmojiCommands;
+		std::mutex EmojiMutex;
 		std::unordered_map<std::string, Ref<Texture>> EmojiMap;
 
 		SERIALIZE_POLY(General, Module, UseEmojis)

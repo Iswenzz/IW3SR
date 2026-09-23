@@ -20,6 +20,7 @@ namespace IW3SR
 		static void STDCALL Frame(IDirect3DDevice9* device);
 		static HRESULT STDCALL Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters);
 		static void UpdateMaterials();
+		static void ReleaseMaterials();
 
 		static void AddCmdDrawText(const char** text, int maxChars, Font_s* font, float x, float y, float xScale,
 			float yScale, float rotation, int style, const vec4& color);
@@ -30,8 +31,9 @@ namespace IW3SR
 
 	private:
 		static inline PointerSwap Swaps;
-		static inline bool PendingMaterialUpdate = false;
+		static inline std::atomic<bool> PendingMaterialUpdate = false;
 
+		static void ApplyMaterials();
 		static bool IsRedCubemap(IDirect3DCubeTexture9* cubemap);
 	};
 }

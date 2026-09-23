@@ -10,7 +10,9 @@ namespace IW3SR
 
 		const auto& entry = it->second;
 		entry->Serialize(Serialized[entry->ID]);
-		entry->Release();
+
+		if (entry->IsEnabled)
+			entry->Release();
 		Entries.erase(it);
 	}
 

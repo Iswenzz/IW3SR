@@ -10,6 +10,7 @@ namespace IW3SR::Addons
 	protected:
 		pmove_t pm = {};
 		pml_t pml = {};
+		playerState_s ps = {};
 		vec2 w_vel = { 0, 0 };
 		float w_speed = 0;
 		float accelerate = 0;

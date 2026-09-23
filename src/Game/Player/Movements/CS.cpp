@@ -7,8 +7,7 @@
 #define sv_airaccelerate 150.0f
 #define sv_airspeedcap 30.0f
 #define sv_stepsize 18.0f
-#define sv_air_tick_hz 100.0f
-#define sv_air_tick_ms (1000.0f / sv_air_tick_hz)
+#define sv_air_tick_ms 10
 
 #define SURF_SLOPE_NORMAL 0.7f
 #define OVERCLIP 1.001f
@@ -89,13 +88,13 @@ namespace IW3SR
 			wishspeed = sv_maxspeed;
 		}
 		// Fixed tick rate for air accel
-		const int tick = static_cast<int>(pm->cmd.serverTime / sv_air_tick_ms);
-		const int oldtick = static_cast<int>((pm->cmd.serverTime - pml->msec) / sv_air_tick_ms);
+		const int tick = pm->cmd.serverTime / sv_air_tick_ms;
+		const int oldtick = (pm->cmd.serverTime - pml->msec) / sv_air_tick_ms;
 
 		if (tick != oldtick)
 		{
 			const float saved = pml->frametime;
-			pml->frametime = static_cast<float>(tick - oldtick) * (sv_air_tick_ms / 1000.0f);
+			pml->frametime = static_cast<float>((tick - oldtick) * sv_air_tick_ms) / 1000.0f;
 			AirAccelerate(wishdir, wishspeed, pm->ps, pml);
 			pml->frametime = saved;
 		}

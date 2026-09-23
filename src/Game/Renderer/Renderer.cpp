@@ -160,11 +160,8 @@ namespace IW3SR
 		}
 		GPortal::EndFrame(); // the world has been drawn, so the borrowed colour maps go back here
 
-		if (PendingMaterialUpdate)
-		{
-			PendingMaterialUpdate = false;
-			UpdateMaterials();
-		}
+		if (PendingMaterialUpdate.exchange(false))
+			ApplyMaterials();
 		Tasks.Submit();
 		Renderer::Frame();
 		Input::Reset();
@@ -201,8 +198,23 @@ namespace IW3SR
 		return hr;
 	}
 
+	// Deferred to the next visible frame so the swaps are only ever touched from the render thread.
 	void GRenderer::UpdateMaterials()
 	{
+		PendingMaterialUpdate = true;
+	}
+
+	// A zone unload releases whatever texture its images hold at that moment, so a swap still in place
+	// would release ours and leak the map's own.
+	void GRenderer::ReleaseMaterials()
+	{
+		Swaps.Clear();
+	}
+
+	void GRenderer::ApplyMaterials()
+	{
+		// Put back first: adding over a live swap would record the swapped texture as the original.
+		Swaps.Clear();
 		GMaterials::WarnOnOverflow();
 
 		if (!rgp->world)
@@ -210,7 +222,9 @@ namespace IW3SR
 
 		Material** const sorted = GMaterials::Sorted();
 
-		for (int i = 0; i < rgp->materialCount; i++)
+		const int count = std::min(rgp->materialCount, GMaterials::PoolSize());
+
+		for (int i = 0; i < count; i++)
 		{
 			const auto material = sorted[i];
 			if (!material || !material->info.name)
@@ -249,8 +263,11 @@ namespace IW3SR
 
 	bool GRenderer::IsRedCubemap(IDirect3DCubeTexture9* cubemap)
 	{
+		// Anything else would be read as ARGB and misjudged.
 		D3DSURFACE_DESC desc;
 		if (FAILED(cubemap->GetLevelDesc(0, &desc)))
+			return false;
+		if (desc.Format != D3DFMT_A8R8G8B8 && desc.Format != D3DFMT_X8R8G8B8)
 			return false;
 
 		IDirect3DSurface9* surface = nullptr;
@@ -263,14 +280,14 @@ namespace IW3SR
 			surface->Release();
 			return false;
 		}
-		const unsigned int* pixelData = (unsigned int*)lockedRect.pBits;
-		unsigned int pixel = pixelData[0];
-		unsigned char r = (pixel >> 16) & 0xFF;
+		const unsigned int pixel = *static_cast<const unsigned int*>(lockedRect.pBits);
 
 		surface->UnlockRect();
 		surface->Release();
 
-		return r == 0xFF;
+		// The red channel at full alone would also match white or yellow sky, so the others must be low.
+		const unsigned int r = (pixel >> 16) & 0xFF, g = (pixel >> 8) & 0xFF, b = pixel & 0xFF;
+		return r == 0xFF && g < 0x40 && b < 0x40;
 	}
 
 	void GRenderer::AddCmdDrawText(const char** text, int maxChars, Font_s* font, float x, float y, float xScale,

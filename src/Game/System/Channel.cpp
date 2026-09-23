@@ -91,10 +91,8 @@ namespace IW3SR
 
 	bool GChannel::IsEnabled()
 	{
-		if (Patch::UseCoD4X || !GProtocol::UsingExtended())
-			return false;
-
-		return !GProtocol::IsLegacy();
+		// The negotiated protocol, not the dvar: switching it off mid-session waits for the next connect.
+		return !Patch::UseCoD4X && !GProtocol::IsLegacy();
 	}
 
 	ReliableMessages& GChannel::Instance()
@@ -193,12 +191,6 @@ namespace IW3SR
 		}
 
 		Messages.Frame(cls ? cls->realtime : 0);
-
-		// Bounded so a peer that never runs dry cannot hold the frame.
-		std::vector<uint8_t> message;
-		for (int i = 0; i < 32 && Messages.Receive(message); i++)
-			Dispatch(message);
-
 		Report();
 	}
 
@@ -419,6 +411,14 @@ namespace IW3SR
 
 		// The marker long and the qport short both belong to the caller's half of the header.
 		Messages.Transport().ReceivePacket(msg->data, msg->cursize, sizeof(marker) + sizeof(uint16_t));
+
+		// Dispatched here rather than from Frame, which runs outside Com_Frame: a gamestate reaches
+		// CL_InitDownloads and the map load, whose Com_Error needs the frame's jmp_buf to still be live,
+		// the same place retail parses its own gamestate. Bounded so a peer that never runs dry cannot
+		// hold the frame.
+		std::vector<uint8_t> message;
+		for (int i = 0; i < 32 && Messages.Receive(message); i++)
+			Dispatch(message);
 		return 1;
 	}
 }

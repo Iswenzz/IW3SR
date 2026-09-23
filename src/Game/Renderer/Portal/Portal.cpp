@@ -12,6 +12,9 @@ namespace IW3SR
 	// Half diagonal of the 70x110 quad, so a reach that covers it whatever way it is turned.
 	constexpr float PORTAL_RADIUS = 66.0f;
 
+	// Frames the material count has to hold still before a level is taken to have no portal surface.
+	constexpr int DiscoverSettleScans = 60;
+
 	// The linker binds a vertex-format variant of the technique set per material: xmodels get
 	// "mc_portal_view", world surfaces "wc_portal_view". Match the stem rather than the asset name.
 	static bool IsPortalTechniqueSet(const MaterialTechniqueSet* techniques)
@@ -60,6 +63,12 @@ namespace IW3SR
 			R_BeginFrame_h();
 			return;
 		}
+
+		// With r_smp_backend the render thread can still be drawing the last frame, and its EndFrame
+		// would restore the maps from under the swaps made below. Only worth the wait on a map that
+		// has portal surfaces to swap.
+		if (!Surfaces.empty() && Threaded && Threaded->current.enabled)
+			R_SyncRenderThread();
 
 		// EndFrame normally hands the colour maps back, but it hangs off EndScene and a frame that
 		// loses the device never gets there. Start clean either way.
@@ -169,19 +178,31 @@ namespace IW3SR
 	// Every material drawing through portal_view is a portal surface. Finding them by technique set
 	// rather than by name means the pass stays off entirely on a fastfile still built on unlit_blend.
 	// Rescans while nothing has been found: the material list is sorted by R_BeginFrame, which runs
-	// after this, so on the first frames of a level it can still be empty or incomplete.
+	// after this, so on the first frames of a level it can still be empty or incomplete. A level with
+	// no portal at all stops once the count has held still for a while, rather than walking the whole
+	// list every frame for as long as it is loaded.
 	void GPortal::Discover()
 	{
-		if (KnownWorld == rgp->world && !Surfaces.empty())
+		const int count = std::min(rgp->materialCount, GMaterials::PoolSize());
+
+		if (KnownWorld != rgp->world)
+		{
+			KnownWorld = rgp->world;
+			KnownCount = -1;
+			SettledScans = 0;
+		}
+		else if (!Surfaces.empty() || SettledScans >= DiscoverSettleScans)
 			return;
+
+		SettledScans = count == KnownCount ? SettledScans + 1 : 0;
+		KnownCount = count;
 
 		Restore();
 		Surfaces.clear();
-		KnownWorld = rgp->world;
 
 		Material** const sorted = GMaterials::Sorted();
 
-		for (int i = 0; i < rgp->materialCount; i++)
+		for (int i = 0; i < count; i++)
 		{
 			Material* material = sorted[i];
 			if (!material || !material->textureCount || !material->textureTable)

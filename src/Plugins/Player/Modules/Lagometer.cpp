@@ -61,7 +61,7 @@ namespace IW3SR::Addons
 		int pingSize = Pings.Max();
 		for (int i = 0; i < pingSize; i++)
 		{
-			int index = pingIndex - pingSize + i - 1;
+			int index = pingIndex - pingSize + i;
 			int snapFlags = snapsFlags[index & 0x7F] & 1;
 			int ping = pings[index & 0x7F];
 

@@ -81,7 +81,7 @@ namespace IW3SR::UC
 				return;
 
 			if (ImGui::Checkbox(label, &dvar->current.enabled))
-				dvar->latched.enabled = dvar->current.enabled;
+				Dvar::SetBool(dvar, dvar->current.enabled);
 			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
 		}
 

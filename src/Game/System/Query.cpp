@@ -245,7 +245,7 @@ namespace IW3SR
 		if (socket == InvalidSocket)
 			return false;
 
-		const int start = Net::Milliseconds();
+		int start = Net::Milliseconds();
 		std::vector<uint8_t> buffer(MaxDatagram);
 
 		uint32_t challenge = 0;
@@ -254,6 +254,7 @@ namespace IW3SR
 		// Two rounds: the plain request, then one carrying the challenge a modern server answers with.
 		for (int attempt = 0; attempt < 2 && !answered; attempt++)
 		{
+			start = Net::Milliseconds();
 			const std::vector<uint8_t> request = BuildInfoRequest(challenge);
 			if (Net::SendTo(socket, address, request.data(), static_cast<int>(request.size())) < 0)
 				break;
@@ -331,7 +332,9 @@ namespace IW3SR
 			{
 				const std::vector<uint8_t> retry = BuildInfoRequest(challenge);
 
+				// The ping is the round trip of the request that gets answered, not of both.
 				entry->second.Retried = true;
+				entry->second.Sent = Net::Milliseconds();
 				Net::SendTo(socket, entry->second.Address, retry.data(), static_cast<int>(retry.size()));
 				continue;
 			}

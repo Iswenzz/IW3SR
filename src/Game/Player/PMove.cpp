@@ -78,6 +78,15 @@ namespace IW3SR
 
 	void PMove::GroundTrace(pmove_t* pm, pml_t* pml)
 	{
+		TraceGround(pm, pml);
+		Timestep::Step(pm, pml);
+
+		EventPMoveGroundTrace event(pm, pml);
+		Application::Dispatch(event);
+	}
+
+	void PMove::TraceGround(pmove_t* pm, pml_t* pml)
+	{
 		switch (GetMovementMode())
 		{
 		case MovementMode::COD4:
@@ -91,10 +100,6 @@ namespace IW3SR
 			CS::GroundTrace(pm, pml);
 			break;
 		}
-		Timestep::Step(pm, pml);
-
-		EventPMoveGroundTrace event(pm, pml);
-		Application::Dispatch(event);
 	}
 
 	void PMove::CrashLand(playerState_s* ps, pml_t* pml)

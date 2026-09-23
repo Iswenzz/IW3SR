@@ -18,6 +18,9 @@ namespace IW3SR
 	// Size of the password buffer CoD4X parses a URL into.
 	constexpr size_t MaxPassword = 31;
 
+	// Stands in for a quoted '+' until a shell command reads it back; nothing typed can produce it.
+	constexpr char MaskedPlus = '\x7F';
+
 	// std::quoted would treat a backslash as an escape and eat every Windows path separator.
 	static auto Quoted(std::string& value)
 	{
@@ -119,9 +122,29 @@ namespace IW3SR
 			Log::WriteLine(Channel::Warning, "Could not register the cod4:// protocol under HKEY_CURRENT_USER.");
 	}
 
+	// Both associations quote %1, but the engine splits its command line on every '+' and newline
+	// regardless, so a demo named "a+bind mouse1 quit+.dm_1" would run a command. This runs in DllMain,
+	// ahead of the CRT that hands this same buffer to WinMain.
+	void GShell::GuardCommandLine()
+	{
+		bool quoted = false;
+		for (char* c = GetCommandLineA(); c && *c; ++c)
+		{
+			if (*c == '"')
+				quoted = !quoted;
+			else if (quoted && *c == '+')
+				*c = MaskedPlus;
+			else if (quoted && (*c == '\n' || *c == '\r'))
+				*c = ' ';
+		}
+	}
+
 	bool GShell::Command(const std::string& command)
 	{
-		std::istringstream stream(command);
+		std::string line = command;
+		std::ranges::replace(line, MaskedPlus, '+');
+
+		std::istringstream stream(line);
 		std::string name;
 		stream >> name;
 
@@ -293,8 +316,8 @@ namespace IW3SR
 			return false;
 		}
 
-		if (!parsed->password.empty())
-			Cmd_ExecuteSingleCommand(0, 0, std::format("set password \"{}\"\n", parsed->password).c_str());
+		// password rides in userinfo, so one left over from an earlier link would go to this server too.
+		Cmd_ExecuteSingleCommand(0, 0, std::format("set password \"{}\"\n", parsed->password).c_str());
 
 		Cmd_ExecuteSingleCommand(0, 0, std::format("connect \"{}\"\n", parsed->address).c_str());
 		return true;
@@ -337,9 +360,22 @@ namespace IW3SR
 				std::format("^1{} is outside the demos folder, move it there to play it.\n", path.string()).c_str(), 0);
 			return true;
 		}
-		const auto target = folders.front() / path.filename();
+		// A different demo of the same name already in the folder is most likely one of the user's own
+		// recordings, so it gets a free name instead; an identical one is simply played again.
+		const auto identical = [&](const std::filesystem::path& other)
+		{
+			if (std::filesystem::file_size(other, ec) != std::filesystem::file_size(path, ec) || ec)
+				return false;
+
+			std::ifstream a(path, std::ios::binary), b(other, std::ios::binary);
+			return std::equal(std::istreambuf_iterator<char>(a), {}, std::istreambuf_iterator<char>(b), {});
+		};
+		auto target = folders.front() / path.filename();
+		for (int n = 1; std::filesystem::exists(target, ec) && !identical(target) && n < 1000; ++n)
+			target = folders.front() / std::format("{}_{}{}", path.stem().string(), n, path.extension().string());
+
 		std::filesystem::create_directories(folders.front(), ec);
-		std::filesystem::copy_file(path, target, std::filesystem::copy_options::overwrite_existing, ec);
+		std::filesystem::copy_file(path, target, std::filesystem::copy_options::skip_existing, ec);
 
 		if (ec)
 		{

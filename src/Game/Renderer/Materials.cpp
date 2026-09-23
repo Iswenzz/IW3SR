@@ -149,7 +149,7 @@ namespace IW3SR
 		static int warned = 0;
 
 		Material** const sorted = Sorted();
-		const int count = std::min(rgp->materialCount, MaxMaterials);
+		const int count = std::min(rgp->materialCount, PoolSize());
 		int drawable = 0;
 
 		for (int i = 0; i < count; i++)

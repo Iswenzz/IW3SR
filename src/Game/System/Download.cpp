@@ -265,6 +265,10 @@ namespace IW3SR
 
 		const std::string name = NormalisePath(path);
 
+		// A UNC name opens a share on someone else's machine and hands it the user's NTLM credentials.
+		if (name.starts_with("//"))
+			return false;
+
 		// Both names legitimately contain ':' and a leading separator - one is an absolute OS path,
 		// the other a URL - so only traversal is worth refusing here.
 		return !name.contains("updates") && !name.contains("cod4update") && !name.contains("..");
@@ -384,6 +388,11 @@ namespace IW3SR
 			Abort("The server redirected a download that was never started.");
 			return;
 		}
+		if (State == DownloadState::Web)
+		{
+			Abort("The server redirected a download that is already redirected.");
+			return;
+		}
 
 		DownloadReader reader{ data, size };
 		const std::string url = reader.String();
@@ -424,8 +433,8 @@ namespace IW3SR
 
 		// Both buffers exist to keep the per chunk costs off a file this size: without them curl hands
 		// over 16K at a time and every one of those becomes its own write.
+		// MSVC's filebuf ignores setbuf until it has a FILE, so the buffer goes in after the open.
 		transfer->Buffer.resize(DownloadWebBufferSize);
-		transfer->File.rdbuf()->pubsetbuf(transfer->Buffer.data(), static_cast<std::streamsize>(transfer->Buffer.size()));
 		transfer->File.open(Resolve(TempName), std::ios::binary | std::ios::trunc);
 
 		if (!transfer->File)
@@ -433,6 +442,7 @@ namespace IW3SR
 			RefuseWeb(DownloadRequest::WebFailed, std::format("Could not create {}.", TempName));
 			return;
 		}
+		transfer->File.rdbuf()->pubsetbuf(transfer->Buffer.data(), static_cast<std::streamsize>(transfer->Buffer.size()));
 		Web = transfer;
 		WebStart = std::chrono::steady_clock::now();
 
@@ -523,6 +533,8 @@ namespace IW3SR
 				std::format("Could not move {} into place: {}.", localName, error.message()));
 			return;
 		}
+		// FileInit renamed an interrupted attempt into the cache before the redirect made it moot.
+		std::filesystem::remove(CachePath(), error);
 		Transmit(Message(DownloadRequest::WebDone).Data);
 
 		// The two halves are reported apart because they are bound by different things: the transfer by
@@ -548,6 +560,9 @@ namespace IW3SR
 
 		Transmit(Message(DownloadRequest::Stop).Data);
 		Reset();
+
+		// The engine is still waiting on the connect screen for a file that is no longer coming.
+		Dropped = true;
 	}
 
 	bool GDownload::Active()

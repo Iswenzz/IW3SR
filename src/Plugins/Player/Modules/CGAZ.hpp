@@ -47,6 +47,7 @@ namespace IW3SR::Addons
 		float MaxCos(float opt);
 		float Max(float maxCos);
 
-		SERIALIZE_POLY(CGAZ, Module, ColorBackground, ColorPartialAccel, ColorFullAccel, ColorTurnZone, UseGroundZones)
+		SERIALIZE_POLY(CGAZ, Module, Y, Height, ColorBackground, ColorPartialAccel, ColorFullAccel, ColorTurnZone,
+			UseGroundZones)
 	};
 }

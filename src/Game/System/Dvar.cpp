@@ -120,6 +120,16 @@ namespace IW3SR
 	// to a script string and drops a reference on it, so the engine's own pointers are kept here and
 	// put back in Shutdown; releasing a reference against a buffer the string table never issued
 	// corrupts the script memory tree and the next free spins forever.
+	// For a menu writing the value in place: Com_WriteConfiguration only writes the config when a saved
+	// dvar has flagged itself modified, which only the engine's own setters otherwise do.
+	void Dvar::SetBool(dvar_s* dvar, bool value)
+	{
+		dvar->current.enabled = value;
+		dvar->latched.enabled = value;
+		dvar->modified = true;
+		dvar_modifiedFlags |= dvar->flags;
+	}
+
 	void Dvar::OverrideString(dvar_s* dvar, const char* value)
 	{
 		if (!dvar || dvar->type != DvarType::STRING || !value)
@@ -256,7 +266,11 @@ namespace IW3SR
 	dvar_s* Dvar::RegisterColor(const char* name, DvarFlags flags, const char* description, float r, float g, float b,
 		float a)
 	{
-		return Dvar_RegisterVariantColor(name, DvarType::COLOR, flags, description, r, g, b, a, 0, 0);
+		// A colour dvar holds four packed bytes in the first slot of its value, not four floats.
+		const auto channel = [](float value) { return static_cast<uint32_t>(std::clamp(value, 0.0f, 1.0f) * 255.0f + 0.5f); };
+		const uint32_t rgba = channel(r) | channel(g) << 8 | channel(b) << 16 | channel(a) << 24;
+
+		return Dvar_RegisterVariantColor(name, DvarType::COLOR, flags, description, rgba, 0, 0, 0, 0, 0);
 	}
 
 	dvar_s* Dvar::Find(const std::string& name)

@@ -104,15 +104,15 @@ namespace IW3SR
 		Dvar_RegisterVariantVec2 = ASM_LOAD(Dvar_RegisterVariant);
 
 	Function<dvar_s*(const char* dvarName, DvarType type, int flags, const char* description,
-		float x, float y, int z, int null3, float min, float max)>
+		float x, float y, float z, int null3, float min, float max)>
 		Dvar_RegisterVariantVec3 = ASM_LOAD(Dvar_RegisterVariant);
 
 	Function<dvar_s*(const char* dvarName, DvarType type, int flags, const char* description,
-		float x, float y, int z, int w, float min, float max)>
+		float x, float y, float z, float w, float min, float max)>
 		Dvar_RegisterVariantVec4 = ASM_LOAD(Dvar_RegisterVariant);
 
 	Function<dvar_s*(const char* dvarName, DvarType type, int flags, const char* description,
-		float r, float g, int b, int a, int null4, int null5)>
+		uint32_t rgba, int null1, int null2, int null3, int null4, int null5)>
 		Dvar_RegisterVariantColor = ASM_LOAD(Dvar_RegisterVariant);
 
 	Function<void(const char* name, const char* value, int source)>

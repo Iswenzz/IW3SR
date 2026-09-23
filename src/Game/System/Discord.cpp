@@ -312,8 +312,8 @@ namespace IW3SR
 			}
 			password += static_cast<char>(byte);
 		}
-		if (!password.empty())
-			Cmd_ExecuteSingleCommand(0, 0, std::format("set password \"{}\"\n", password).c_str());
+		// Set even when empty: password rides in userinfo, and a stale one would go to this server too.
+		Cmd_ExecuteSingleCommand(0, 0, std::format("set password \"{}\"\n", password).c_str());
 
 		Log::WriteLine(Channel::Game, "Joining {}.{}.{}.{}:{} from Discord.", address[0], address[1], address[2],
 			address[3], port);

@@ -847,13 +847,16 @@ namespace IW3SR
 
 	// Never consumes the packet: the engine still runs its own challengeResponse path, this only
 	// listens in on the protocol tag.
-	bool GProtocol::Inspect(const netadr_t* from, const char* packet)
+	bool GProtocol::Inspect(const netadr_t* from, const msg_t* msg)
 	{
 		// CoD4X runs the same handshake off the same packet, and two readers would only race.
-		if (!packet || Mirror())
+		if (!msg || !msg->data || msg->cursize <= 4 || Mirror())
 			return false;
 
-		const std::vector<std::string> args = Tokenize(packet);
+		// Sys_GetPacket never terminates the datagram, so the text ends at its length rather than at
+		// whatever NUL an older, longer packet left in the buffer. The first four bytes are the marker.
+		const auto packet = reinterpret_cast<const char*>(msg->data) + 4;
+		const std::vector<std::string> args = Tokenize(packet, static_cast<size_t>(msg->cursize - 4));
 		if (args.empty() || !Equals(args[0], "challengeResponse"))
 			return false;
 
@@ -1524,8 +1527,9 @@ namespace IW3SR
 		Result.extended = version > LegacyVersion;
 
 		// Only the demotion is acted on: the connect packet's protocol was settled in ChallengeResponse,
-		// so promoting here would aim the extended reader at a gamestate encoded for protocol 6.
-		const bool extended = Current == Protocol::Extended && Result.extended && UsingExtended();
+		// so promoting here would aim the extended reader at a gamestate encoded for protocol 6. Nor is
+		// sr_extendedProtocol read again: switching it off mid-session waits for the next connect.
+		const bool extended = Current == Protocol::Extended && Result.extended;
 		Result.version = extended ? version : LegacyVersion;
 
 		Apply(extended ? Protocol::Extended : Protocol::Legacy);
@@ -1656,10 +1660,12 @@ namespace IW3SR
 		return &clients->gameState.stringData[offset];
 	}
 
-	std::vector<std::string> GProtocol::Tokenize(const char* packet)
+	std::vector<std::string> GProtocol::Tokenize(const char* packet, size_t size)
 	{
+		const size_t limit = std::min(size, MaxPacketLength);
+
 		size_t length = 0;
-		while (length < MaxPacketLength && packet[length])
+		while (length < limit && packet[length])
 			length++;
 
 		const std::string_view text(packet, length);

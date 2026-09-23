@@ -42,6 +42,7 @@ namespace IW3SR
 		static dvar_s* Find(const std::string& name);
 
 		static void OverrideString(dvar_s* dvar, const char* value);
+		static void SetBool(dvar_s* dvar, bool value);
 		static void Shutdown();
 
 		template <typename T>

@@ -49,6 +49,8 @@ namespace IW3SR
 		static inline PortalTarget Targets[2];
 		static inline std::vector<PortalSurface> Surfaces;
 		static inline GfxWorld* KnownWorld = nullptr;
+		static inline int KnownCount = -1;
+		static inline int SettledScans = 0;
 		static inline bool Swapped = false;
 		static inline int Missed = 0;
 		static inline int Rendered[2] = { -1, -1 };

@@ -227,10 +227,7 @@ namespace IW3SR
 		a.mov(x86::ebp, x86::esp);
 		a.pushad();
 
-		a.mov(x86::eax, x86::dword_ptr(x86::ebp, -0x04));				  // (eax) msg
-		a.mov(x86::eax, x86::dword_ptr(x86::eax, offsetof(msg_t, data))); // msg->data
-		a.add(x86::eax, 0x04);
-		a.push(x86::eax); // packet, past the 0xFFFFFFFF marker
+		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (eax) msg
 		a.lea(x86::eax, x86::dword_ptr(x86::ebp, 0x08));
 		a.push(x86::eax); // from
 		a.call(GProtocol::Inspect);
