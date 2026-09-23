@@ -6,7 +6,7 @@
 
 namespace IW3SR
 {
-	constexpr int LastTestedVersion = 216;
+	constexpr int LastTestedVersion = 218;
 	constexpr int MinimumVersion = 213;
 	constexpr float UntestedNoticeDelay = 5.0f;
 	constexpr float UntestedNoticeDuration = 20.0f;
