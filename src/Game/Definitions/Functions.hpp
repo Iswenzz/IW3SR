@@ -59,6 +59,9 @@ namespace IW3SR
 	extern Function<void(const char* mapName, const char* gametype)>
 		CL_SetupForNewServerMap;
 
+	extern Function<void()>
+		CL_Vid_Restart_f;
+
 	extern Function<void(int localClientNum, int controllerIndex, const char* text)>
 		Cmd_ExecuteSingleCommand;
 
@@ -71,11 +74,26 @@ namespace IW3SR
 	API extern Function<void(ConChannel channel, const char* msg, int error)>
 		Com_PrintMessage;
 
+	extern Function<void()>
+		Com_Restart;
+
 	API extern Function<bool(const char* zoneName, DB_FILE_EXISTS_PATH path)>
 		DB_FileExists;
 
 	extern Function<uint8_t(int type, const char* name)>
 		DB_IsXAssetDefault;
+
+	extern Function<void()>
+		DB_LoadXZoneFromGfxConfig;
+
+	extern Function<bool()>
+		DB_ModFileExists;
+
+	extern Function<void()>
+		DB_ShutdownXAssets;
+
+	extern Function<void(const char* mapname)>
+		LoadMapLoadscreen;
 
 	extern Function<void(const char *localName, const char *remoteName)>
 		DL_BeginDownload;
@@ -269,6 +287,7 @@ namespace IW3SR
 	ASM_FUNCTION(Dvar_SetFromStringByNameFromSource);
 	ASM_FUNCTION(G_MissileTrace);
 	ASM_FUNCTION(Jump_Check);
+	ASM_FUNCTION(LoadMapLoadscreen);
 	ASM_FUNCTION(Material_RegisterHandle);
 	ASM_FUNCTION(MSG_ReadBitsCompress);
 	ASM_FUNCTION(MSG_ReadDeltaEntity);

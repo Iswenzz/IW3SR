@@ -21,6 +21,8 @@ namespace IW3SR
 
 	private:
 		static inline dvar_s* Enabled = nullptr;
+		static inline dvar_s* Reload = nullptr;
+		static inline bool ReloadPending = false;
 		static inline Hook<HANDLE STDCALL(LPCSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE)> Redirect;
 
 		static inline std::vector<PatchZone> Layer;
@@ -30,6 +32,9 @@ namespace IW3SR
 		static void Discover();
 		static void PatchFileSize();
 		static void PatchUsermapSearch();
+		static void PatchGameDirRestart();
+		static void VidRestart();
+		static void ComRestart();
 		static void Collect();
 		static void MountIwd();
 		static bool Resolvable(const PatchZone& zone);

@@ -36,6 +36,21 @@ namespace IW3SR
 	constexpr uintptr_t UsermapBranch = 0x48A9D8;
 	constexpr uint16_t UsermapBranchStock = 0x2174; // je +0x21, little endian
 
+	// CL_DownloadsComplete runs a whole vid_restart when fs_game changed, destroying the window only so
+	// the fastfiles reload with the new mod.ff. The call, and the Com_Restart the function makes once
+	// CL_ShutdownAll has the renderer down and before CL_InitRenderer registers everything again:
+	//   0046aa77: e8 04 f7 ff ff   call 0x46a180
+	//   0046aaa8: e8 13 5a 09 00   call 0x5004c0
+	constexpr uintptr_t VidRestartSite = 0x46AA77;
+	constexpr uintptr_t VidRestartTarget = 0x46A180;
+	constexpr uintptr_t ComRestartSite = 0x46AAA8;
+	constexpr uintptr_t ComRestartTarget = 0x5004C0;
+
+	constexpr uintptr_t GameDirChangedAddress = 0xC5B69C; // cls.gameDirChanged
+	constexpr uintptr_t WaitingForServerAddress = 0x8F4CDC; // g_waitingForServer
+	constexpr uintptr_t MapNameAddress = 0xCAE6158;			// g_mapname, set by UI_SetMap
+	constexpr uintptr_t ModFastFileAddress = 0xCC9D13C;		// gfxCfg.modFastFileName
+
 	// Runs on every CreateFileA in the process, and the names are ASCII, so no locale-aware tolower.
 	static constexpr char Lower(char value)
 	{
@@ -183,12 +198,73 @@ namespace IW3SR
 		Memory::NOP(UsermapBranch, 2);
 	}
 
+	// The way CoD4x avoids the restart (CoD4x_Client_pub/src/cl_main.c:5683-5696): leave the window
+	// alone and swap the fastfiles once the renderer is down.
+	void GZones::PatchGameDirRestart()
+	{
+		if (Patch::UseCoD4X)
+			return;
+
+		const auto stock = [](uintptr_t site, uintptr_t target)
+		{ return Memory::Get<uint8_t>(site) == 0xE8 && site + 5 + Memory::Get<int32_t>(site + 1) == target; };
+
+		if (!stock(VidRestartSite, VidRestartTarget) || !stock(ComRestartSite, ComRestartTarget))
+		{
+			Log::WriteLine(Channel::Error, "CL_DownloadsComplete is not stock 1.7; a mod switch keeps its vid_restart.");
+			return;
+		}
+		Memory::CALL(VidRestartSite, reinterpret_cast<uintptr_t>(&GZones::VidRestart));
+		Memory::CALL(ComRestartSite, reinterpret_cast<uintptr_t>(&GZones::ComRestart));
+	}
+
+	void GZones::VidRestart()
+	{
+		if (Reload && !Reload->current.enabled)
+		{
+			CL_Vid_Restart_f();
+			return;
+		}
+		// Both are cleared by the restart itself, and the loading screen it would bring back depends
+		// on the second.
+		Memory::Set<int>(GameDirChangedAddress, 0);
+		Memory::Set<uint8_t>(WaitingForServerAddress, 0);
+		ReloadPending = true;
+	}
+
+	void GZones::ComRestart()
+	{
+		Com_Restart();
+
+		if (!ReloadPending)
+			return;
+		ReloadPending = false;
+
+		R_SyncRenderThread();
+		DB_ShutdownXAssets();
+
+		// The mod fastfile is picked into gfxCfg when the renderer is configured, which only the
+		// restart would have done again for the new fs_game.
+		Memory::Set<const char*>(ModFastFileAddress, DB_ModFileExists() ? "mod" : nullptr);
+
+		// The layer rode the batch that was just unloaded.
+		Injected = false;
+		DB_LoadXZoneFromGfxConfig();
+
+		// Unloading everything took the loading screen's zone with it.
+		const auto map = reinterpret_cast<const char*>(MapNameAddress);
+		if (*map)
+			LoadMapLoadscreen(map);
+
+		Com_PrintMessage(CON_CHANNEL_FILES, "Reloaded the fastfiles for the new mod in place.\n", 0);
+	}
+
 	void GZones::Discover()
 	{
 		// Independent of the layer below: this is what lets an extended server's own zones be
 		// measured at all, and it has to happen even with sr_zones off.
 		PatchFileSize();
 		PatchUsermapSearch();
+		PatchGameDirRestart();
 
 		// Registered here rather than at renderer init, where the first batch is already loading.
 		// The anchor dvar covers the table not being up yet: a hook must not take the boot down.
@@ -196,6 +272,10 @@ namespace IW3SR
 		{
 			Enabled = Dvar::RegisterBool("sr_zones", DVAR_SAVED,
 				"Mount the fastfiles in IW3SR/Zone on top of the retail zones", true);
+			Reload = Dvar::RegisterBool("sr_mod_reload", DVAR_SAVED,
+				"Reload the fastfiles in place when joining a server that runs another mod, instead of a video "
+				"restart that recreates the window",
+				true);
 		}
 		if (Enabled && !Enabled->current.enabled)
 			return;

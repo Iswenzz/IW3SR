@@ -55,6 +55,9 @@ namespace IW3SR
 	Function<void(const char* mapName, const char* gametype)>
 		CL_SetupForNewServerMap = ASM_LOAD(CL_SetupForNewServerMap);
 
+	Function<void()>
+		CL_Vid_Restart_f = 0x46A180;
+
 	Function<void(int localClientNum, int controllerIndex, const char* text)>
 		Cmd_ExecuteSingleCommand = 0x4F9AB0;
 
@@ -67,11 +70,26 @@ namespace IW3SR
 	Function<void(ConChannel channel, const char* msg, int error)>
 		Com_PrintMessage = 0x4FCA50;
 
+	Function<void()>
+		Com_Restart = 0x5004C0;
+
 	Function<bool(const char* zoneName, DB_FILE_EXISTS_PATH path)>
 		DB_FileExists = ASM_LOAD(DB_FileExists);
 
 	Function<uint8_t(int type, const char* name)>
 		DB_IsXAssetDefault = 0x4898A0;
+
+	Function<void()>
+		DB_LoadXZoneFromGfxConfig = 0x5F3C00;
+
+	Function<bool()>
+		DB_ModFileExists = 0x48BA10;
+
+	Function<void()>
+		DB_ShutdownXAssets = 0x48B200;
+
+	Function<void(const char* mapname)>
+		LoadMapLoadscreen = ASM_LOAD(LoadMapLoadscreen);
 
 	Function<void(const char *localName, const char *remoteName)>
 		DL_BeginDownload = 0x500AE0;
@@ -393,6 +411,20 @@ namespace IW3SR
 		a.call(0x407D90);
 		a.mov(x86::dword_ptr(x86::ebp, -0x04), x86::eax);
 		a.add(x86::esp, 0x04);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(LoadMapLoadscreen)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // mapname
+		a.call(0x46A800);
 
 		a.popad();
 		a.pop(x86::ebp);
