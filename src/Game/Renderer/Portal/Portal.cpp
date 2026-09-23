@@ -65,9 +65,11 @@ namespace IW3SR
 		}
 
 		// With r_smp_backend the render thread can still be drawing the last frame, and its EndFrame
-		// would restore the maps from under the swaps made below. Only worth the wait on a map that
-		// has portal surfaces to swap.
-		if (!Surfaces.empty() && Threaded && Threaded->current.enabled)
+		// would restore the maps from under the swaps made below. Only on a frame that will swap: a
+		// loading screen is drawn by the render thread on its own, and taking ownership back in the
+		// middle of that leaves the next R_IssueRenderCommands waiting forever (/reconnect).
+		const bool ready = Ready();
+		if (ready && !Surfaces.empty() && Threaded && Threaded->current.enabled)
 			R_SyncRenderThread();
 
 		// EndFrame normally hands the colour maps back, but it hangs off EndScene and a frame that
@@ -75,7 +77,7 @@ namespace IW3SR
 		Restore();
 		DebugFrames++;
 
-		if (Ready())
+		if (ready)
 		{
 			Discover();
 

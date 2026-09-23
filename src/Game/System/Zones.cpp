@@ -49,6 +49,8 @@ namespace IW3SR
 	constexpr uintptr_t MapNameAddress = 0xCAE6158;			// g_mapname, set by UI_SetMap
 	constexpr uintptr_t ModFastFileAddress = 0xCC9D13C;		// gfxCfg.modFastFileName
 
+	constexpr int SndKeepReverb = 1; // SND_StopSounds flag, what CL_Vid_Restart_f passes (0x46a280)
+
 	// Runs on every CreateFileA in the process, and the names are ASCII, so no locale-aware tolower.
 	static constexpr char Lower(char value)
 	{
@@ -229,6 +231,7 @@ namespace IW3SR
 			return;
 		ReloadPending = false;
 
+		SND_StopSounds(SndKeepReverb);
 		R_SyncRenderThread();
 		DB_ShutdownXAssets();
 

@@ -266,6 +266,9 @@ namespace IW3SR
 	extern Function<void(unsigned int track, int fadeTime)>
 		SND_StopBackground;
 
+	extern Function<void(int flags)>
+		SND_StopSounds;
+
 	extern Function<bool(int length, const void* data, netadr_t to)>
 		Sys_SendPacket;
 

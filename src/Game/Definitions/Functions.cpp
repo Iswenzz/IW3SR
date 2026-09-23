@@ -262,6 +262,9 @@ namespace IW3SR
 	Function<void(unsigned int track, int fadeTime)>
 		SND_StopBackground = ASM_LOAD(SND_StopBackground);
 
+	Function<void(int flags)>
+		SND_StopSounds = 0x5C6220;
+
 	Function<bool(int length, const void* data, netadr_t to)>
 		Sys_SendPacket = ASM_LOAD(Sys_SendPacket);
 
