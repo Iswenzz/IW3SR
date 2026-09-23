@@ -16,6 +16,7 @@ namespace IW3SR::Addons
 		KeyTurnRight = Bind(Input_None);
 
 		UseBhop = false;
+		UseBhopUncrouch = true;
 		UseBhopToggle = false;
 		UseTurnBind = false;
 		BhopToggled = false;
@@ -77,6 +78,9 @@ namespace IW3SR::Addons
 		ImGui::SameLine();
 		ImGui::Keybind("##KeyBhop", &KeyBhop.Input);
 
+		ImGui::Checkbox("Bhop Uncrouch", &UseBhopUncrouch);
+		ImGui::Tooltip("Stand up before each bhop jump.\nOff keeps crouch and prone held while bhopping.");
+
 		ImGui::Checkbox("Bhop Toggle", &UseBhopToggle);
 		ImGui::SameLine();
 		ImGui::Keybind("##KeyBhopToggle", &KeyBhopToggle.Input);
@@ -108,8 +112,11 @@ namespace IW3SR::Addons
 				// command's time, as Jump_Check measures it, not the older commandTime.
 				if (cmd->serverTime - ps->jumpTime >= 500)
 				{
-					clients->stance = CL_STANCE_STAND;
-					cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD | BUTTON_PRONE | BUTTON_PRONE_HOLD);
+					if (UseBhopUncrouch)
+					{
+						clients->stance = CL_STANCE_STAND;
+						cmd->buttons &= ~(BUTTON_CROUCH | BUTTON_CROUCH_HOLD | BUTTON_PRONE | BUTTON_PRONE_HOLD);
+					}
 					cmd->buttons |= BUTTON_JUMP;
 				}
 				// Clear jump during cooldown to keep oldcmd clean for edge detection when it expires
