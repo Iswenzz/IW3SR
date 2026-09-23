@@ -38,7 +38,6 @@ namespace IW3SR
 
 	private:
 		Font_s* Font = nullptr;
-		float FontUISize = 0.0f;
 
 		void ComputeAlignment(vec2& position);
 
