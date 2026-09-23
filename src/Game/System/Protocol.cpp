@@ -207,6 +207,14 @@ namespace IW3SR
 
 	constexpr uintptr_t ServerIdAddress = 0xC84FE4;
 
+	// CL_SendPureChecksums builds its cp line from FS_ReferencedIwdPureChecksums. An extended server
+	// reads two tokens after the '@' before the checksums, the localization and cl.serverId
+	// (CoD4x_Client_pub/src/files.c:3547), and without them never marks the client pure: on sv_pure 1
+	// it then ignores every usercmd, and the client waits in CA_PRIMED for a snapshot that never comes.
+	//   0046a0f9: e8 82 a3 09 00   call 0x504480
+	constexpr uintptr_t PureChecksumsSite = 0x46A0F9;
+	constexpr uintptr_t PureChecksumsTarget = 0x504480;
+
 	// 0x463FFA: the two MSG_Init arguments are still on the stack, so the three that the original
 	// add esp,0xc dropped become two once MSG_WriteByte is gone.
 	static const std::vector<uint8_t> StockHeaderWrite = { 0x8B, 0x15, 0xE4, 0x4F, 0xC8, 0x00, 0x52, 0x8B, 0xC6, 0xE8,
@@ -750,6 +758,9 @@ namespace IW3SR
 		SnapshotThunk = ASM_LOAD(CL_GetSnapshot_h);
 		ServerCommandThunk = ASM_LOAD(CL_ServerCommand_h);
 
+		if (!Patch::UseCoD4X)
+			Memory::CALL(PureChecksumsSite, reinterpret_cast<uintptr_t>(&GProtocol::PureChecksums));
+
 		AllowedLast = UsingExtended();
 		Publish();
 	}
@@ -772,6 +783,22 @@ namespace IW3SR
 		WriteAdvertise(LegacyVersion);
 		WriteConnectedState(CA_SENDINGSTATS);
 		WriteSendInterval(ConnectedSendInterval);
+		Memory::CALL(PureChecksumsSite, PureChecksumsTarget);
+	}
+
+	// Stock sends "@ <checksums> <total>", which is also what CoD4X sends a legacy server.
+	const char* GProtocol::PureChecksums()
+	{
+		const char* stock = reinterpret_cast<const char* (*)()>(PureChecksumsTarget)();
+		if (IsLegacy() || !stock || stock[0] != '@')
+			return stock;
+
+		static std::string line;
+		const dvar_s* language = Dvar::Find("loc_language");
+
+		line = std::format("@ L{} {} {}", language ? language->current.integer : 0,
+			Memory::Get<int32_t>(ServerIdAddress), stock[1] == ' ' ? stock + 2 : stock + 1);
+		return line.c_str();
 	}
 
 	void GProtocol::Frame()

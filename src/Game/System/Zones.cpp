@@ -42,9 +42,7 @@ namespace IW3SR
 	//   0046aa77: e8 04 f7 ff ff   call 0x46a180
 	//   0046aaa8: e8 13 5a 09 00   call 0x5004c0
 	constexpr uintptr_t VidRestartSite = 0x46AA77;
-	constexpr uintptr_t VidRestartTarget = 0x46A180;
 	constexpr uintptr_t ComRestartSite = 0x46AAA8;
-	constexpr uintptr_t ComRestartTarget = 0x5004C0;
 
 	constexpr uintptr_t GameDirChangedAddress = 0xC5B69C; // cls.gameDirChanged
 	constexpr uintptr_t WaitingForServerAddress = 0x8F4CDC; // g_waitingForServer
@@ -205,14 +203,6 @@ namespace IW3SR
 		if (Patch::UseCoD4X)
 			return;
 
-		const auto stock = [](uintptr_t site, uintptr_t target)
-		{ return Memory::Get<uint8_t>(site) == 0xE8 && site + 5 + Memory::Get<int32_t>(site + 1) == target; };
-
-		if (!stock(VidRestartSite, VidRestartTarget) || !stock(ComRestartSite, ComRestartTarget))
-		{
-			Log::WriteLine(Channel::Error, "CL_DownloadsComplete is not stock 1.7; a mod switch keeps its vid_restart.");
-			return;
-		}
 		Memory::CALL(VidRestartSite, reinterpret_cast<uintptr_t>(&GZones::VidRestart));
 		Memory::CALL(ComRestartSite, reinterpret_cast<uintptr_t>(&GZones::ComRestart));
 	}

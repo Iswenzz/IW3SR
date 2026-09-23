@@ -58,6 +58,7 @@ namespace IW3SR
 		static void ParseGamestateHook(int localClientNum, msg_t* msg);
 		static void SystemInfoChanged();
 		static bool CanParse(int protocol);
+		static const char* PureChecksums();
 
 		static const char* ExtendedConfigString(int index);
 		static const char* ClientName(int clientNum);
