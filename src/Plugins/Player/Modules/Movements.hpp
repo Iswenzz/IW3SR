@@ -13,10 +13,11 @@ namespace IW3SR::Addons
 		Text BhopText;
 
 		bool UseBhop;
-		bool UseBhopUncrouch;
+		bool UseBhopFromCrouch;
 		bool UseBhopToggle;
 		bool UseTurnBind;
 		bool BhopToggled;
+		bool BhopFromCrouch;
 
 		Movements();
 		virtual ~Movements() = default;
@@ -31,6 +32,6 @@ namespace IW3SR::Addons
 		void TurnBind(playerState_s* ps, usercmd_s* cmd);
 
 		SERIALIZE_POLY(Movements, Module, KeyBhop, KeyBhopToggle, KeyTurnLeft, KeyTurnRight, BhopText, UseBhop,
-			UseBhopUncrouch, UseBhopToggle, UseTurnBind)
+			UseBhopFromCrouch, UseBhopToggle, UseTurnBind)
 	};
 }
