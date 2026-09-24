@@ -4196,6 +4196,40 @@ namespace IW3SR
 		int dataSize;
 	};
 
+	struct audioSample_t
+	{
+		uint8_t* buffer;
+		int lengthInBytes;
+		int lengthInSamples;
+		int bytesPerSample;
+		int frequency;
+		bool stereo;
+		int channels;
+		int sampleOffset;
+	};
+
+	struct dsound_sample_t
+	{
+		void* DSCB;
+		void* DSB;
+		uint32_t dwBufferSize;
+		uint32_t dwCaptureOffset;
+		uint32_t currentOffset;
+		uint32_t lastOffset;
+		uint32_t currentBufferLength;
+		int stopPosition;
+		uint32_t lastPlayPos;
+		int bytesBuffered;
+		int mode;
+		int frequency;
+		int volume;
+		int pan;
+		int channels;
+		bool playing;
+		int channel;
+		uint8_t playMode;
+	};
+
 	struct clientConnection_t
 	{
 		int qport;

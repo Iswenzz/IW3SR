@@ -20,10 +20,6 @@
 		"cef": {
 			"description": "Build CEF",
 			"dependencies": ["cef"]
-		},
-		"tests": {
-			"description": "Build tests",
-			"dependencies": ["gtest"]
 		}
 	},
 	"dependencies": [
@@ -31,22 +27,27 @@
 		"glm",
 		{ "name": "imgui", "features": ["club", "markdown"] },
 		"implot",
+		"libsamplerate",
 		"libzippp",
 		"nlohmann-json",
+		"opus",
 		"polyhook2",
-		"sentry-native"
+		"sentry-native",
+		"speex"
 	],
 	"overrides": [
 		{ "name": "cef", "version": "149.0.6" },
 		{ "name": "curl", "version": "8.14.1" },
         { "name": "directxsdk", "version-string": "jun10#8" },
 		{ "name": "glm", "version": "1.0.1#2" },
-		{ "name": "gtest", "version": "1.14.0#1" },
         { "name": "imgui", "version": "1.92.8" },
         { "name": "implot", "version": "0.16#1" },
+		{ "name": "libsamplerate", "version": "0.2.2#1" },
 		{ "name": "libzippp", "version": "7.1-1.10.1"},
         { "name": "nlohmann-json", "version": "3.11.3" },
+		{ "name": "opus", "version": "1.5.2#1" },
         { "name": "polyhook2", "version": "2024-02-08" },
-        { "name": "sentry-native", "version": "0.12.1" }
+        { "name": "sentry-native", "version": "0.12.1" },
+		{ "name": "speex", "version": "1.2.1#1" }
     ]
 }

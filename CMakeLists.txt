@@ -10,6 +10,9 @@ if(MSVC)
 	# add_compile_options(/fsanitize=address)
 endif()
 
+# CMake
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 # Dependencies
 find_package(CURL REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -17,22 +20,10 @@ find_package(imgui CONFIG REQUIRED)
 find_package(implot CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(Opus CONFIG REQUIRED)
 find_package(PolyHook_2 CONFIG REQUIRED)
-
-# Tests
-if(BUILD_TESTING)
-	include(CTest)
-	find_package(GTest CONFIG REQUIRED)
-	add_executable(IW3SR.Tests)
-	add_test(NAME IW3SR COMMAND IW3SR.Tests)
-
-	# What is under test is compiled in rather than linked out of the game library, which cannot
-	# load outside the game: it installs its hooks the moment it does.
-	target_include_directories(IW3SR.Tests PRIVATE src)
-	target_link_libraries(IW3SR.Tests PRIVATE
-		GTest::gtest
-		GTest::gtest_main)
-endif()
+find_package(SampleRate CONFIG REQUIRED)
+find_package(Speex REQUIRED)
 
 # Path
 if(NOT DEFINED ENV{COD4})

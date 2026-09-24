@@ -5,6 +5,7 @@
 #include "PMem.hpp"
 #include "Profile.hpp"
 #include "Shell.hpp"
+#include "Voice.hpp"
 
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Renderer.hpp"
@@ -88,6 +89,7 @@ namespace IW3SR
 
 		Autocomplete::Initialize();
 		GHuffman::Initialize();
+		GVoice::Initialize();
 
 		LiveStorage_DecodeStatsData_h.Install();
 		Profile::UseCoD4XStatsFormat();

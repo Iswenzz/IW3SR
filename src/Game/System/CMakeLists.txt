@@ -57,8 +57,6 @@ target_sources(IW3SR PRIVATE
 	Rank.cpp
 	Rcon.hpp
 	Rcon.cpp
-	Schedule.hpp
-	Schedule.cpp
 	Patch.hpp
 	Patch.cpp
 	Server.hpp
@@ -75,9 +73,7 @@ target_sources(IW3SR PRIVATE
 	Timestep.cpp
 	Transport.hpp
 	Transport.cpp
+	Voice.hpp
+	Voice.cpp
 	Zones.hpp
 	Zones.cpp)
-
-if(BUILD_TESTING)
-	add_subdirectory(__test__)
-endif()

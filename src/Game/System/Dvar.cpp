@@ -46,7 +46,11 @@ namespace IW3SR
 		Register();
 		InitializeConsole();
 
-		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_SERVERINFO), "Client version", APPLICATION_VERSION);
+		// Both ride in the userinfo, so any server can read them from the client's slot.
+		RegisterString("sr_version", DvarFlags(DVAR_READONLY | DVAR_USERINFO | DVAR_SERVERINFO), "Client version",
+			APPLICATION_VERSION);
+		RegisterString("sr_voice", DvarFlags(DVAR_READONLY | DVAR_USERINFO), "Voice relay framing this client speaks",
+			"1");
 		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "about:blank");
 
 		if (!Patch::UseCoD4X)

@@ -1,6 +1,7 @@
 #include "Protocol.hpp"
 #include "Dvar.hpp"
 #include "Patch.hpp"
+#include "Voice.hpp"
 
 #include <charconv>
 #include <cstdlib>
@@ -1649,6 +1650,7 @@ namespace IW3SR
 	void GProtocol::SystemInfoChanged()
 	{
 		CL_SystemInfoChanged_h();
+		GVoice::SetRelay(InfoValue(ConfigString(1), "sr_voiceRelay") == "1");
 
 		if (DemoSession || clc.demoplaying)
 			DemoGameDir(ConfigString(1));

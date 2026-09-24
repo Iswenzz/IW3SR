@@ -215,6 +215,8 @@ namespace IW3SR
 			return;
 		if (GDownload::Command(command))
 			return;
+		if (Timestep::Command(command))
+			return;
 
 		Cmd_ExecuteSingleCommand_h(localClientNum, controllerIndex, cmd);
 

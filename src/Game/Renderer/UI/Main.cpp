@@ -337,7 +337,7 @@ namespace IW3SR::UC
 
 			bool allow = UI::Serialized.empty() ? true : UI::Serialized.value("CoD4X", true);
 
-			if (ImGui::Checkbox("CoD4X", &allow))
+			if (ImGui::Checkbox("Use CoD4X", &allow))
 				UI::Serialized["CoD4X"] = allow;
 			ImGui::Tooltip("Applies on the next launch.");
 			if (allow != Patch::UseCoD4X)

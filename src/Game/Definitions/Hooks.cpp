@@ -21,6 +21,7 @@
 #include "Game/System/Server.hpp"
 #include "Game/System/System.hpp"
 #include "Game/System/Timestep.hpp"
+#include "Game/System/Voice.hpp"
 #include "Game/System/Zones.hpp"
 
 #include <cstddef>
@@ -560,6 +561,52 @@ namespace IW3SR
 		a.popad();
 
 		a.push(imm(0x500037));
+		a.ret();
+	}
+
+	// cdecl (input, output, size) onto Encode_Sample, which takes its input in esi.
+	ASM_FUNCTION(Encode_Sample_h)
+	{
+		a.push(x86::esi);
+		a.mov(x86::esi, x86::dword_ptr(x86::esp, 0x08));  // input
+		a.push(x86::dword_ptr(x86::esp, 0x10));			  // size
+		a.push(x86::dword_ptr(x86::esp, 0x10));			  // output
+		a.call(imm(0x4ECB00));
+		a.add(x86::esp, 0x08);
+		a.pop(x86::esi);
+		a.ret();
+	}
+
+	// cdecl (data, bytes) onto Client_SendVoiceData, which takes the data in eax and the size in esi.
+	ASM_FUNCTION(Client_SendVoiceData_h)
+	{
+		a.push(x86::esi);
+		a.mov(x86::eax, x86::dword_ptr(x86::esp, 0x08)); // data
+		a.mov(x86::esi, x86::dword_ptr(x86::esp, 0x0C)); // bytes
+		a.call(imm(0x46C800));
+		a.pop(x86::esi);
+		a.ret();
+	}
+
+	// The capture format's average byte rate, which retail shifts out of the channel count because 8192 is a
+	// power of two. The cmp is the instruction the jump displaced, and its flags are still read afterwards.
+	ASM_FUNCTION(CaptureByteRate_h)
+	{
+		a.imul(x86::ecx, x86::ecx, GVoice::CaptureBytesPerSecond);
+		a.cmp(x86::dword_ptr(x86::esi), x86::ebx);
+		a.push(imm(0x4ED63E));
+		a.ret();
+	}
+
+	ASM_FUNCTION(DSound_UpdateSample_h)
+	{
+		a.pushad();
+		a.mov(x86::esi, x86::dword_ptr(x86::esp, 0x24)); // sample
+		a.mov(x86::eax, x86::dword_ptr(x86::esp, 0x2C)); // length
+		a.push(x86::dword_ptr(x86::esp, 0x28));			 // data
+		a.call(imm(0x4ECC40));
+		a.add(x86::esp, 0x04);
+		a.popad();
 		a.ret();
 	}
 }
