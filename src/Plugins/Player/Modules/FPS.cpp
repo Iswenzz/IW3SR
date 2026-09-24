@@ -58,6 +58,12 @@ namespace IW3SR::Addons
 			maxfps->latched.integer = maxfps->current.integer;
 		}
 		ImGui::Tooltip("Frame rate cap, separate from the movement rate.");
+
+		const auto apex = Dvar::Find("sr_timestep_apex");
+		if (apex && ImGui::Checkbox("Print Jump Heights", &apex->current.enabled))
+			apex->latched.enabled = apex->current.enabled;
+
+		ImGui::Tooltip("Print how high every jump peaks next to what a standing jump at com_maxfps reaches.");
 	}
 
 	void FPS::Measure()

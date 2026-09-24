@@ -1,10 +1,23 @@
 #pragma once
 #include "Game/Base.hpp"
 
-#include "Game/System/Schedule.hpp"
-
 namespace IW3SR
 {
+	// The client's frame limiter, kept going as a clock of movement steps.
+	struct Cadence
+	{
+		int Time = 0;
+		bool Started = false;
+	};
+
+	// Steps run from Clock, each as wide as its entry in the widths array.
+	struct Steps
+	{
+		int Clock = 0;
+		int Count = 0;
+		bool Starved = false;
+	};
+
 	// Splits every rendered frame into fixed size movement commands so the physics rate follows
 	// com_maxfps instead of the frame rate the machine happens to reach. sr_maxfps caps the
 	// renderer on its own, which leaves com_maxfps free to mean nothing but the movement rate.
@@ -14,11 +27,10 @@ namespace IW3SR
 		static void Initialize();
 		static void Frame();
 		static void Reset();
+		static bool Command(const std::string& command);
 
 		static void FASTCALL CreateNewCommands(int localClientNum);
 		static void CalcViewValues(int localClientNum);
-		static void StartTest();
-		static void Status();
 		static void Sample(const usercmd_s& cmd);
 		static void Step(const pmove_t* pm, const pml_t* pml);
 		static void Bounce(const pmove_t* pm, const pml_t* pml, const trace_t& trace, float before);
@@ -30,10 +42,14 @@ namespace IW3SR
 	private:
 		static bool Active();
 		static void Split(int localClientNum);
-		static int MeasureSleep();
+		static Steps PlanSteps(int* widths, int step, int target, int frametime);
+		static float JumpApex(float velocity, float gravity, int msec);
+		static void CheckPackets();
+		static void TrackJump(const playerState_s& ps);
+		static float IdealApex(const playerState_s& ps);
+		static void Status();
 		static void Record(const usercmd_s& cmd);
-		static void Audit();
-		static void AuditClock();
+		static void StartTest();
 		static void TestFrame();
 		static void Send(const char* command, int key, int time);
 
@@ -42,10 +58,10 @@ namespace IW3SR
 		static inline dvar_s* ComMaxFps = nullptr;
 		static inline dvar_s* Smooth = nullptr;
 		static inline dvar_s* Log = nullptr;
+		static inline dvar_s* Apex = nullptr;
 
-		// The vanilla limiter the step widths come from, and what a sleep costs on this machine.
+		// The client limiter the step widths come from.
 		static inline Cadence Vanilla = {};
-		static inline Pacing Pace = {};
 
 		static inline dvar_s** Limiter = nullptr;
 		static inline dvar_s Limit = {};
@@ -59,18 +75,29 @@ namespace IW3SR
 		static inline std::ofstream Journal;
 		static inline int Logged = 0;
 		static inline int Previous = 0;
-		static inline int Time = 0;
+
 		static inline int Starved = 0;
-		static inline bool Warned = false;
+		static inline int Sent = 0;
+		static inline bool Dropping = false;
+
+		// Steps emitted and the stretch of the step clock they covered, for the rate actually reached.
 		static inline int Emitted = 0;
 		static inline int First = 0;
-		static inline int Wobble = 0;
-		static inline int Steady = 0;
+		static inline int Last = 0;
+
+		// com_frameTime as the last step was handed it, which the next step's frame_msec runs from.
+		static inline int Stamp = 0;
+
+		// The jump in flight, measured from takeoff, and the last one to land.
+		static inline bool Grounded = true;
+		static inline bool Jumping = false;
+		static inline float JumpBase = 0;
+		static inline float JumpTop = 0;
+		static inline float LastApex = 0;
+		static inline float LastIdeal = 0;
+
 		static inline int Test = 0;
 		static inline int Beat = 0;
 		static inline int Peak = 0;
-		static inline int Clock = 0;
-		static inline int Held = 0;
-		static inline bool Frozen = false;
 	};
 }

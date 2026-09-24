@@ -1,9 +1,9 @@
 #include "Timestep.hpp"
 
+#include "Engine/Core/Utils/StringUtils.hpp"
+
 #include "Game/System/Client.hpp"
 #include "Game/System/Dvar.hpp"
-#include "Game/System/Patch.hpp"
-#include "Game/System/Schedule.hpp"
 #include "Game/System/System.hpp"
 
 namespace IW3SR
@@ -14,7 +14,7 @@ namespace IW3SR
 
 	// A packet carries at most 32 commands and one goes out per rendered frame, so this is a hard
 	// ceiling rather than a tuning choice: past it the packet writer would drop commands the server
-	// never sees, which desyncs it from us. Dropping movement time instead at least keeps us agreed.
+	// never sees, which desyncs it from us.
 	constexpr int MaxSteps = 32;
 
 	// One clamped frame is a hitch. This many in a row is a configuration that cannot carry the rate.
@@ -25,34 +25,15 @@ namespace IW3SR
 	// Gap between the three keys going down, so the hop starts the way a player starts one.
 	constexpr int TestStagger = 200;
 
-	// What a frame at com_maxfps spends on its own work before the limiter is consulted, used when
-	// the measurement is turned off. Low enough that the cadence comes out an even grid.
-	constexpr int FrameWork = 500;
-
-	// How many times the limiter's wait is timed at startup to find what it really costs.
-	constexpr int SleepSamples = 33;
-
 	// Past this the movement clock is stale, from a map change or a server time correction.
 	constexpr int MaxDrift = 500;
-
-	// Counter ticks as microseconds. The frequency is fixed for the life of the process, so it is
-	// read once.
-	static int64_t Micros(int64_t ticks)
-	{
-		static const int64_t frequency = []
-		{
-			LARGE_INTEGER value = {};
-			return QueryPerformanceFrequency(&value) ? value.QuadPart : 0;
-		}();
-		return frequency ? ticks * 1000000 / frequency : 0;
-	}
 
 	void Timestep::Initialize()
 	{
 		ComMaxFps = Dvar::Find("com_maxfps");
 
-		// Movement here is not proven identical to a client actually running at com_maxfps, so it stays
-		// out of a release build entirely rather than sitting behind a dvar someone could turn on.
+		// Stays out of a release build until it is confirmed in play, rather than sitting behind a dvar
+		// someone could turn on.
 		if (!System::IsDebug())
 			return;
 
@@ -64,19 +45,8 @@ namespace IW3SR
 			"Draw the view at the frame time instead of at the last movement step", true);
 		Log = Dvar::RegisterBool("sr_timestep_log", DVAR_TEMP,
 			"Write every movement command to iw3sr/Logs/timestep.csv", false);
-
-		Pace.Sleep = MeasureSleep();
-		Pace.Work = FrameWork;
-
-		// The whole of the limiter's overshoot is this number, and a step is only ever exact while
-		// it stays under what is left of the millisecond. Printed because there is no other way to
-		// tell a high resolution timer that is working from one that is quietly costing a
-		// millisecond, and the two give different movement rates.
-		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
-			std::format("Timestep: the frame limiter's wait costs {} us.{}\n", Pace.Sleep,
-				Pace.Sleep > 500 ? " Over 500, so steps will widen where they should not." : "")
-				.c_str(),
-			0);
+		Apex = Dvar::RegisterBool("sr_timestep_apex", DVAR_SAVED,
+			"Print how high every jump peaks next to what a standing jump at com_maxfps reaches", false);
 
 		const auto limiter = reinterpret_cast<dvar_s**>(ComMaxFpsRef);
 
@@ -101,82 +71,68 @@ namespace IW3SR
 
 	void Timestep::Reset()
 	{
-		Time = 0;
 		Vanilla = {};
 		Stepped = 0;
+		Emitted = 0;
+		First = 0;
+		Sent = 0;
+		Dropping = false;
+		Grounded = true;
+		Jumping = false;
 	}
 
-	// What the audit has seen so far, so the absence of a warning can be read as evidence rather
-	// than taken on trust.
+	bool Timestep::Command(const std::string& command)
+	{
+		if (!Enabled)
+			return false;
+
+		std::istringstream stream(command);
+		std::string verb;
+		stream >> verb;
+		verb = StringUtils::ToLower(verb);
+
+		if (verb == "sr_timestep_test")
+		{
+			StartTest();
+			return true;
+		}
+		if (verb == "sr_timestep_status")
+		{
+			Status();
+			return true;
+		}
+		return false;
+	}
+
 	void Timestep::Status()
 	{
+		const int movement = MovementFps();
+
 		if (!Active())
 		{
 			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, "Timestep is off, movement follows the frame rate.\n", 0);
-			return;
 		}
-		const int movement = MovementFps();
-		const int step = 1000 / movement;
-
-		// The achieved rate, not com_maxfps. A vanilla client's limiter overshoots its target by
-		// whatever a sleep costs, and the steps here carry the same overshoot, so the two differ.
-		const int emitted = Steady + Wobble;
-		const int reached = emitted ? 1000 * emitted / std::max(1, Emitted - First) : 0;
-
-		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
-			std::format("Timestep: com_maxfps {} is a {} ms step, drawing at {} fps.\n"
-						"Reaching {} steps a second, which is what a vanilla client here would.\n"
-						"The frame limiter's wait costs {} us. Steps on cadence: {}, off: {}.\n",
-				movement, step, RenderFps(), reached, Pace.Sleep, Steady, Wobble)
-				.c_str(),
-			0);
-	}
-
-	// The engine walks serverTimeDelta a millisecond at a time toward the server, once per snapshot,
-	// and every walk lands on a step as one that is a millisecond wide or narrow. A client that has
-	// stopped walking it emits a rigid grid, which is a cadence no connected client has - so a clock
-	// that has not moved across thousands of steps is reported rather than left to be measured as a
-	// jump height weeks later.
-	void Timestep::AuditClock()
-	{
-		if (Frozen || !Active())
-			return;
-
-		if (clients->serverTimeDelta != Clock)
+		else
 		{
-			Clock = clients->serverTimeDelta;
-			Held = 0;
-			return;
+			// Measured on the step clock rather than from com_maxfps, so a frame that could not carry the
+			// rate shows up here as the rate falling short.
+			const int span = Last - First;
+			const int reached = span > 0 ? static_cast<int>(1000LL * Emitted / span) : 0;
+
+			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
+				std::format("Timestep: com_maxfps {} is a {} ms step, drawing at {} fps, reaching {} steps a second.\n",
+					movement, 1000 / movement, RenderFps(), reached)
+					.c_str(),
+				0);
 		}
-		// A second of steps at any rate the timestep supports, and several snapshots' worth.
-		if (++Held < 1000)
-			return;
-
-		Frozen = true;
-		Com_PrintMessage(CON_CHANNEL_ERROR,
-			std::format("^1Timestep: the server time delta has not moved in {} steps, so every step is "
-						"exactly {} ms and movement is stiffer than a real client's. Please report this.\n",
-				Held, 1000 / std::max(1, MovementFps()))
-				.c_str(),
-			0);
-	}
-
-	// Runs while you play, so a break in either property shows up on its own rather than waiting for
-	// someone to go looking for it.
-	void Timestep::Audit()
-	{
-		AuditClock();
-
-		if (Warned || Steady + Wobble < 600 || Wobble * 8 < Steady)
-			return;
-
-		Warned = true;
-		Com_PrintMessage(CON_CHANNEL_ERROR,
-			std::format("^1Timestep: {} of {} steps are wider than com_maxfps ever sends, movement will "
-						"not match it. Please report this.\n",
-				Wobble, Steady + Wobble)
-				.c_str(),
-			0);
+		if (LastIdeal > 0)
+		{
+			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
+				std::format("Last jump peaked {:.2f} above takeoff. A standing jump at com_maxfps {} peaks {:.2f}.\n",
+					LastApex, movement, LastIdeal)
+					.c_str(),
+				0);
+		}
 	}
 
 	// Taken at CL_FinishMove, which is the last thing the engine does to a command and the first
@@ -214,21 +170,23 @@ namespace IW3SR
 	}
 
 	// One row per pmove step, taken at the ground trace, which runs first in a step and so reports
-	// the state the move is about to be run from. Prediction replays the same commands every frame,
-	// so a step is only written the first time it is stepped over.
+	// the state the move is about to be run from.
 	void Timestep::Step(const pmove_t* pm, const pml_t* pml)
 	{
-		if (!Log || !OpenTrace(Trace, Log->current.enabled, Enabled && Enabled->current.enabled))
-			return;
-
-		// pml->msec is the width pmove really stepped, which is not the spacing of the commands
-		// whenever the command clock has drifted from what the playerState was last predicted to.
-		if (pm->cmd.serverTime <= Stepped)
+		// Only the local player's prediction, and each command only the first time: prediction replays
+		// the same commands every frame, and a listen server runs every client's moves through here too.
+		if (!Enabled || pm->ps != &cgs->predictedPlayerState || pm->cmd.serverTime <= Stepped)
 			return;
 		Stepped = pm->cmd.serverTime;
 
 		const playerState_s& ps = *pm->ps;
+		TrackJump(ps);
 
+		if (!Log || !OpenTrace(Trace, Log->current.enabled, Enabled->current.enabled))
+			return;
+
+		// pml->msec is the width pmove really stepped, which is not the spacing of the commands
+		// whenever the command clock has drifted from what the playerState was last predicted to.
 		Trace << "step," << pm->cmd.serverTime << ',' << pml->msec << ',' << ps.origin[2] << ','
 			  << glm::length(vec2(ps.velocity)) << ',' << ps.velocity[2] << ','
 			  << (ps.groundEntityNum != ENTITYNUM_NONE ? 1 : 0) << ',' << ps.pm_flags << ',' << ps.jumpTime << ','
@@ -250,6 +208,84 @@ namespace IW3SR
 			  << ps.velocity[2] << ',' << (ps.groundEntityNum != ENTITYNUM_NONE ? 1 : 0) << ',' << ps.pm_flags << ','
 			  << ps.jumpTime << ',' << ps.jumpOriginZ << ',' << trace.normal[2] << ',' << (trace.walkable ? 1 : 0)
 			  << '\n';
+	}
+
+	// Jump height is the plainest readout of the step width there is: Sys_SnapVector rounds the
+	// velocity every step, so 333 peaks near 46.4 and 250 near 41.6 where the true height is 39. The
+	// state seen here is the one a step starts from, so the highest of them is the peak pmove reached.
+	void Timestep::TrackJump(const playerState_s& ps)
+	{
+		const bool grounded = ps.groundEntityNum != ENTITYNUM_NONE;
+
+		// Rising off the ground with the jump flag up. Walking off a ledge or a ramp does not rise, and
+		// the flag outlives a landing in CoD4, so it alone would take either for a jump.
+		const bool takeoff = Grounded && !grounded && (ps.pm_flags & PMF_JUMPING) && ps.velocity[2] > 0;
+		Grounded = grounded;
+
+		if (takeoff)
+		{
+			Jumping = true;
+			JumpBase = ps.jumpOriginZ;
+			JumpTop = ps.origin[2];
+			return;
+		}
+		if (!Jumping)
+			return;
+
+		JumpTop = std::max(JumpTop, ps.origin[2]);
+		if (!grounded && ps.velocity[2] > 0)
+			return;
+
+		Jumping = false;
+		LastApex = JumpTop - JumpBase;
+		LastIdeal = IdealApex(ps);
+
+		if (Apex && Apex->current.enabled)
+		{
+			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY,
+				std::format("Jump peaked {:.2f}, a standing jump at com_maxfps {} peaks {:.2f}\n", LastApex,
+					MovementFps(), LastIdeal)
+					.c_str(),
+				0);
+		}
+	}
+
+	// Every mode takes off at sqrt(2 g jump_height) and falls under the same averaged gravity, so one
+	// formula covers them all.
+	float Timestep::IdealApex(const playerState_s& ps)
+	{
+		static const auto height = Dvar::Find("jump_height");
+
+		const int movement = MovementFps();
+		if (!height || movement <= 0 || ps.gravity <= 0)
+			return 0;
+
+		const float gravity = static_cast<float>(ps.gravity);
+		const float velocity = std::sqrt(2.0f * gravity * height->current.value);
+
+		return JumpApex(velocity, gravity, 1000 / movement);
+	}
+
+	// Height a standing jump peaks at when every pmove step is msec wide. Sys_SnapVector rounds the
+	// velocity to a whole unit after every step, so gravity is lost in whole units and the height is
+	// a property of the step width rather than of the jump.
+	float Timestep::JumpApex(float velocity, float gravity, int msec)
+	{
+		const float frametime = static_cast<float>(std::max(msec, 1)) * 0.001f;
+
+		float height = 0;
+		float peak = 0;
+
+		// PM_SlideMove moves on the mean of the velocity either side of the step's gravity.
+		for (int i = 0; i < 100000 && (velocity > 0 || height >= peak); i++)
+		{
+			const float end = velocity - gravity * frametime;
+
+			height += (velocity + end) * 0.5f * frametime;
+			velocity = std::nearbyint(end);
+			peak = std::max(peak, height);
+		}
+		return peak;
 	}
 
 	// Writes the commands as they leave for the server, so a run with the timestep on and one with it
@@ -311,6 +347,7 @@ namespace IW3SR
 		Test = cls->realtime;
 		Beat = 0;
 		Peak = 0;
+		LastIdeal = 0;
 		Log->current.enabled = true;
 
 		Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, "Timestep test running for 3 seconds, keep off the keyboard.\n", 0);
@@ -339,6 +376,7 @@ namespace IW3SR
 
 			Com_PrintMessage(CON_CHANNEL_CONSOLEONLY, std::format("Timestep test done, peak speed {}.\n", Peak).c_str(),
 				0);
+			Status();
 			return;
 		}
 		// Forward, then jump, then strafe, each held for the rest of the run and staggered the way a
@@ -377,7 +415,11 @@ namespace IW3SR
 
 		if (!Active())
 		{
-			Time = 0;
+			// Picked up again a frame behind wherever the clock is then, rather than owing the gap.
+			Vanilla.Started = false;
+			Emitted = 0;
+			First = 0;
+			Sent = 0;
 
 			const int slot = clients->cmdNumber;
 			CL_CreateNewCommands_h(localClientNum);
@@ -424,39 +466,82 @@ namespace IW3SR
 			cgs->viewModelAxis[3][i] += carry[i];
 	}
 
+	// A packet holds the newest 32 commands, so any more made between two packets never reach the
+	// server, which then steps the whole gap as one wide move. A client at com_maxfps loses them too
+	// when cl_maxpackets is low, but here packets only leave on rendered frames, so a low frame rate
+	// loses them where the client being imitated would not. Read off the packets already sent, so it
+	// is only ever reported once it has happened.
+	void Timestep::CheckPackets()
+	{
+		int sent = 0;
+		for (const outPacket_t& packet : clients->outPackets)
+			sent = std::max(sent, packet.p_cmdNumber);
+
+		// At most one packet leaves a frame, and this runs every frame, so the gap is one packet's worth.
+		const int between = Sent ? sent - Sent : 0;
+		Sent = sent;
+
+		if (Dropping || between <= MaxSteps)
+			return;
+
+		Dropping = true;
+
+		static const auto maxPackets = Dvar::Find("cl_maxpackets");
+		Com_PrintMessage(CON_CHANNEL_ERROR,
+			std::format("^1Timestep: {} commands were made between two packets at com_maxfps {} and {} fps, and a "
+						"packet carries 32, so the server stepped {} of them as one. Raise cl_maxpackets{} or "
+						"sr_maxfps.\n",
+				between, MovementFps(), RenderFps(), between - MaxSteps + 1,
+				maxPackets ? std::format(" (now {})", maxPackets->current.integer) : "")
+				.c_str(),
+			0);
+	}
+
+	// Com_Frame's client branch (0x500037, and CoD4X's rewrite of it) only waits for the millisecond to
+	// tick over, credits the frame max(elapsed, 1000/com_maxfps), and R_WaitEndTime then holds it until
+	// wall time catches up. So a client that keeps up steps an exact grid however long its wait takes,
+	// and one that cannot sends a single wide command for the frame it lost. The virtual client starts
+	// a frame behind the real one, or it would owe nothing on the frame it is seeded and stay a step
+	// short for the whole run.
+	Steps Timestep::PlanSteps(int* widths, int step, int target, int frametime)
+	{
+		if (step < 1)
+			step = 1;
+
+		if (!Vanilla.Started || std::abs(target - Vanilla.Time) > MaxDrift)
+		{
+			Vanilla.Time = target - (frametime > 0 ? frametime : step);
+			Vanilla.Started = true;
+		}
+
+		Steps plan;
+		plan.Clock = Vanilla.Time;
+
+		while (plan.Count < MaxSteps && target - Vanilla.Time >= step)
+		{
+			widths[plan.Count++] = step;
+			Vanilla.Time += step;
+		}
+
+		// More than a packet can carry. The last command takes the rest, which is the one wide command a
+		// client that hitched for this long would have sent, and keeps the clock from falling behind.
+		if (plan.Count == MaxSteps && target - Vanilla.Time >= step)
+		{
+			const int owed = target - Vanilla.Time;
+			const int spent = owed - owed % step;
+
+			widths[MaxSteps - 1] += spent;
+			Vanilla.Time += spent;
+			plan.Starved = true;
+		}
+		return plan;
+	}
+
 	// Builds one command per movement step by running the engine's own builder that many times, each
 	// with the clocks it reads pointed at that step. Sampling input per step rather than per frame is
 	// what a client really running at com_maxfps does, and it has to be done this way round rather
 	// than by copying one command: CL_KeyState divides a key's held time by frame_msec, so a long
 	// frame yields a weaker forwardmove and rightmove than the same keys held at com_maxfps would.
-	// What one turn of the limiter's wait really costs here, which is the whole of its overshoot.
-	// It has to be Patch::FrameWait, because that is what the limiter calls once IW3SR is loaded -
-	// a fifty microsecond high resolution timer replacing the millisecond sleep stock CoD4 spun on,
-	// and CoD4X's hot usleep with it. Timing ::Sleep(1) instead modelled a client nobody is running:
-	// at com_maxfps 333 it turned an even 3 ms cadence into a 3/4 ms mix, which is a seventh of the
-	// movement rate and, through Sys_SnapVector rounding the velocity every step, three units of
-	// jump height. Measuring the real wait also picks up the Sleep(0) fallback on Windows before
-	// 1803, where the high resolution timer does not exist.
-	int Timestep::MeasureSleep()
-	{
-		int samples[SleepSamples] = {};
-		for (int i = 0; i < SleepSamples; i++)
-		{
-			LARGE_INTEGER before = {};
-			LARGE_INTEGER after = {};
-
-			QueryPerformanceCounter(&before);
-			Patch::FrameWait();
-			QueryPerformanceCounter(&after);
-
-			samples[i] = static_cast<int>(Micros(after.QuadPart - before.QuadPart));
-		}
-		std::sort(std::begin(samples), std::end(samples));
-
-		// The median, so one descheduled sample cannot decide the movement rate.
-		return std::clamp(samples[SleepSamples / 2], 1, 8000);
-	}
-
 	void Timestep::Split(int localClientNum)
 	{
 		const int step = 1000 / MovementFps();
@@ -468,11 +553,11 @@ namespace IW3SR
 		const int target = cls->realtime;
 		const int delta = clients->serverTime - target;
 
-		int widths[MaxSteps] = {};
-		const Steps plan = PlanSteps(Vanilla, widths, MaxSteps, step, target, cls->frametime, MaxDrift, Pace);
-		const int count = plan.Count;
+		CheckPackets();
 
-		Time = plan.Clock;
+		int widths[MaxSteps] = {};
+		const Steps plan = PlanSteps(widths, step, target, cls->frametime);
+		const int count = plan.Count;
 
 		if (plan.Starved)
 		{
@@ -503,18 +588,30 @@ namespace IW3SR
 		const int dx = clients->mouseDx[clients->mouseIndex];
 		const int dy = clients->mouseDy[clients->mouseIndex];
 
-		int time = Time;
+		if (!Emitted)
+		{
+			First = plan.Clock;
+			Stamp = frameTime - msec;
+		}
+
+		int time = plan.Clock;
 		for (int i = 1; i <= count; i++)
 		{
 			const int width = widths[i - 1];
 			time += width;
 
-			// Key timing lives on this clock, so a step placed on it measures a held key over the
-			// step rather than over the whole frame.
-			com_frameTime = time;
+			// Placed on the wall clock the binds stamp, not on realtime's, which falls behind at every
+			// clamped hitch and would throw the stance hold's timer off.
+			const int stamp = frameTime - (target - time);
+
+			// Both halves of CL_KeyState's ratio come off this one clock, as in CL_Frame, so a held key
+			// reads whole even on the step after a hitch or a change of com_maxfps.
+			com_frameTime = stamp;
+			frame_msec = std::clamp(stamp - Stamp, 1, 200);
+			Stamp = stamp;
+
 			clients->serverTime = time + delta;
 			cls->frametime = width;
-			frame_msec = width;
 
 			// The frame's mouse travel belongs to the frame, so hand each step its own share of it.
 			clients->mouseDx[clients->mouseIndex] = dx * i / count - dx * (i - 1) / count;
@@ -532,19 +629,9 @@ namespace IW3SR
 			// predictions per second the same as the client being imitated pays.
 			if (i < count)
 				Client::Predict(localClientNum);
-
-			// Vanilla steps wander by the millisecond the engine walks the clock. Wider than that is
-			// jitter of our own making, and a step com_maxfps never produces.
-			const int stamp = time + delta;
-			if (!First)
-				First = stamp;
-			if (Emitted)
-				std::abs(stamp - Emitted - width) > 1 ? Wobble++ : Steady++;
-			Emitted = stamp;
 		}
-
-		Time = time;
-		Audit();
+		Emitted += count;
+		Last = time;
 
 		clients->serverTime = serverTime;
 		com_frameTime = frameTime;

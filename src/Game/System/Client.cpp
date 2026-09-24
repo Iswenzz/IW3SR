@@ -20,6 +20,9 @@ namespace IW3SR
 		"sr_serverfilter_refresh", "sr_serverinfo", "sr_serverlist", "sr_shell_register", "sr_shell_unregister",
 		"snd_pause", "snd_stopambient", "snd_unpause" };
 
+	// The timestep only exists in a debug build, so its commands are only offered there.
+	constexpr std::array DebugCommands = { "sr_timestep_status", "sr_timestep_test" };
+
 	void Client::Initialize(int localClientNum)
 	{
 		CL_InitCGame_h(localClientNum);
@@ -38,6 +41,13 @@ namespace IW3SR
 		Console::AddCommand("unset");
 		for (const char* name : ConsoleCommands)
 		{
+			Console::AddCommand(name);
+			GConsole::Register(name);
+		}
+		for (const char* name : DebugCommands)
+		{
+			if (!System::IsDebug())
+				break;
 			Console::AddCommand(name);
 			GConsole::Register(name);
 		}
