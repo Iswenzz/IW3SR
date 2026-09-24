@@ -20,7 +20,7 @@ target_sources(IW3SR PRIVATE
 # Build
 target_include_directories(IW3SR PUBLIC ..)
 target_link_libraries(IW3SR PUBLIC IzEngine ole32)
-target_link_libraries(IW3SR PRIVATE Opus::opus SampleRate::samplerate speex::speex)
+target_link_libraries(IW3SR PRIVATE dsound Opus::opus SampleRate::samplerate speex::speex)
 
 # API
 target_link_libraries(IW3SR.API INTERFACE IW3SR)

@@ -3,6 +3,7 @@
 #include <mmsystem.h>
 
 #include <dsound.h>
+#include <mmdeviceapi.h>
 #include <opus/opus.h>
 #include <samplerate.h>
 #include <speex/speex.h>
@@ -65,6 +66,83 @@ namespace IW3SR
 	static Hook<int(audioSample_t* sample)> Record_QueueAudioDataForEncoding_h(0x4ED320, GVoice::QueueAudioData);
 	static Hook<void(uint8_t talker, uint8_t* data, int size)>
 		Voice_IncomingVoiceData_h(0x57AF60, GVoice::IncomingVoiceData);
+
+	static HRESULT STDCALL CreateCapture(LPCGUID device, LPDIRECTSOUNDCAPTURE* capture, LPUNKNOWN outer);
+
+	// dsound.dll's own export, so it catches CoD4X's SND_InitDSCaptureDevice as well as retail's.
+	static Hook<HRESULT STDCALL(LPCGUID device, LPDIRECTSOUNDCAPTURE* capture, LPUNKNOWN outer)>
+		DirectSoundCaptureCreate_h(DirectSoundCaptureCreate, CreateCapture);
+
+	// PKEY_AudioEndpoint_GUID and PKEY_Device_FriendlyName, which the SDK only defines under INITGUID.
+	constexpr PROPERTYKEY EndpointGuidKey = {
+		{ 0x1DA5D803, 0xD492, 0x4EDD, { 0x8C, 0x23, 0xE0, 0xC0, 0xFF, 0xEE, 0x7F, 0x0E } }, 4
+	};
+	constexpr PROPERTYKEY FriendlyNameKey = {
+		{ 0xA45C254E, 0xDF1C, 0x4EFD, { 0x80, 0x20, 0x67, 0xD1, 0x46, 0xA8, 0x50, 0xE0 } }, 14
+	};
+
+	static std::string ToUtf8(const wchar_t* text)
+	{
+		const int size = WideCharToMultiByte(CP_UTF8, 0, text, -1, nullptr, 0, nullptr, nullptr);
+		if (size <= 1)
+			return {};
+
+		std::string result(size - 1, '\0');
+		WideCharToMultiByte(CP_UTF8, 0, text, -1, result.data(), size, nullptr, nullptr);
+		return result;
+	}
+
+	// Windows' default recording device, as DirectSound identifies it.
+	static bool DefaultCaptureDevice(GUID& device, std::string& name)
+	{
+		const HRESULT apartment = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+		IMMDeviceEnumerator* enumerator = nullptr;
+		IMMDevice* endpoint = nullptr;
+		IPropertyStore* properties = nullptr;
+		bool found = false;
+
+		if (SUCCEEDED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator),
+				reinterpret_cast<void**>(&enumerator)))
+			&& SUCCEEDED(enumerator->GetDefaultAudioEndpoint(eCapture, eConsole, &endpoint))
+			&& SUCCEEDED(endpoint->OpenPropertyStore(STGM_READ, &properties)))
+		{
+			PROPVARIANT value;
+			PropVariantInit(&value);
+			if (SUCCEEDED(properties->GetValue(EndpointGuidKey, &value)) && value.vt == VT_LPWSTR)
+				found = SUCCEEDED(CLSIDFromString(value.pwszVal, &device));
+			PropVariantClear(&value);
+
+			if (SUCCEEDED(properties->GetValue(FriendlyNameKey, &value)) && value.vt == VT_LPWSTR)
+				name = ToUtf8(value.pwszVal);
+			PropVariantClear(&value);
+		}
+		if (properties)
+			properties->Release();
+		if (endpoint)
+			endpoint->Release();
+		if (enumerator)
+			enumerator->Release();
+		if (SUCCEEDED(apartment))
+			CoUninitialize();
+
+		return found;
+	}
+
+	// Retail and CoD4X both ask for the default device with NULL. Named explicitly instead, so it is the
+	// device Windows lists as default, and the log says which one it is.
+	static HRESULT STDCALL CreateCapture(LPCGUID device, LPDIRECTSOUNDCAPTURE* capture, LPUNKNOWN outer)
+	{
+		GUID fallback = {};
+		std::string name;
+
+		if (!device && DefaultCaptureDevice(fallback, name))
+		{
+			Log::WriteLine(Channel::Game, "Voice captures from \"{}\".", name);
+			device = &fallback;
+		}
+		return DirectSoundCaptureCreate_h(device, capture, outer);
+	}
 
 	// speex_encoder_ctl, which retail inlines: every encoder state opens with its SpeexMode.
 	static int EncoderCtl(void* state, int request, void* value)
@@ -185,6 +263,7 @@ namespace IW3SR
 		SendVoiceData = reinterpret_cast<SendVoiceData_t>(ASM_LOAD(Client_SendVoiceData_h));
 		UpdateSample = reinterpret_cast<UpdateSample_t>(ASM_LOAD(DSound_UpdateSample_h));
 
+		DirectSoundCaptureCreate_h.Install();
 		Record_QueueAudioDataForEncoding_h.Install();
 		Voice_IncomingVoiceData_h.Install();
 	}
