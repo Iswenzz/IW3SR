@@ -19,14 +19,26 @@ namespace IW3SR::Addons
 
 	void Snap::Menu()
 	{
-		ImGui::Checkbox("Active Zone", &UseActiveZone);
-
-		ImGui::DragFloat("Y Position", &Y);
-		ImGui::DragFloat("Height", &Height);
-
-		ImGui::ColorEdit4("Primary", &ColorPrimary.x, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Alternate", &ColorAlternate.x, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Active", &ColorActive.x, ImGuiColorEditFlags_Float);
+		if (ImGui::BeginSection("General"))
+		{
+			ImGui::Property("Active Zone");
+			ImGui::Switch("##activezone", &UseActiveZone);
+			ImGui::Property("Y Position");
+			ImGui::DragFloat("##y", &Y);
+			ImGui::Property("Height");
+			ImGui::DragFloat("##height", &Height);
+			ImGui::EndSection();
+		}
+		if (ImGui::BeginSection("Colors"))
+		{
+			ImGui::Property("Primary");
+			ImGui::ColorEdit4("##primary", &ColorPrimary.x, ImGuiColorEditFlags_Float);
+			ImGui::Property("Alternate");
+			ImGui::ColorEdit4("##alternate", &ColorAlternate.x, ImGuiColorEditFlags_Float);
+			ImGui::Property("Active");
+			ImGui::ColorEdit4("##active", &ColorActive.x, ImGuiColorEditFlags_Float);
+			ImGui::EndSection();
+		}
 	}
 
 	// Pmove snaps the velocity to whole units every frame, so what a wish direction really adds is

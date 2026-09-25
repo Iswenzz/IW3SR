@@ -47,7 +47,7 @@ namespace IW3SR::Addons
 
 		void Initialize() override;
 		void Menu() override;
-		void MenuNode(Node& node);
+		void MenuNode(const std::string& label, Node& node);
 
 		void OnSpawn(EventClientSpawn& event) override;
 		void OnRender() override;

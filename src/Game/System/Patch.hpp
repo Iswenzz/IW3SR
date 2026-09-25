@@ -18,6 +18,7 @@ namespace IW3SR
 
 	private:
 		static void AllowMultipleInstances();
+		static void DisableAimAssistTargets();
 		static void DisablePunkbuster();
 		static void FixDownloadRate();
 		static void TightenFrameLimiter();

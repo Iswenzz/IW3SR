@@ -61,21 +61,24 @@ namespace IW3SR
 
 	void GText::Menu(const std::string& label, bool open)
 	{
-		if (!ImGui::CollapsingHeader(label, open))
+		if (!ImGui::BeginSection(label, open))
 			return;
 
-		ImGui::PushID(label.c_str());
+		ImGui::Property("Position");
+		ImGui::DragFloat2("##position", &Position.x);
+		ImGui::Property("Color");
+		ImGui::ColorEdit4("##color", &Color.x, ImGuiColorEditFlags_Float);
 
-		ImGui::DragFloat2("Position", &Position.x);
-		ImGui::ColorEdit4("Color", &Color.x, ImGuiColorEditFlags_Float);
-
-		if (ImGui::InputFloat("Font Size", &FontSize, 0.1))
+		ImGui::Property("Font Size");
+		if (ImGui::InputFloat("##fontsize", &FontSize, 0.1))
 			SetFont(FontName);
 
-		ImGui::Checkbox("Responsive Font", &FontResponsive);
+		ImGui::Property("Responsive Font");
+		ImGui::Switch("##responsive", &FontResponsive);
 
 		const auto& fonts = GDraw2D::FontNames;
-		if (ImGui::Combo("Font", &FontIndex, fonts))
+		ImGui::Property("Font");
+		if (ImGui::Combo("##font", &FontIndex, fonts))
 		{
 			FontResponsive = false;
 			SetFont(fonts[FontIndex]);
@@ -84,7 +87,7 @@ namespace IW3SR
 		ImGui::ComboAlign(&AlignX, &AlignY);
 		ImGui::ComboAlignRect(&HorizontalAlign, &VerticalAlign);
 
-		ImGui::PopID();
+		ImGui::EndSection();
 	}
 
 	void GText::Render()

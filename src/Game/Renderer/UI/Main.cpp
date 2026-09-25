@@ -73,14 +73,15 @@ namespace IW3SR::UC
 			ImGui::PopStyleColor();
 		}
 
-		// Checkbox bound straight to a boolean dvar, so the console and the panel stay in step.
+		// A switch bound straight to a boolean dvar, so the console and the panel stay in step.
 		void Setting(const char* label, const char* name, const char* tooltip)
 		{
 			const auto dvar = Dvar::Find(name);
 			if (!dvar)
 				return;
 
-			if (ImGui::Checkbox(label, &dvar->current.enabled))
+			ImGui::Property(label);
+			if (ImGui::Switch(std::string("##") + name, &dvar->current.enabled))
 				Dvar::SetBool(dvar, dvar->current.enabled);
 			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
 		}
@@ -324,38 +325,54 @@ namespace IW3SR::UC
 		Header("Settings", std::string("Interface") + Dot + "Input" + Dot + "Client");
 
 		BeginPanel("##settings", { 0, 0 }, PanelColor);
-		if (ImGui::CollapsingHeader("General", ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::BeginSection("Interface"))
 		{
-			ImGui::Keybind("Menu", &UI::KeyOpen.Input, false);
-			ImGui::Checkbox("Design Mode", &UI::DesignMode);
-
+			ImGui::Property("Menu Key");
+			ImGui::Keybind("##menu", &UI::KeyOpen.Input, false, vec2(-FLT_MIN, 0));
+			ImGui::Property("Design Mode");
+			ImGui::Switch("##design", &UI::DesignMode);
+			ImGui::EndSection();
+		}
+		if (ImGui::BeginSection("Input"))
+		{
 			Setting("Raw Input", "sr_rawinput",
 				"Reads the mouse through raw input instead of the Windows pointer.\n"
 				"Drops pointer acceleration and the movement the old path lost at the\n"
 				"edges of the screen, and stays smooth and stable on the frame rate at\n"
 				"high polling rates, where 1000 Hz and above used to stutter and flicker.");
-
+			ImGui::EndSection();
+		}
+		if (ImGui::BeginSection("Client"))
+		{
 			bool allow = UI::Serialized.empty() ? true : UI::Serialized.value("CoD4X", true);
 
-			if (ImGui::Checkbox("Use CoD4X", &allow))
+			ImGui::Property("Use CoD4X");
+			if (ImGui::Switch("##cod4x", &allow))
 				UI::Serialized["CoD4X"] = allow;
 			ImGui::Tooltip("Applies on the next launch.");
 			if (allow != Patch::UseCoD4X)
-				ImGui::TextDisabled("Restart the game to apply.");
+			{
+				ImGui::SameLine();
+				ImGui::TextDisabled(ICON_FA_ROTATE_RIGHT);
+				ImGui::Tooltip("Restart the game to apply.");
+			}
+			ImGui::EndSection();
 		}
-		if (System::IsDebug() && ImGui::CollapsingHeader("Debug"))
+		if (System::IsDebug() && ImGui::BeginSection("Debug", false))
 		{
-			if (ImGui::Button(IsReloading ? "Reloading..." : "Reload Plugins", ImVec2(-1, 0)))
+			if (ImGui::Button(IsReloading ? "Reloading..." : "Reload Plugins", ImVec2(-FLT_MIN, 0)))
 				Reload();
 			ImGui::Tooltip("Rebuilds the plugins and swaps them in without restarting the game.");
 
-			if (ImGui::Button("Memory Editor", ImVec2(-1, 0)))
+			if (ImGui::Button("Memory Editor", ImVec2(-FLT_MIN, 0)))
 				UI::OpenWindow("Memory");
 
-			if (ImGui::Button("Crash", ImVec2(-1, 0)))
+			if (ImGui::Button("Crash", ImVec2(-FLT_MIN, 0)))
 				*reinterpret_cast<volatile int*>(0) = 0;
-			ImGui::Tooltip("Faults on purpose, to check the handler end to end: dump written, the\n"
-						   "reporter window opens, and the copy lands in Reports.");
+			ImGui::Tooltip(
+				"Faults on purpose, to check the handler end to end: dump written, the\n"
+				"reporter window opens, and the copy lands in Reports.");
+			ImGui::EndSection();
 		}
 		ImGui::EndChild();
 	}

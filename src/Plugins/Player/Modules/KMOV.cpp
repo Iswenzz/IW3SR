@@ -40,33 +40,43 @@ namespace IW3SR::Addons
 
 	void KMOV::Menu()
 	{
-		ImGui::DragFloat("Jump Power", &JumpPower, 0.1f, 0.0f, 100.0f);
-		ImGui::DragFloat("Angles Power", &AnglesPower, 0.1f, 0.0f, 100.0f);
-		ImGui::DragFloat("Fire Power", &FirePower, 0.1f, 0.0f, 10.0f);
-
-		if (ImGui::CollapsingHeader("LT"))
-			MenuNode(NodeLT);
-		if (ImGui::CollapsingHeader("LB"))
-			MenuNode(NodeLB);
-		if (ImGui::CollapsingHeader("RT"))
-			MenuNode(NodeRT);
-		if (ImGui::CollapsingHeader("RB"))
-			MenuNode(NodeRB);
+		if (ImGui::BeginSection("General"))
+		{
+			ImGui::Property("Jump Power");
+			ImGui::DragFloat("##jump", &JumpPower, 0.1f, 0.0f, 100.0f);
+			ImGui::Property("Angles Power");
+			ImGui::DragFloat("##angles", &AnglesPower, 0.1f, 0.0f, 100.0f);
+			ImGui::Property("Fire Power");
+			ImGui::DragFloat("##fire", &FirePower, 0.1f, 0.0f, 10.0f);
+			ImGui::EndSection();
+		}
+		MenuNode("LT", NodeLT);
+		MenuNode("LB", NodeLB);
+		MenuNode("RT", NodeRT);
+		MenuNode("RB", NodeRB);
 	}
 
-	void KMOV::MenuNode(Node& node)
+	void KMOV::MenuNode(const std::string& label, Node& node)
 	{
-		ImGui::Combo("Type", reinterpret_cast<int*>(&node.Type), modes);
+		if (!ImGui::BeginSection(label, false))
+			return;
+
+		ImGui::Property("Type");
+		ImGui::Combo("##type", reinterpret_cast<int*>(&node.Type), modes);
 		if (node.Type == NodeEnum::Hook)
 		{
-			if (ImGui::InputInt("Hook HUD", &node.Hook))
+			ImGui::Property("Hook HUD");
+			if (ImGui::InputInt("##hookhud", &node.Hook))
 				node.Hook = std::clamp(node.Hook, 0, HUD_ELEM_MAX);
 
-			ImGui::InputText("Hook Value", &node.HookString);
+			ImGui::Property("Hook Value");
+			ImGui::InputText("##hookvalue", &node.HookString);
 			ImGui::Tooltip("Display the value of a HUD element. Insert '{}' where you want the value to appear.");
-			ImGui::Checkbox("Hook Float", &node.HookFloat);
+			ImGui::Property("Hook Float");
+			ImGui::Switch("##hookfloat", &node.HookFloat);
 		}
 		node.Element.Menu("Text");
+		ImGui::EndSection();
 	}
 
 	void KMOV::Compute()

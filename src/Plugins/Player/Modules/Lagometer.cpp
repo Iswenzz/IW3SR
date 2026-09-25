@@ -38,9 +38,16 @@ namespace IW3SR::Addons
 
 	void Lagometer::Menu()
 	{
-		ImGui::Checkbox("Snapshot", &ShowSnap);
-		ImGui::Checkbox("Snapshot Flags", &ShowSnapFlag);
-		ImGui::Checkbox("Ping", &ShowPing);
+		if (ImGui::BeginSection("General"))
+		{
+			ImGui::Property("Snapshot");
+			ImGui::Switch("##snapshot", &ShowSnap);
+			ImGui::Property("Snapshot Flags");
+			ImGui::Switch("##flags", &ShowSnapFlag);
+			ImGui::Property("Ping");
+			ImGui::Switch("##ping", &ShowPing);
+			ImGui::EndSection();
+		}
 		Graph.Menu("Graph Options");
 	}
 

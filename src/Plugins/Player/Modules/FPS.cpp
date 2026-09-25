@@ -23,14 +23,19 @@ namespace IW3SR::Addons
 
 	void FPS::Menu()
 	{
-		DrawTimestep();
+		if (ImGui::BeginSection("General"))
+		{
+			DrawTimestep();
 
-		ImGui::Checkbox("Show Switch FPS", &ShowSwitch);
-		ImGui::Tooltip("Draw com_maxfps.");
+			ImGui::Property("Show Switch FPS");
+			ImGui::Switch("##switch", &ShowSwitch);
+			ImGui::Tooltip("Draw com_maxfps.");
 
-		ImGui::Checkbox("Show Game FPS", &ShowFrames);
-		ImGui::Tooltip("Draw the frame rate being reached, green while it holds the cap.");
-
+			ImGui::Property("Show Game FPS");
+			ImGui::Switch("##frames", &ShowFrames);
+			ImGui::Tooltip("Draw the frame rate being reached, green while it holds the cap.");
+			ImGui::EndSection();
+		}
 		SwitchText.Menu("Switch Options");
 		FramesText.Menu("Game Options");
 	}
@@ -43,12 +48,13 @@ namespace IW3SR::Addons
 		if (!timestep || !maxfps)
 			return;
 
-		if (ImGui::Checkbox("Enable Timestep", &timestep->current.enabled))
+		ImGui::Property("Timestep");
+		if (ImGui::Switch("##sr_timestep", &timestep->current.enabled))
 			timestep->latched.enabled = timestep->current.enabled;
 
 		ImGui::Tooltip("Step movement at com_maxfps instead of at the frame rate.");
 		ImGui::SameLine();
-		ImGui::SetNextItemWidth(-1);
+		ImGui::SetNextItemWidth(-FLT_MIN);
 
 		if (ImGui::SliderInt("##sr_maxfps", &maxfps->current.integer, 60, 1000, "%d fps", ImGuiSliderFlags_AlwaysClamp))
 		{

@@ -38,19 +38,30 @@ namespace IW3SR::Addons
 		else if (!GDiscord::Connected())
 			ImGui::TextDisabled("Waiting for Discord.");
 
-		ImGui::Checkbox("Show Overlay", &ShowOverlay);
-		ImGui::Tooltip("Draw the bar when a friend asks to join. The keys answer either way.");
+		if (ImGui::BeginSection("General"))
+		{
+			ImGui::Property("Show Overlay");
+			ImGui::Switch("##overlay", &ShowOverlay);
+			ImGui::Tooltip("Draw the bar when a friend asks to join. The keys answer either way.");
 
-		ImGui::Keybind("Accept", &KeyAccept.Input);
-		ImGui::SameLine();
-		ImGui::Keybind("Decline", &KeyDeny.Input);
-
-		ImGui::DragFloat2("Bar Position", &BarPosition.x);
-		ImGui::DragFloat2("Bar Size", &BarSize.x);
-
-		ImGui::ColorEdit4("Header", &ColorHeader.x, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Background", &ColorBackground.x, ImGuiColorEditFlags_Float);
-
+			ImGui::Property("Accept");
+			ImGui::Keybind("##accept", &KeyAccept.Input, true, vec2(-FLT_MIN, 0));
+			ImGui::Property("Decline");
+			ImGui::Keybind("##decline", &KeyDeny.Input, true, vec2(-FLT_MIN, 0));
+			ImGui::EndSection();
+		}
+		if (ImGui::BeginSection("Bar"))
+		{
+			ImGui::Property("Position");
+			ImGui::DragFloat2("##position", &BarPosition.x);
+			ImGui::Property("Size");
+			ImGui::DragFloat2("##size", &BarSize.x);
+			ImGui::Property("Header");
+			ImGui::ColorEdit4("##header", &ColorHeader.x, ImGuiColorEditFlags_Float);
+			ImGui::Property("Background");
+			ImGui::ColorEdit4("##background", &ColorBackground.x, ImGuiColorEditFlags_Float);
+			ImGui::EndSection();
+		}
 		TitleText.Menu("Title Options");
 		RequestText.Menu("Request Options");
 		AcceptText.Menu("Accept Options");

@@ -19,8 +19,13 @@ namespace IW3SR::Addons
 
 	void CEF::Menu()
 	{
-		ImGui::Checkbox("Interactive", &Interactive);
+		if (!ImGui::BeginSection("General"))
+			return;
+
+		ImGui::Property("Interactive");
+		ImGui::Switch("##interactive", &Interactive);
 		ImGui::Tooltip("Send the mouse and keyboard to the page while the menu is open");
+		ImGui::EndSection();
 	}
 
 	void CEF::OnRender()

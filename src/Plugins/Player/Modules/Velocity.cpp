@@ -34,24 +34,32 @@ namespace IW3SR::Addons
 
 	void Velocity::Menu()
 	{
-		ImGui::Checkbox("Velocity", &ShowVelocity);
-		ImGui::Checkbox("Average", &ShowAverage);
-		ImGui::Checkbox("Max", &ShowMax);
-
-		if (ShowMax)
+		if (ImGui::BeginSection("General"))
 		{
-			ImGui::SameLine();
-			ImGui::Keybind("Reset", &KeyReset.Input);
-		}
-		ImGui::Checkbox("Ground", &ShowGround);
+			ImGui::Property("Velocity");
+			ImGui::Switch("##velocity", &ShowVelocity);
+			ImGui::Property("Average");
+			ImGui::Switch("##average", &ShowAverage);
 
-		if (ShowGround)
-		{
-			ImGui::SameLine();
-			ImGui::Checkbox("Time", &ShowGroundTime);
+			ImGui::Property("Max");
+			ImGui::Switch("##max", &ShowMax);
+			if (ShowMax)
+			{
+				ImGui::SameLine();
+				ImGui::Keybind("##reset", &KeyReset.Input, true, vec2(-FLT_MIN, 0));
+				ImGui::Tooltip("Resets the max.");
+			}
+			ImGui::Property("Ground");
+			ImGui::Switch("##ground", &ShowGround);
+			if (ShowGround)
+			{
+				ImGui::Property("Ground Time");
+				ImGui::Switch("##groundtime", &ShowGroundTime);
+			}
+			ImGui::Property("Graph");
+			ImGui::Switch("##graph", &ShowGraph);
+			ImGui::EndSection();
 		}
-		ImGui::Checkbox("Graph", &ShowGraph);
-
 		VelocityText.Menu("Velocity Options");
 		AverageText.Menu("Average Options");
 		MaxText.Menu("Max Options");

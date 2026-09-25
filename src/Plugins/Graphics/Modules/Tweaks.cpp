@@ -38,38 +38,52 @@ namespace IW3SR::Addons
 
 	void Tweaks::Menu()
 	{
-		if (ImGui::CollapsingHeader("Tweaks"))
+		if (ImGui::BeginSection("Tweaks"))
 		{
-			ImGui::PushID("Tweaks");
-			ImGui::Checkbox("Enabled", &DrawTweaks);
-			ImGui::SliderFloat("Brightness", &TweakBrightness, -1, 1);
-			ImGui::SliderFloat("Contrast", &TweakContrast, 0, 4);
-			ImGui::SliderFloat("Desaturation", &TweakDesaturation, 0, 1);
-			ImGui::ColorEdit3("Light Tint", &TweakLightTint.x, ImGuiColorEditFlags_Float);
-			ImGui::ColorEdit3("Dark Tint", &TweakDarkTint.x, ImGuiColorEditFlags_Float);
-			ImGui::PopID();
+			ImGui::Property("Enabled");
+			ImGui::Switch("##enabled", &DrawTweaks);
+			ImGui::Property("Brightness");
+			ImGui::SliderFloat("##brightness", &TweakBrightness, -1, 1);
+			ImGui::Property("Contrast");
+			ImGui::SliderFloat("##contrast", &TweakContrast, 0, 4);
+			ImGui::Property("Desaturation");
+			ImGui::SliderFloat("##desaturation", &TweakDesaturation, 0, 1);
+			ImGui::Property("Light Tint");
+			ImGui::ColorEdit3("##lighttint", &TweakLightTint.x, ImGuiColorEditFlags_Float);
+			ImGui::Property("Dark Tint");
+			ImGui::ColorEdit3("##darktint", &TweakDarkTint.x, ImGuiColorEditFlags_Float);
+			ImGui::EndSection();
 		}
-		if (ImGui::CollapsingHeader("Glow"))
+		if (ImGui::BeginSection("Glow"))
 		{
-			ImGui::PushID("Glow");
-			ImGui::Checkbox("Enabled", &DrawGlow);
-			ImGui::SliderFloat("Radius", &GlowRadius, 0, 32);
-			ImGui::SliderFloat("Bloom Desaturation", &GlowBloomDesaturation, 0, 1);
-			ImGui::SliderFloat("Bloom Intensity", &GlowBloomIntensity, 0, 20);
-			ImGui::SliderFloat("Bloom Cut-off", &GlowBloomCutoff, 0, 1);
-			ImGui::PopID();
+			ImGui::Property("Enabled");
+			ImGui::Switch("##enabled", &DrawGlow);
+			ImGui::Property("Radius");
+			ImGui::SliderFloat("##radius", &GlowRadius, 0, 32);
+			ImGui::Property("Bloom Desaturation");
+			ImGui::SliderFloat("##desaturation", &GlowBloomDesaturation, 0, 1);
+			ImGui::Property("Bloom Intensity");
+			ImGui::SliderFloat("##intensity", &GlowBloomIntensity, 0, 20);
+			ImGui::Property("Bloom Cut-off");
+			ImGui::SliderFloat("##cutoff", &GlowBloomCutoff, 0, 1);
+			ImGui::EndSection();
 		}
-		if (ImGui::CollapsingHeader("Sun"))
+		if (ImGui::BeginSection("Sun"))
 		{
-			ImGui::PushID("Sun");
-			ImGui::Checkbox("Enabled", &DrawSun);
-			ImGui::Checkbox("Override", &SunOverride);
-			ImGui::Tooltip("Replace the map's own sun with the values below.\n"
-						   "Turning it off gives the map's sun back on the next map load.");
-			ImGui::SliderFloat("Intensity", &SunIntensity, 0, 4);
-			ImGui::ColorEdit4("Color", &SunColor.x, ImGuiColorEditFlags_Float);
-			ImGui::SliderFloat3("Direction", &SunDirection.x, -360, 360);
-			ImGui::PopID();
+			ImGui::Property("Enabled");
+			ImGui::Switch("##enabled", &DrawSun);
+			ImGui::Property("Override");
+			ImGui::Switch("##override", &SunOverride);
+			ImGui::Tooltip(
+				"Replace the map's own sun with the values below.\n"
+				"Turning it off gives the map's sun back on the next map load.");
+			ImGui::Property("Intensity");
+			ImGui::SliderFloat("##intensity", &SunIntensity, 0, 4);
+			ImGui::Property("Color");
+			ImGui::ColorEdit4("##color", &SunColor.x, ImGuiColorEditFlags_Float);
+			ImGui::Property("Direction");
+			ImGui::SliderFloat3("##direction", &SunDirection.x, -360, 360);
+			ImGui::EndSection();
 		}
 	}
 

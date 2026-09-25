@@ -17,15 +17,28 @@ namespace IW3SR::Addons
 
 	void CGAZ::Menu()
 	{
-		ImGui::Checkbox("Ground Zones", &UseGroundZones);
-
-		ImGui::DragFloat("Y Position", &Y);
-		ImGui::DragFloat("Height", &Height);
-
-		ImGui::ColorEdit4("Background", &ColorBackground.x, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Partial Accel", &ColorPartialAccel.x, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Full Accel", &ColorFullAccel.x, ImGuiColorEditFlags_Float);
-		ImGui::ColorEdit4("Turn Zone", &ColorTurnZone.x, ImGuiColorEditFlags_Float);
+		if (ImGui::BeginSection("General"))
+		{
+			ImGui::Property("Ground Zones");
+			ImGui::Switch("##groundzones", &UseGroundZones);
+			ImGui::Property("Y Position");
+			ImGui::DragFloat("##y", &Y);
+			ImGui::Property("Height");
+			ImGui::DragFloat("##height", &Height);
+			ImGui::EndSection();
+		}
+		if (ImGui::BeginSection("Colors"))
+		{
+			ImGui::Property("Background");
+			ImGui::ColorEdit4("##background", &ColorBackground.x, ImGuiColorEditFlags_Float);
+			ImGui::Property("Partial Accel");
+			ImGui::ColorEdit4("##partial", &ColorPartialAccel.x, ImGuiColorEditFlags_Float);
+			ImGui::Property("Full Accel");
+			ImGui::ColorEdit4("##full", &ColorFullAccel.x, ImGuiColorEditFlags_Float);
+			ImGui::Property("Turn Zone");
+			ImGui::ColorEdit4("##turn", &ColorTurnZone.x, ImGuiColorEditFlags_Float);
+			ImGui::EndSection();
+		}
 	}
 
 	void CGAZ::Compute(float wishspeed, float accel, float gravity)

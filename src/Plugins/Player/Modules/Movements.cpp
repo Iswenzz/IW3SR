@@ -25,10 +25,14 @@ namespace IW3SR::Addons
 
 	void Movements::Menu()
 	{
+		if (!ImGui::BeginSection("General"))
+			return;
+
 		if (Dvar::Get<bool>("sv_running"))
 		{
 			MovementMode mode = PMove::GetMovementMode();
-			if (ImGui::Combo("Movements", reinterpret_cast<int*>(&mode), modes))
+			ImGui::Property("Movements");
+			if (ImGui::Combo("##movements", reinterpret_cast<int*>(&mode), modes))
 			{
 				switch (mode)
 				{
@@ -75,23 +79,31 @@ namespace IW3SR::Addons
 				}
 			}
 		}
-		ImGui::Checkbox("Bhop", &UseBhop);
+		ImGui::Property("Bhop");
+		ImGui::Switch("##bhop", &UseBhop);
 		ImGui::SameLine();
-		ImGui::Keybind("##KeyBhop", &KeyBhop.Input);
+		ImGui::Keybind("##KeyBhop", &KeyBhop.Input, true, vec2(-FLT_MIN, 0));
 
-		ImGui::Checkbox("Bhop From Crouch", &UseBhopFromCrouch);
-		ImGui::Tooltip("Holding the bhop key while crouched or prone stands up first.\n"
-					   "On, it jumps right away. Off, it stays standing until the key is pressed again.");
+		ImGui::Property("Bhop From Crouch");
+		ImGui::Switch("##crouch", &UseBhopFromCrouch);
+		ImGui::Tooltip(
+			"Holding the bhop key while crouched or prone stands up first.\n"
+			"On, it jumps right away. Off, it stays standing until the key is pressed again.");
 
-		ImGui::Checkbox("Bhop Toggle", &UseBhopToggle);
+		ImGui::Property("Bhop Toggle");
+		ImGui::Switch("##toggle", &UseBhopToggle);
 		ImGui::SameLine();
-		ImGui::Keybind("##KeyBhopToggle", &KeyBhopToggle.Input);
+		ImGui::Keybind("##KeyBhopToggle", &KeyBhopToggle.Input, true, vec2(-FLT_MIN, 0));
 
-		ImGui::Checkbox("CS Turnbind", &UseTurnBind);
+		ImGui::Property("CS Turnbind");
+		ImGui::Switch("##turnbind", &UseTurnBind);
 		ImGui::SameLine();
-		ImGui::Keybind("##KeyTurnLeft", &KeyTurnLeft.Input);
+		const float half = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+		ImGui::Keybind("##KeyTurnLeft", &KeyTurnLeft.Input, true, vec2(half, 0));
 		ImGui::SameLine();
-		ImGui::Keybind("##KeyTurnRight", &KeyTurnRight.Input);
+		ImGui::Keybind("##KeyTurnRight", &KeyTurnRight.Input, true, vec2(-FLT_MIN, 0));
+
+		ImGui::EndSection();
 	}
 
 	void Movements::OnFinishMove(EventPMoveFinish& event)

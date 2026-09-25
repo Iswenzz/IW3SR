@@ -81,6 +81,7 @@ namespace IW3SR
 		Memory::NOP(0x46A919, 5);
 
 		FixDownloadRate();
+		DisableAimAssistTargets();
 
 		RenameConsolePrompt();
 		RecolorConsoleText();
@@ -179,6 +180,16 @@ namespace IW3SR
 
 		Memory::CALL(DownloadRateSite, ASM_LOAD(DownloadRate_h));
 		Memory::NOP(DownloadRateSite + 5, DownloadRateSize - 5);
+	}
+
+	// Retail builds a gamepad aim-assist target from every visible enemy player, taking its height from
+	// j_helmet, and drops the client with "AimTarget_GetTagPos: Cannot find tag" when the model has
+	// j_head but no j_helmet (deathrun dog and custom character models). CoD4X NOPs these same two
+	// calls to AimTarget_ProcessEntity, in CG_ScriptMover and CG_Player, so this only matters without it.
+	void Patch::DisableAimAssistTargets()
+	{
+		for (uintptr_t site : { uintptr_t(0x43378A), uintptr_t(0x4454F5) })
+			Memory::NOP(site, 5);
 	}
 
 	void Patch::TightenFrameLimiter()
