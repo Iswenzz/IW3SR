@@ -16,7 +16,7 @@ A client modification for Call of Duty 4, powered by [IzEngine](https://github.c
 - Shell integration for `cod4://` links and `.dm_1` demo files.
 
 ### Movement
-- Movement rate decoupled from the frame rate: `com_maxfps` drives the physics, `sr_maxfps` the renderer.
+- Timestep (experimental): physics at your `com_maxfps` whatever frame rate you reach, with `sr_maxfps` capping the renderer.
 - Alternative physics modes, listed below.
 - Bunny hop script.
 - CGAZ HUD, velocity meter, snap zones, pmove HUD, lagometer, FPS counter and key display.
@@ -43,6 +43,7 @@ A client modification for Call of Duty 4, powered by [IzEngine](https://github.c
 - Segmented resumable downloads, reusing the segments of an interrupted transfer that still verify.
 - Server browser filtering: hide, redirect or block a list of servers.
 - Master server override.
+- Voice chat at 48 kHz: improved Speex on every server, and Opus with 3D proximity chat on SR servers.
 - Standalone Valve A2S_INFO query client.
 - Artificial latency and packet loss on the game's UDP sockets.
 - qWAVE QoS, prioritising the game socket over other traffic on the machine.

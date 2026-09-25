@@ -564,19 +564,6 @@ namespace IW3SR
 		a.ret();
 	}
 
-	// cdecl (input, output, size) onto Encode_Sample, which takes its input in esi.
-	ASM_FUNCTION(Encode_Sample_h)
-	{
-		a.push(x86::esi);
-		a.mov(x86::esi, x86::dword_ptr(x86::esp, 0x08));  // input
-		a.push(x86::dword_ptr(x86::esp, 0x10));			  // size
-		a.push(x86::dword_ptr(x86::esp, 0x10));			  // output
-		a.call(imm(0x4ECB00));
-		a.add(x86::esp, 0x08);
-		a.pop(x86::esi);
-		a.ret();
-	}
-
 	// cdecl (data, bytes) onto Client_SendVoiceData, which takes the data in eax and the size in esi.
 	ASM_FUNCTION(Client_SendVoiceData_h)
 	{

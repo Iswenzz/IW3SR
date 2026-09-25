@@ -1,4 +1,6 @@
 #include "Voice.hpp"
+#include "Dvar.hpp"
+#include "Protocol.hpp"
 
 #include <mmsystem.h>
 
@@ -8,14 +10,16 @@
 #include <samplerate.h>
 #include <speex/speex.h>
 
+#include <numbers>
+
 namespace IW3SR
 {
 	// Speex ultra-wideband runs at four times the retail 8192 Hz, so the narrowband layer a stock client
-	// plays keeps its pitch.
+	// plays keeps its pitch. Encoded with libspeex, never retail's encoder: its scratch stack is sized
+	// for narrowband, and an ultra-wideband frame overruns it into whatever the heap holds next.
 	constexpr int SpeexRate = 8192 * 4;
-	constexpr int UltraWideband = 2;
-	constexpr int Quality = 10;
-	constexpr int Complexity = 10;
+	constexpr int SpeexQuality = 10;
+	constexpr int SpeexComplexity = 10;
 
 	constexpr int OpusFrameSize = GVoice::Rate / 50;
 	constexpr int OpusMaxFrameSize = GVoice::Rate * 120 / 1000;
@@ -26,29 +30,53 @@ namespace IW3SR
 	constexpr int HeaderSize = 2;
 	constexpr int UnityGain = 64;
 	constexpr int MaxPacketSize = 255;
+	// On the codec byte of proximity voice: pan it by where the talker stands.
+	constexpr uint8_t Positional = 0x80;
+
+	// The binaural panner's head, in metres and hertz. The far ear hears up to 0.66 ms late, quieter, and
+	// through the head's shadow; straight behind, both ears lose some treble, which is what tells front
+	// from back when the delays are the same.
+	constexpr float HeadRadius = 0.0875f;
+	constexpr float SpeedOfSound = 343.0f;
+	constexpr float ShadowCutoff = 2500.0f;
+	constexpr float RearCutoff = 5000.0f;
+	constexpr float FarEarLoss = 0.3f;
+	constexpr float RearLoss = 0.15f;
+	// A talker this close, in units, is on top of the listener and has no direction to speak of.
+	constexpr float CentreDistance = 16.0f;
+
+	// Voice mixes in quieter than the game's own sounds, so it is lifted before the volume slider applies.
+	constexpr float VoiceBoost = 4.0f;
+	// Above this share of full scale the boost is bent rather than clipped, so loud voices do not crackle.
+	constexpr float LimiterKnee = 0.75f;
+
+	// Passes x through below the knee and eases it towards full scale above, never reaching it.
+	static int16_t SoftLimit(float x)
+	{
+		const float magnitude = std::abs(x) / 32768.0f;
+		if (magnitude <= LimiterKnee)
+			return static_cast<int16_t>(x);
+
+		const float over = (magnitude - LimiterKnee) / (1.0f - LimiterKnee);
+		const float limited = LimiterKnee + (1.0f - LimiterKnee) * std::tanh(over);
+		return static_cast<int16_t>(std::copysign(limited * 32767.0f, x));
+	}
 
 	constexpr int MaxTalkers = 64;
 	constexpr int PlaybackBufferBytes = GVoice::PlaybackBytesPerSecond;
-	constexpr uintptr_t SpeexModeEncoderCtl = 0x2C;
-
-	// Encode_Init reads the bandwidth setting Voice_Init just zeroed, and stores it back for Decode_Init.
-	constexpr uintptr_t EncodeInitBandwidth = 0x4ECA63;
-	constexpr uintptr_t EncodeSetOptionsCall = 0x4ECAC5;
-	// Encode_Sample's jump over re-applying sv_voiceQuality whenever it differs from the encoder's.
-	constexpr uintptr_t EncodeQualityJump = 0x4ECB0E;
 
 	constexpr uintptr_t CaptureByteRateSite = 0x4ED639;
 	constexpr uintptr_t CaptureRate = 0x4ED654;
 
-	using SpeexCtl = int(__cdecl*)(void* state, int request, void* value);
-	using EncodeSample_t = int(__cdecl*)(const int16_t* input, uint8_t* output, int size);
+	// CL_VoiceTransmit sends once this many packets are queued, or after 200 ms. Retail's 10 overflows
+	// CL_WriteVoicePacket's 2048-byte message with Opus, which then drops data mid-packet, and holds
+	// voice back 200 ms. Two sends every 40 ms.
+	constexpr uintptr_t VoiceTransmitBatch = 0x46C7BD;
+	constexpr uint8_t PacketsPerMessage = 2;
+
 	using SendVoiceData_t = int(__cdecl*)(const uint8_t* data, int bytes);
 	using UpdateSample_t = void(__cdecl*)(dsound_sample_t* sample, const void* data, int length);
 
-	static void** EncoderState = Signature(0xD5EC440);
-	static int* EncoderFrameSize = Signature(0xD5EC444);
-	static int* EncoderQuality = Signature(0x724ED0);
-	static int* EncoderSampleRate = Signature(0x724ED4);
 	static dsound_sample_t** ClientSamples = Signature(0xCC1B4D0);
 	static IDirectSound** DirectSound = Signature(0xD5EC44C);
 	static float* MicScaler = Signature(0x71FB08);
@@ -58,7 +86,6 @@ namespace IW3SR
 	static Function<bool()> Voice_SendVoiceData = 0x46C850;
 	static Function<void()> CL_VoiceTransmit = 0x46C780;
 
-	static EncodeSample_t EncodeSample = nullptr;
 	static SendVoiceData_t SendVoiceData = nullptr;
 	static UpdateSample_t UpdateSample = nullptr;
 
@@ -144,14 +171,6 @@ namespace IW3SR
 		return DirectSoundCaptureCreate_h(device, capture, outer);
 	}
 
-	// speex_encoder_ctl, which retail inlines: every encoder state opens with its SpeexMode.
-	static int EncoderCtl(void* state, int request, void* value)
-	{
-		const uintptr_t mode = *static_cast<uintptr_t*>(state);
-		const SpeexCtl ctl = *reinterpret_cast<SpeexCtl*>(mode + SpeexModeEncoderCtl);
-		return ctl(state, request, value);
-	}
-
 	VoiceStream::VoiceStream()
 	{
 		int enhancement = 1;
@@ -178,6 +197,109 @@ namespace IW3SR
 
 		speex_bits_destroy(Bits);
 		delete Bits;
+	}
+
+	// One-pole low-pass coefficient; 1 lets everything through.
+	static float LowPass(float cutoff)
+	{
+		return 1.0f - std::exp(-2.0f * std::numbers::pi_v<float> * cutoff / GVoice::Rate);
+	}
+
+	// Where each ear should be for a talker at this azimuth, radians clockwise from straight ahead. The
+	// interaural delay is Woodworth's spherical-head model.
+	static std::array<VoiceEar, 2> EarTargets(float azimuth)
+	{
+		const float side = std::sin(azimuth);
+		const float lateral = std::abs(side);
+		const float rear = std::max(0.0f, -std::cos(azimuth));
+
+		const float delay = HeadRadius / SpeedOfSound * (std::asin(lateral) + lateral) * GVoice::Rate;
+		const float rearCoefficient = std::lerp(1.0f, LowPass(RearCutoff), rear);
+		const float shadowCoefficient = std::lerp(1.0f, LowPass(ShadowCutoff), lateral);
+		const int farEar = side >= 0.0f ? 0 : 1;
+
+		std::array<VoiceEar, 2> ears = {};
+		for (int ear = 0; ear < 2; ear++)
+		{
+			const bool distant = ear == farEar;
+			ears[ear].Delay = distant ? delay : 0.0f;
+			ears[ear].Gain = (distant ? 1.0f - FarEarLoss * lateral : 1.0f) * (1.0f - RearLoss * rear);
+			ears[ear].Coefficient = std::min(rearCoefficient, distant ? shadowCoefficient : 1.0f);
+		}
+		return ears;
+	}
+
+	float VoiceStream::Delayed(float delay) const
+	{
+		const int size = static_cast<int>(History.size());
+		const int whole = static_cast<int>(delay);
+		const float fraction = delay - static_cast<float>(whole);
+
+		const float newer = History[(HistoryAt - whole + size) % size];
+		const float older = History[(HistoryAt - whole - 1 + size) % size];
+		return std::lerp(newer, older, fraction);
+	}
+
+	// Pans the talker to their azimuth, or back to the centre without one. Every parameter glides from
+	// where the last packet left it, so a talker moving across the view never clicks. Packets that were
+	// never panned pass through untouched, which keeps the radio's stereo.
+	void VoiceStream::Spatialize(std::vector<int16_t>& pcm, std::optional<float> azimuth)
+	{
+		const std::array<VoiceEar, 2> targets = azimuth ? EarTargets(*azimuth) : std::array<VoiceEar, 2>{};
+		const auto resting = [](const VoiceEar& ear) { return !ear.Delay && ear.Gain == 1.0f && ear.Coefficient == 1.0f; };
+
+		if (!azimuth && resting(Ears[0]) && resting(Ears[1]))
+			return;
+
+		const size_t frames = pcm.size() / GVoice::PlaybackChannels;
+		for (size_t i = 0; i < frames; i++)
+		{
+			const float t = static_cast<float>(i + 1) / static_cast<float>(frames);
+			const float mono = (pcm[i * 2] + pcm[i * 2 + 1]) * 0.5f;
+
+			HistoryAt = (HistoryAt + 1) % static_cast<int>(History.size());
+			History[HistoryAt] = mono;
+
+			for (int ear = 0; ear < 2; ear++)
+			{
+				VoiceEar& state = Ears[ear];
+				const VoiceEar& target = targets[ear];
+
+				const float input = Delayed(std::lerp(state.Delay, target.Delay, t));
+				state.Filtered += std::lerp(state.Coefficient, target.Coefficient, t) * (input - state.Filtered);
+
+				const float output = state.Filtered * std::lerp(state.Gain, target.Gain, t);
+				pcm[i * 2 + ear] = static_cast<int16_t>(std::clamp(static_cast<int>(output), -32768, 32767));
+			}
+		}
+		for (int ear = 0; ear < 2; ear++)
+		{
+			Ears[ear].Delay = targets[ear].Delay;
+			Ears[ear].Gain = targets[ear].Gain;
+			Ears[ear].Coefficient = targets[ear].Coefficient;
+		}
+	}
+
+	// Direction of the talker from the view, clockwise from straight ahead. None when they are not in this
+	// client's snapshot, since their position is only known while they are.
+	static std::optional<float> TalkerAzimuth(int talker)
+	{
+		if (!cgs || !cgs->snap || !cg_entities || talker == cgs->clientNum)
+			return {};
+
+		bool present = false;
+		for (int n = 0; n < cgs->snap->numEntities && !present; n++)
+			present = cgs->snap->entities[n].number == talker;
+		if (!present)
+			return {};
+
+		const vec3 local = cg_entities[talker].pose.origin - cgs->refdef.vieworg;
+		const float forward = glm::dot(local, cgs->refdef.viewaxis[0]);
+		const float right = -glm::dot(local, cgs->refdef.viewaxis[1]);
+
+		if (forward * forward + right * right < CentreDistance * CentreDistance)
+			return {};
+		return std::atan2(right, forward);
 	}
 
 	// Ultra-wideband reads narrowband and wideband packets too, leaving the bands they lack empty. A stereo
@@ -239,13 +361,9 @@ namespace IW3SR
 			return;
 		Installed = true;
 
-		// mov edi, UltraWideband; nop
-		Memory::Write(EncodeInitBandwidth, std::vector<uint8_t>{ 0xBF, UltraWideband, 0x00, 0x00, 0x00, 0x90 });
-		Memory::CALL(EncodeSetOptionsCall, reinterpret_cast<uintptr_t>(&GVoice::SetEncoderOptions));
-		Memory::Set<uint8_t>(EncodeQualityJump, 0xEB);
-
 		Memory::Set<uint32_t>(CaptureRate, Rate);
 		Memory::JMP(CaptureByteRateSite, ASM_LOAD(CaptureByteRate_h));
+		Memory::Set<uint8_t>(VoiceTransmitBatch, PacketsPerMessage);
 
 		// Retail's jitter buffer counts bytes, so its thresholds are set in 48 kHz stereo: slow down below
 		// 20 ms, start and settle at 250 ms, speed up above 450 ms.
@@ -259,7 +377,6 @@ namespace IW3SR
 		for (const auto& [address, bytes] : thresholds)
 			Memory::Set<int32_t>(address, bytes);
 
-		EncodeSample = reinterpret_cast<EncodeSample_t>(ASM_LOAD(Encode_Sample_h));
 		SendVoiceData = reinterpret_cast<SendVoiceData_t>(ASM_LOAD(Client_SendVoiceData_h));
 		UpdateSample = reinterpret_cast<UpdateSample_t>(ASM_LOAD(DSound_UpdateSample_h));
 
@@ -268,9 +385,12 @@ namespace IW3SR
 		Voice_IncomingVoiceData_h.Install();
 	}
 
-	// Read from each gamestate's systeminfo. The encoder starts over so a stream never spans two servers.
-	void GVoice::SetRelay(bool relay)
+	// Read straight from the gamestate's systeminfo whenever voice moves. A hook on CL_SystemInfoChanged
+	// would miss CoD4X, which calls its own copy. The encoder starts over so a stream never spans two
+	// servers.
+	void GVoice::RefreshRelay()
 	{
+		const bool relay = GProtocol::SystemInfoValue("sr_voiceRelay") == "1";
 		if (relay == Relay)
 			return;
 		Relay = relay;
@@ -308,28 +428,26 @@ namespace IW3SR
 			src_reset(Downsampler);
 	}
 
-	// Voice activity detection and DTX drop frames they judge to be noise to the 2 kbps comfort-noise
-	// mode, which clips quiet speech whatever the quality.
-	void GVoice::SetEncoderOptions()
+	// Voice activity detection and DTX, which retail turns on, drop frames they judge to be noise to the
+	// 2 kbps comfort-noise mode and clip quiet speech; libspeex leaves both off.
+	bool GVoice::CreateSpeexEncoder()
 	{
-		void* encoder = *EncoderState;
-		if (!encoder)
-			return;
-
 		int rate = SpeexRate;
-		int quality = Quality;
-		int complexity = Complexity;
-		int off = 0;
+		int quality = SpeexQuality;
+		int complexity = SpeexComplexity;
 
-		EncoderCtl(encoder, SPEEX_SET_SAMPLING_RATE, &rate);
-		EncoderCtl(encoder, SPEEX_SET_QUALITY, &quality);
-		EncoderCtl(encoder, SPEEX_SET_COMPLEXITY, &complexity);
-		EncoderCtl(encoder, SPEEX_SET_VAD, &off);
-		EncoderCtl(encoder, SPEEX_SET_DTX, &off);
-		EncoderCtl(encoder, SPEEX_GET_FRAME_SIZE, EncoderFrameSize);
+		SpeexEncoder = speex_encoder_init(speex_lib_get_mode(SPEEX_MODEID_UWB));
+		if (!SpeexEncoder)
+			return false;
 
-		*EncoderQuality = quality;
-		*EncoderSampleRate = rate;
+		EncoderBits = new SpeexBits();
+		speex_bits_init(EncoderBits);
+
+		speex_encoder_ctl(SpeexEncoder, SPEEX_SET_SAMPLING_RATE, &rate);
+		speex_encoder_ctl(SpeexEncoder, SPEEX_SET_QUALITY, &quality);
+		speex_encoder_ctl(SpeexEncoder, SPEEX_SET_COMPLEXITY, &complexity);
+		speex_encoder_ctl(SpeexEncoder, SPEEX_GET_FRAME_SIZE, &SpeexFrameSize);
+		return SpeexFrameSize > 0;
 	}
 
 	// Replaces Record_QueueAudioDataForEncoding, whose partial buffer holds 640 samples and so cannot frame
@@ -360,6 +478,8 @@ namespace IW3SR
 			ResetCapture();
 			return 0;
 		}
+		RefreshRelay();
+
 		const size_t start = Captured.size();
 		Captured.resize(start + length);
 		src_short_to_float_array(pcm, Captured.data() + start, length);
@@ -388,13 +508,13 @@ namespace IW3SR
 		return sent;
 	}
 
-	// Down to Speex's rate, then through retail's encoder a frame at a time.
+	// Down to Speex's rate, then encoded a frame at a time.
 	int GVoice::EncodeSpeex()
 	{
-		const int frame = *EncoderFrameSize;
-		if (frame <= 0)
+		if (!SpeexEncoder && !CreateSpeexEncoder())
 			return 0;
 
+		const int frame = SpeexFrameSize;
 		if (!Downsampler)
 		{
 			int error = 0;
@@ -425,7 +545,10 @@ namespace IW3SR
 			src_float_to_short_array(Narrow.data(), Frame.data(), frame);
 			Narrow.erase(Narrow.begin(), Narrow.begin() + frame);
 
-			const int bytes = EncodeSample(Frame.data(), packet, MaxPacketSize);
+			speex_bits_reset(EncoderBits);
+			speex_encode_int(SpeexEncoder, Frame.data(), EncoderBits);
+
+			const int bytes = speex_bits_write(EncoderBits, reinterpret_cast<char*>(packet), MaxPacketSize);
 			if (bytes > 0)
 				sent += SendVoiceData(packet, bytes);
 		}
@@ -489,6 +612,8 @@ namespace IW3SR
 	// so the frequency field is what makes it play at 48 kHz.
 	void GVoice::IncomingVoiceData(uint8_t talker, uint8_t* data, int size)
 	{
+		RefreshRelay();
+
 		dsound_sample_t* sample = talker < MaxTalkers ? ClientSamples[talker] : nullptr;
 		if (!sample || !UpdateSample)
 		{
@@ -503,13 +628,16 @@ namespace IW3SR
 
 		VoiceCodec codec = VoiceCodec::Speex;
 		float gain = 1.0f;
+		bool positional = false;
 
 		if (Relay)
 		{
-			if (size <= HeaderSize || data[0] > static_cast<uint8_t>(VoiceCodec::Opus))
+			const uint8_t codecByte = data[0] & ~Positional;
+			if (size <= HeaderSize || codecByte > static_cast<uint8_t>(VoiceCodec::Opus))
 				return;
 
-			codec = static_cast<VoiceCodec>(data[0]);
+			codec = static_cast<VoiceCodec>(codecByte);
+			positional = data[0] & Positional;
 			gain = static_cast<float>(data[1]) / UnityGain;
 			data += HeaderSize;
 			size -= HeaderSize;
@@ -522,11 +650,19 @@ namespace IW3SR
 		if (pcm.empty())
 			return;
 
+		// Retail plays voice outside the sound system, so the game's volume slider never reached it.
+		static const dvar_s* masterVolume = Dvar::Find("snd_volume");
+		gain *= VoiceBoost;
+		if (masterVolume)
+			gain *= std::clamp(masterVolume->current.value, 0.0f, 1.0f);
+
 		if (gain != 1.0f)
 		{
 			for (int16_t& value : pcm)
-				value = static_cast<int16_t>(std::clamp(static_cast<int>(value * gain), -32768, 32767));
+				value = SoftLimit(value * gain);
 		}
+		stream->Spatialize(pcm, positional ? TalkerAzimuth(talker) : std::nullopt);
+
 		// Still the mono buffer if the stereo one could not be made.
 		if (!stereo)
 		{

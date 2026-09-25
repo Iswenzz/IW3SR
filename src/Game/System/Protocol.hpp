@@ -59,6 +59,7 @@ namespace IW3SR
 		static void SystemInfoChanged();
 		static bool CanParse(int protocol);
 		static const char* PureChecksums();
+		static std::string SystemInfoValue(std::string_view key);
 
 		static const char* ExtendedConfigString(int index);
 		static const char* ClientName(int clientNum);

@@ -204,7 +204,6 @@ namespace IW3SR
 	ASM_FUNCTION(DB_FileSize_h);
 	ASM_FUNCTION(DownloadRate_h);
 	ASM_FUNCTION(FrameWait_h);
-	ASM_FUNCTION(Encode_Sample_h);
 	ASM_FUNCTION(DSound_UpdateSample_h);
 	ASM_FUNCTION(Client_SendVoiceData_h);
 	ASM_FUNCTION(CaptureByteRate_h);

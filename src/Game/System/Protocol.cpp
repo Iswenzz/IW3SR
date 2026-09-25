@@ -1,7 +1,6 @@
 #include "Protocol.hpp"
 #include "Dvar.hpp"
 #include "Patch.hpp"
-#include "Voice.hpp"
 
 #include <charconv>
 #include <cstdlib>
@@ -1650,7 +1649,6 @@ namespace IW3SR
 	void GProtocol::SystemInfoChanged()
 	{
 		CL_SystemInfoChanged_h();
-		GVoice::SetRelay(InfoValue(ConfigString(1), "sr_voiceRelay") == "1");
 
 		if (DemoSession || clc.demoplaying)
 			DemoGameDir(ConfigString(1));
@@ -1675,6 +1673,11 @@ namespace IW3SR
 
 		Log::WriteLine(Channel::Game, "Demo was recorded under fs_game \"{}\"; switching to it.", game);
 		Dvar_SetFromStringByNameFromSource("fs_game", game.c_str(), 0);
+	}
+
+	std::string GProtocol::SystemInfoValue(std::string_view key)
+	{
+		return InfoValue(ConfigString(1), key);
 	}
 
 	const char* GProtocol::ConfigString(int index)
