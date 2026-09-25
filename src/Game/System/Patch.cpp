@@ -44,11 +44,10 @@ namespace IW3SR
 		const auto cod4x = settings.is_object() ? settings.find("CoD4X") : settings.end();
 		AllowCoD4X = cod4x == settings.end() || !cod4x->is_boolean() || cod4x->get<bool>();
 
-		AllowMultipleInstances();
-
 		if (AllowCoD4X)
 			return;
 
+		AllowMultipleInstances();
 		DisablePunkbuster();
 		SkipImproperQuitPrompt();
 		SkipOptimalSettingsPrompt();
