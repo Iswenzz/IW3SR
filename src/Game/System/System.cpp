@@ -186,11 +186,24 @@ namespace IW3SR
 
 		case WM_CLOSE:
 			UI::Open = false;
+
+			// Queued like CoD4X does (win_wndproc.c:234). Retail runs Com_Quit_f from inside whichever
+			// message pump got the close, a loading screen's included.
+			if (!Patch::UseCoD4X)
+			{
+				Cbuf_AddText(0, "quit\n");
+				return 0;
+			}
 			break;
 		}
 		if (Window::Intercept(hWnd, msg, wParam, lParam))
 			return false;
-		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
+
+		// The overlay only keeps input from the engine. WM_CREATE is where it points the sound driver at
+		// the window a vid_restart just made, and missing it leaves the sound bound to the destroyed one.
+		const bool lifecycle = msg == WM_CREATE || msg == WM_DESTROY;
+		return UI::Open && !lifecycle ? DefWindowProc(hWnd, msg, wParam, lParam)
+									  : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
 	void GSystem::ExecuteSingleCommand(int localClientNum, int controllerIndex, char* cmd)

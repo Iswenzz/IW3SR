@@ -202,6 +202,8 @@ namespace IW3SR
 	ASM_FUNCTION(ExtendedHeader_h);
 	ASM_FUNCTION(ReadOriginFloat_h);
 	ASM_FUNCTION(DB_FileSize_h);
+	ASM_FUNCTION(LoadMapLoadscreen_h);
+	ASM_FUNCTION(SetupForNewServerMap_h);
 	ASM_FUNCTION(DownloadRate_h);
 	ASM_FUNCTION(FrameWait_h);
 	ASM_FUNCTION(DSound_UpdateSample_h);

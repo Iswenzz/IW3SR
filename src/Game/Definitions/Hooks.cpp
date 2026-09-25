@@ -214,7 +214,7 @@ namespace IW3SR
 		a.pushad();
 
 		a.push(x86::dword_ptr(x86::ebp, -0x04)); // (eax) localClientNum
-		a.call(GSystem::Shutdown);
+		a.call(Client::Shutdown);
 		a.add(x86::esp, 0x04);
 
 		a.popad();
@@ -529,6 +529,43 @@ namespace IW3SR
 		a.push(x86::ecx);
 		a.call(GZones::FileSize);
 		a.add(x86::esp, 0x08);
+		a.ret();
+	}
+
+	// LoadMapLoadscreen takes the map in eax.
+	ASM_FUNCTION(LoadMapLoadscreen_h)
+	{
+		a.pushad();
+		a.push(x86::eax);
+		a.call(GZones::LoadLoadscreen);
+		a.add(x86::esp, 0x04);
+		a.popad();
+		a.ret();
+	}
+
+	// Stands in for CL_SetupForNewServerMap's loading screen and the UI_SetMap after it, reached with the
+	// map in edi and the gametype in ebx. With no loading screen the UI keeps the empty map it was just
+	// given, which is the black screen the download is drawn over.
+	ASM_FUNCTION(SetupForNewServerMap_h)
+	{
+		Label done = a.newLabel();
+
+		a.pushad();
+		a.push(x86::edi);
+		a.call(GZones::LoadLoadscreen);
+		a.add(x86::esp, 0x04);
+		a.mov(x86::dword_ptr(x86::esp, 0x1C), x86::eax); // popad's eax slot
+		a.popad();
+
+		a.test(x86::al, x86::al);
+		a.jz(done);
+
+		a.push(x86::ebx);
+		a.mov(x86::esi, x86::edi);
+		a.call(imm(0x5442F0));
+		a.add(x86::esp, 0x04);
+
+		a.bind(done);
 		a.ret();
 	}
 

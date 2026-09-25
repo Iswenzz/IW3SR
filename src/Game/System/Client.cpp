@@ -8,9 +8,11 @@
 #include "Game/System/Download.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Net.hpp"
+#include "Game/System/Patch.hpp"
 #include "Game/System/Protocol.hpp"
 #include "Game/System/QoS.hpp"
 #include "Game/System/ServerFilter.hpp"
+#include "Game/System/System.hpp"
 #include "Game/System/Timestep.hpp"
 
 namespace IW3SR
@@ -87,6 +89,17 @@ namespace IW3SR
 
 		EventClientDisconnect event;
 		Application::Dispatch(event);
+	}
+
+	// Runs ahead of CL_Shutdown. Its own CL_Disconnect would send "disconnect" after GSystem::Shutdown has
+	// put the stock packet header back, which an extended server cannot read, so the player would stay
+	// on it until the connection timed out.
+	void Client::Shutdown(int localClientNum)
+	{
+		if (!Patch::UseCoD4X)
+			Disconnect(localClientNum);
+
+		GSystem::Shutdown(localClientNum);
 	}
 
 	void Client::Respawn(int localClientNum)

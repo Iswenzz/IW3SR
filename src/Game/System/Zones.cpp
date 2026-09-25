@@ -1,5 +1,6 @@
 #include "Zones.hpp"
 
+#include "Game/System/Assets.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Patch.hpp"
 
@@ -43,6 +44,28 @@ namespace IW3SR
 	//   0046aaa8: e8 13 5a 09 00   call 0x5004c0
 	constexpr uintptr_t VidRestartSite = 0x46AA77;
 	constexpr uintptr_t ComRestartSite = 0x46AAA8;
+
+	// The other vid_restart in CL_DownloadsComplete, straight after the FS_Restart that follows every
+	// downloaded file. It is the window vanishing and coming back mid download:
+	//   0046a94e: e8 bd 43 0f 00   call 0x55ed10   (FS_Restart)
+	//   0046a956: e8 25 f8 ff ff   call 0x46a180   (CL_Vid_Restart_f)
+	constexpr uintptr_t DownloadRestartSite = 0x46A956;
+
+	// CL_SetupForNewServerMap loads the next map's loading screen before the gamestate has said whether
+	// that map is even on disk, then names it to the UI. For a map still to be downloaded the connect
+	// screen draws a loading screen that does not exist:
+	//   0047060c: e8 ef a1 ff ff   call 0x46a800   (LoadMapLoadscreen, eax = map)
+	//   00470611: 53               push ebx        (gametype)
+	//   00470612: 8b f7            mov esi,edi     (map)
+	//   00470614: e8 d7 3c 0d 00   call 0x5442f0   (UI_SetMap)
+	//   00470619: 83 c4 04         add esp,0x4
+	constexpr uintptr_t NewMapLoadscreenSite = 0x47060C;
+	constexpr uintptr_t NewMapSetMapSite = 0x470611;
+	constexpr int NewMapSetMapSize = 11;
+
+	// CL_DownloadsComplete's own loading screen, once the files are in:
+	//   0046aa88: e8 73 fd ff ff   call 0x46a800
+	constexpr uintptr_t MapLoadscreenSite = 0x46AA88;
 
 	constexpr uintptr_t GameDirChangedAddress = 0xC5B69C; // cls.gameDirChanged
 	constexpr uintptr_t WaitingForServerAddress = 0x8F4CDC; // g_waitingForServer
@@ -207,6 +230,45 @@ namespace IW3SR
 
 		Memory::CALL(VidRestartSite, reinterpret_cast<uintptr_t>(&GZones::VidRestart));
 		Memory::CALL(ComRestartSite, reinterpret_cast<uintptr_t>(&GZones::ComRestart));
+		Memory::CALL(DownloadRestartSite, reinterpret_cast<uintptr_t>(&GZones::DownloadRestart));
+	}
+
+	// CoD4X's map change (cl_main.c:9448) leaves the UI with no map, so a download runs over a black
+	// connect screen. Kept here for a map that is already on disk, which is most of them.
+	void GZones::PatchMapLoad()
+	{
+		if (Patch::UseCoD4X)
+			return;
+
+		Memory::NOP(NewMapSetMapSite, NewMapSetMapSize);
+		Memory::CALL(NewMapLoadscreenSite, ASM_LOAD(SetupForNewServerMap_h));
+		Memory::CALL(MapLoadscreenSite, ASM_LOAD(LoadMapLoadscreen_h));
+	}
+
+	// CoD4X's LoadMapLoadscreen (cl_main.c:9268). Retail loads the zone blind, and a missing one leaves
+	// the connect screen drawing a material that was never registered.
+	bool GZones::LoadLoadscreen(const char* map)
+	{
+		if (!map || !*map || !Assets::ZoneExists(std::string(map) + "_load"))
+			return false;
+
+		LoadMapLoadscreen(map);
+		return true;
+	}
+
+	// CoD4X drops this vid_restart (cl_main.c:5640-5658). The FS_Restart before it has already mounted
+	// the new files, and the map load that follows reloads the fastfiles in place for anything that
+	// only a restart would otherwise have picked up, a downloaded mod.ff included.
+	void GZones::DownloadRestart()
+	{
+		if (Reload && !Reload->current.enabled)
+		{
+			CL_Vid_Restart_f();
+			return;
+		}
+		// The restart cleared it, and the map load only brings its loading screen in when it is clear.
+		Memory::Set<uint8_t>(WaitingForServerAddress, 0);
+		ReloadPending = true;
 	}
 
 	void GZones::VidRestart()
@@ -244,11 +306,9 @@ namespace IW3SR
 		DB_LoadXZoneFromGfxConfig();
 
 		// Unloading everything took the loading screen's zone with it.
-		const auto map = reinterpret_cast<const char*>(MapNameAddress);
-		if (*map)
-			LoadMapLoadscreen(map);
+		LoadLoadscreen(reinterpret_cast<const char*>(MapNameAddress));
 
-		Com_PrintMessage(CON_CHANNEL_FILES, "Reloaded the fastfiles for the new mod in place.\n", 0);
+		Com_PrintMessage(CON_CHANNEL_FILES, "Reloaded the fastfiles in place.\n", 0);
 	}
 
 	void GZones::Discover()
@@ -258,6 +318,7 @@ namespace IW3SR
 		PatchFileSize();
 		PatchUsermapSearch();
 		PatchGameDirRestart();
+		PatchMapLoad();
 
 		// Registered here rather than at renderer init, where the first batch is already loading.
 		// The anchor dvar covers the table not being up yet: a hook must not take the boot down.

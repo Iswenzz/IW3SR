@@ -33,11 +33,9 @@ namespace IW3SR
 		ComMaxFps = Dvar::Find("com_maxfps");
 
 		Enabled = Dvar::RegisterBool("sr_timestep", DVAR_SAVED,
-			"Run movement on a fixed timestep taken from com_maxfps, whatever the frame rate is", true);
+			"Run movement on a fixed timestep taken from com_maxfps, whatever the frame rate is", false);
 		MaxFps =
 			Dvar::RegisterInt("sr_maxfps", DVAR_SAVED, "Frame rate cap, 0 to follow com_maxfps", DisplayFps(), 0, 1000);
-		Smooth = Dvar::RegisterBool("sr_timestep_smooth", DVAR_SAVED,
-			"Draw the view at the frame time instead of at the last movement step", true);
 		Log = Dvar::RegisterBool("sr_timestep_log", DVAR_TEMP,
 			"Write every movement command to iw3sr/Logs/timestep.csv", false);
 		Apex = Dvar::RegisterBool("sr_timestep_apex", DVAR_SAVED,
@@ -441,7 +439,7 @@ namespace IW3SR
 	{
 		CG_CalcViewValues_h(localClientNum);
 
-		if (!Active() || !Smooth || !Smooth->current.enabled)
+		if (!Active())
 			return;
 
 		const playerState_s& ps = cgs->predictedPlayerState;

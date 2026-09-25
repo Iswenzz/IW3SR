@@ -79,7 +79,6 @@ namespace IW3SR
 		static inline dvar_s* Enabled = nullptr;
 		static inline dvar_s* MaxFps = nullptr;
 		static inline dvar_s* ComMaxFps = nullptr;
-		static inline dvar_s* Smooth = nullptr;
 		static inline dvar_s* Log = nullptr;
 		static inline dvar_s* Apex = nullptr;
 

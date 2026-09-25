@@ -18,6 +18,7 @@ namespace IW3SR
 
 		static std::filesystem::path Root();
 		static int FileSize(const char* name, int size);
+		static bool LoadLoadscreen(const char* map);
 
 	private:
 		static inline dvar_s* Enabled = nullptr;
@@ -33,7 +34,9 @@ namespace IW3SR
 		static void PatchFileSize();
 		static void PatchUsermapSearch();
 		static void PatchGameDirRestart();
+		static void PatchMapLoad();
 		static void VidRestart();
+		static void DownloadRestart();
 		static void ComRestart();
 		static void Collect();
 		static void MountIwd();

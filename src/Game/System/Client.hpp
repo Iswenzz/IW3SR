@@ -9,6 +9,7 @@ namespace IW3SR
 		static void Initialize(int localClientNum);
 		static void Connect();
 		static void Disconnect(int localClientNum);
+		static void Shutdown(int localClientNum);
 		static void Respawn(int localClientNum);
 		static void Predict(int localClientNum);
 
