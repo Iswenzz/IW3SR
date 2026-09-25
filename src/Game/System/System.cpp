@@ -198,12 +198,7 @@ namespace IW3SR
 		}
 		if (Window::Intercept(hWnd, msg, wParam, lParam))
 			return false;
-
-		// The overlay only keeps input from the engine. WM_CREATE is where it points the sound driver at
-		// the window a vid_restart just made, and missing it leaves the sound bound to the destroyed one.
-		const bool lifecycle = msg == WM_CREATE || msg == WM_DESTROY;
-		return UI::Open && !lifecycle ? DefWindowProc(hWnd, msg, wParam, lParam)
-									  : MainWndProc_h(hWnd, msg, wParam, lParam);
+		return UI::Open ? DefWindowProc(hWnd, msg, wParam, lParam) : MainWndProc_h(hWnd, msg, wParam, lParam);
 	}
 
 	void GSystem::ExecuteSingleCommand(int localClientNum, int controllerIndex, char* cmd)
