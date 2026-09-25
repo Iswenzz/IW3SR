@@ -44,6 +44,8 @@ namespace IW3SR
 		const auto cod4x = settings.is_object() ? settings.find("CoD4X") : settings.end();
 		AllowCoD4X = cod4x == settings.end() || !cod4x->is_boolean() || cod4x->get<bool>();
 
+		AllowMultipleInstances();
+
 		if (AllowCoD4X)
 			return;
 
@@ -206,6 +208,15 @@ namespace IW3SR
 		// the mov al, 1 both of them end on.
 		for (uintptr_t address : { uintptr_t(0x5C031F), uintptr_t(0x5C15B8) })
 			Memory::Set<uint8_t>(address, 0xEB);
+	}
+
+	// Retail's WinMain quits when the semaphore file names another live iw3mp.exe; CoD4X's WinMain never
+	// makes the check. That exit becomes a jump to the write, so the new instance takes the file over
+	// without the improper-quit prompt. Applied even when CoD4X is allowed, since its DLL may be absent.
+	void Patch::AllowMultipleInstances()
+	{
+		constexpr uintptr_t site = 0x577414;
+		Memory::Set<uint8_t>(site, 0x52);
 	}
 
 	void Patch::SkipImproperQuitPrompt()

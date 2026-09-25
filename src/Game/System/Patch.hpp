@@ -17,6 +17,7 @@ namespace IW3SR
 		static void ReallocXAssetPools();
 
 	private:
+		static void AllowMultipleInstances();
 		static void DisablePunkbuster();
 		static void FixDownloadRate();
 		static void TightenFrameLimiter();
