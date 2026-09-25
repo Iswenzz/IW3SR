@@ -32,11 +32,6 @@ namespace IW3SR
 	{
 		ComMaxFps = Dvar::Find("com_maxfps");
 
-		// Stays out of a release build until it is confirmed in play, rather than sitting behind a dvar
-		// someone could turn on.
-		if (!System::IsDebug())
-			return;
-
 		Enabled = Dvar::RegisterBool("sr_timestep", DVAR_SAVED,
 			"Run movement on a fixed timestep taken from com_maxfps, whatever the frame rate is", true);
 		MaxFps =
@@ -72,6 +67,9 @@ namespace IW3SR
 	void Timestep::Reset()
 	{
 		Vanilla = {};
+		Server = {};
+		Arrivals.clear();
+		HasOffset = false;
 		Stepped = 0;
 		Emitted = 0;
 		First = 0;
@@ -417,6 +415,7 @@ namespace IW3SR
 		{
 			// Picked up again a frame behind wherever the clock is then, rather than owing the gap.
 			Vanilla.Started = false;
+			Server.Started = false;
 			Emitted = 0;
 			First = 0;
 			Sent = 0;
@@ -455,8 +454,10 @@ namespace IW3SR
 		if (ps.pm_type != PM_NORMAL && ps.pm_type != PM_NOCLIP && ps.pm_type != PM_UFO && ps.pm_type != PM_SPECTATOR)
 			return;
 
-		const int lag = clients->serverTime - ps.commandTime;
-		if (lag <= 0 || lag > 1000 / MovementFps() + 1)
+		// Off the step clock rather than serverTime, whose delta can sit a walk apart from the one the
+		// last command was stamped with.
+		const int lag = cls->realtime - Last;
+		if (!Emitted || lag <= 0 || lag > 1000 / MovementFps() + 1)
 			return;
 
 		const vec3 carry = ps.velocity * (static_cast<float>(lag) * 0.001f);
@@ -537,6 +538,115 @@ namespace IW3SR
 		return plan;
 	}
 
+	// Takes the clock over from wherever the engine has it, counting the current snapshot as seen.
+	void Timestep::SeedClock(int target)
+	{
+		Server.Delta = clients->serverTime - target;
+		Server.OldServerTime = clients->cmds[clients->cmdNumber & 0x7F].serverTime;
+		Server.Snap = clients->snap.serverTime;
+		Server.OldSnap = clients->oldSnapServerTime;
+		Server.Extrapolated = false;
+		Server.Started = true;
+
+		Arrivals.clear();
+		Seen = clients->snap.serverTime;
+	}
+
+	// A snapshot is parsed at the top of the frame after it came in, so all that is known of its
+	// arrival is that it fell inside the last frame. The server sends on a steady beat, so the
+	// arrival is placed on that beat, at an offset learnt from the frames they turned up in, and held
+	// inside the frame. Taking the frame's own time instead is what the engine does, and it makes the
+	// delta walk a function of the render rate: one that divides the snapshot interval never walks.
+	void Timestep::Receive(int target, int frametime)
+	{
+		const int snap = clients->snap.serverTime;
+		if (snap == Seen)
+			return;
+
+		// Time ran backwards, from a map restart.
+		if (snap < Seen)
+		{
+			SeedClock(target);
+			return;
+		}
+		Seen = snap;
+
+		const int from = target - frametime + 1;
+		const double middle = (from + target) * 0.5;
+
+		Offset = HasOffset ? Offset + (middle - snap - Offset) / 32.0 : middle - snap;
+		HasOffset = true;
+
+		const int time = static_cast<int>(std::lround(snap + Offset));
+		Arrivals.push_back({ snap, std::clamp(time, from, target) });
+	}
+
+	// CL_SetCGameTime for one step: the command's time, the extrapolation check, and the walk for any
+	// snapshot that has arrived by now. The command takes the delta from before the walk, as vanilla's
+	// does, so a walk lands on the next step.
+	int Timestep::Tick(int time)
+	{
+		bool fresh = false;
+		while (!Arrivals.empty() && Arrivals.front().Time <= time)
+		{
+			const int snap = Arrivals.front().Snap;
+			Arrivals.erase(Arrivals.begin());
+
+			if (snap > Server.Snap)
+			{
+				Server.OldSnap = Server.Snap;
+				Server.Snap = snap;
+				fresh = true;
+			}
+		}
+
+		const int serverTime = std::max(time + Server.Delta, Server.OldServerTime);
+		Server.OldServerTime = serverTime;
+
+		if (time + Server.Delta >= Server.Snap - 5)
+			Server.Extrapolated = true;
+		if (fresh)
+			AdjustDelta(time);
+
+		return serverTime;
+	}
+
+	// CL_AdjustTimeDelta, run against the step's time instead of the frame's.
+	void Timestep::AdjustDelta(int time)
+	{
+		const int interval = Server.Snap - Server.OldSnap;
+		const int ideal = Server.Snap - time - interval - 5;
+
+		int correction = std::abs(ideal - Server.Delta);
+		if (ideal > Server.Delta && interval <= 500)
+			correction = std::max(0, correction - interval);
+
+		if (correction > 500)
+		{
+			Server.Delta = Server.Snap - time - 5;
+			Server.OldServerTime = Server.Snap;
+			return;
+		}
+		if (correction > 100)
+		{
+			Server.Delta = (ideal + Server.Delta) >> 1;
+			return;
+		}
+		if (Server.Extrapolated)
+		{
+			Server.Extrapolated = false;
+			Server.Delta -= 2;
+		}
+		else if (ideal > Server.Delta)
+		{
+			Server.Delta++;
+		}
+		else if (ideal < Server.Delta)
+		{
+			Server.Delta--;
+		}
+	}
+
 	// Builds one command per movement step by running the engine's own builder that many times, each
 	// with the clocks it reads pointed at that step. Sampling input per step rather than per frame is
 	// what a client really running at com_maxfps does, and it has to be done this way round rather
@@ -546,12 +656,19 @@ namespace IW3SR
 	{
 		const int step = 1000 / MovementFps();
 
-		// serverTime is built as realtime plus a delta the engine walks toward the server a
-		// millisecond at a time, so stepping realtime and adding that delta rebuilds it the way
-		// vanilla does, walk included. Stepping com_frameTime instead would add a millisecond of our
-		// own whenever 1000/fps is not whole, and hand pmove a step vanilla never sends.
+		// Steps are laid on realtime, which is what serverTime is built from. Stepping com_frameTime
+		// instead would add a millisecond of our own whenever 1000/fps is not whole.
 		const int target = cls->realtime;
-		const int delta = clients->serverTime - target;
+
+		// A big jump between the engine's delta and ours is a correction the engine made on its own,
+		// a map change or a lag spike, which starts the clock over from where the engine put it.
+		if (!Server.Started || std::abs(clients->serverTimeDelta - Server.Delta) > 100)
+			SeedClock(target);
+		Receive(target, cls->frametime);
+
+		// The engine walked its delta once this frame, at the frame's time. Ours walks at the step the
+		// snapshot reached, the way a client at com_maxfps does, so the engine's walk is discarded.
+		clients->serverTimeDelta = Server.Delta;
 
 		CheckPackets();
 
@@ -610,7 +727,7 @@ namespace IW3SR
 			frame_msec = std::clamp(stamp - Stamp, 1, 200);
 			Stamp = stamp;
 
-			clients->serverTime = time + delta;
+			clients->serverTime = Tick(time);
 			cls->frametime = width;
 
 			// The frame's mouse travel belongs to the frame, so hand each step its own share of it.
@@ -633,6 +750,7 @@ namespace IW3SR
 		Emitted += count;
 		Last = time;
 
+		clients->serverTimeDelta = Server.Delta;
 		clients->serverTime = serverTime;
 		com_frameTime = frameTime;
 		cls->frametime = frametime;

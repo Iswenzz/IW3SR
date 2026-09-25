@@ -18,6 +18,25 @@ namespace IW3SR
 		bool Starved = false;
 	};
 
+	// The server clock of a client at com_maxfps: what CL_SetCGameTime and CL_AdjustTimeDelta keep,
+	// run once per movement step instead of once per rendered frame.
+	struct ServerClock
+	{
+		int Delta = 0;
+		int OldServerTime = 0;
+		int Snap = 0;
+		int OldSnap = 0;
+		bool Extrapolated = false;
+		bool Started = false;
+	};
+
+	// A snapshot and the step clock time it is reckoned to have reached the client at.
+	struct Arrival
+	{
+		int Snap = 0;
+		int Time = 0;
+	};
+
 	// Splits every rendered frame into fixed size movement commands so the physics rate follows
 	// com_maxfps instead of the frame rate the machine happens to reach. sr_maxfps caps the
 	// renderer on its own, which leaves com_maxfps free to mean nothing but the movement rate.
@@ -43,6 +62,10 @@ namespace IW3SR
 		static bool Active();
 		static void Split(int localClientNum);
 		static Steps PlanSteps(int* widths, int step, int target, int frametime);
+		static void SeedClock(int target);
+		static void Receive(int target, int frametime);
+		static int Tick(int time);
+		static void AdjustDelta(int time);
 		static float JumpApex(float velocity, float gravity, int msec);
 		static void CheckPackets();
 		static void TrackJump(const playerState_s& ps);
@@ -62,6 +85,13 @@ namespace IW3SR
 
 		// The client limiter the step widths come from.
 		static inline Cadence Vanilla = {};
+
+		// The server clock the command times come from, and the snapshots it has yet to see.
+		static inline ServerClock Server = {};
+		static inline std::vector<Arrival> Arrivals;
+		static inline int Seen = 0;
+		static inline double Offset = 0;
+		static inline bool HasOffset = false;
 
 		static inline dvar_s** Limiter = nullptr;
 		static inline dvar_s Limit = {};
