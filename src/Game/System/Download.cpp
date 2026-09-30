@@ -154,6 +154,34 @@ namespace IW3SR
 		destination[length] = '\0';
 	}
 
+	// The engine holds every mounted iwd open without delete sharing, and FS_CompareIwds mounts a
+	// usermap's own before asking for it, so an updated map can be neither removed nor renamed over.
+	// Retail's FS_SV_Rename (0x502EF0) writes over it in place instead, and so does this; the
+	// FS_Restart in CL_DownloadsComplete remounts it before anything reads it again.
+	static void MoveIntoPlace(const std::filesystem::path& from, const std::filesystem::path& to,
+		std::error_code& error)
+	{
+		std::filesystem::rename(from, to, error);
+		if (!error)
+			return;
+
+		std::ifstream source(from, std::ios::binary);
+		std::ofstream target(to, std::ios::binary | std::ios::trunc);
+
+		if (!source || !target || !(target << source.rdbuf()))
+			return;
+
+		target.close();
+		source.close();
+
+		if (!target)
+			return;
+
+		error.clear();
+		std::error_code ignored;
+		std::filesystem::remove(from, ignored);
+	}
+
 	void GDownload::Initialize()
 	{
 		Enabled = Dvar::RegisterBool("sr_download", DVAR_SAVED,
@@ -524,8 +552,7 @@ namespace IW3SR
 		}
 
 		std::error_code error;
-		std::filesystem::remove(Resolve(localName), error);
-		std::filesystem::rename(Resolve(TempName), Resolve(localName), error);
+		MoveIntoPlace(Resolve(TempName), Resolve(localName), error);
 
 		if (error)
 		{
@@ -731,8 +758,7 @@ namespace IW3SR
 			return;
 		}
 
-		std::filesystem::remove(target, error);
-		std::filesystem::rename(temp, target, error);
+		MoveIntoPlace(temp, target, error);
 
 		if (error)
 		{
