@@ -3,6 +3,7 @@
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/Renderer.hpp"
+#include "Game/Renderer/VR/VR.hpp"
 
 #include "Game/System/Assets.hpp"
 #include "Game/System/Capture.hpp"
@@ -41,7 +42,7 @@ namespace IW3SR
 		Com_PrintMessage_h(0x4FCA50, GConsole::Write);
 
 	Hook<void(int localClientNum)>
-		CG_CalcViewValues_h(0x451990, Timestep::CalcViewValues);
+		CG_CalcViewValues_h(0x451990, GVR::CalcViewValues);
 
 	Hook<void()>
 		CG_CalculateFPS_h(0x42B6B0, GRenderer::CalculateFPS);
@@ -166,6 +167,41 @@ namespace IW3SR
 	Hook<void()>
 		RB_LookupColor_h(0x613790, ASM_LOAD(RB_LookupColor_h));
 
+	Hook<void(GfxWindowParms* parms)>
+		R_SetWndParms_h(0x5F4B10, ASM_LOAD(R_SetWndParms_h));
+
+	Hook<void(const refdef_s* refdef)>
+		R_RenderScene_h(0x5FAF00, ASM_LOAD(R_RenderScene_h));
+
+	Hook<void(int localClientNum)>
+		CG_Draw2D_h(0x42F590, ASM_LOAD(CG_Draw2D_h));
+
+	Hook<void()>
+		RB_Draw3D_h(0x6155B0, GVR::Draw3D);
+
+	Hook<void(GfxViewInfo* viewInfo)>
+		RB_ViewCommands_h(0x64B637, ASM_LOAD(RB_ViewCommands_h));
+
+	Hook<void(DObj_s* obj)>
+		CG_UpdateViewModelPose_h(0x455895, ASM_LOAD(CG_UpdateViewModelPose_h));
+
+	Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DRENDERSTATETYPE state, DWORD value)>
+		IDirect3DDevice9_SetRenderState_h(GVR::SetRenderState);
+
+	Hook<HRESULT STDCALL(IDirect3DDevice9* device, UINT swapChain, UINT index, D3DBACKBUFFER_TYPE type,
+		IDirect3DSurface9** surface)>
+		IDirect3DDevice9_GetBackBuffer_h(GVR::GetBackBuffer);
+
+	Hook<HRESULT STDCALL(IDirect3D9* d3d, UINT adapter, D3DDEVTYPE type, HWND window, DWORD flags,
+		D3DPRESENT_PARAMETERS* parameters, IDirect3DDevice9** device)>
+		IDirect3D9_CreateDevice_h(GVR::CreateDevice);
+
+	Function<void(const refdef_s* refdef)>
+		R_RenderScene_Original = ASM_LOAD(R_RenderScene_Original);
+
+	Function<void(int localClientNum)>
+		CG_Draw2D_Original = ASM_LOAD(CG_Draw2D_Original);
+
 	Hook<void(const char** text, int maxChars, Font_s* font, float x, float y, float xScale, float yScale, float rotation,
 		int style, const vec4& color)>
 		R_AddCmdDrawText_h(0x5F6B00, ASM_LOAD(R_AddCmdDrawText_h));
@@ -188,7 +224,7 @@ namespace IW3SR
 		RB_EndSceneRendering_h(0x6496EC, GRenderer::Draw3D);
 
 	Hook<void()>
-		R_BeginFrame_h(0x5F75A0, GPortal::BeginFrame);
+		R_BeginFrame_h(0x5F75A0, GRenderer::BeginFrame);
 
 	Hook<void(int localClientNum, itemDef_s *item, const char **args)>
 		Script_ScriptMenuResponse_h(0x54DD90, GSystem::ScriptMenuResponse);
@@ -632,5 +668,105 @@ namespace IW3SR
 		a.add(x86::esp, 0x04);
 		a.popad();
 		a.ret();
+	}
+	// R_SetWndParms takes its parameters in esi and leaves them there, so the headset's size is laid over
+	// what r_mode chose once it returns, right before the window and the device are made from them.
+	ASM_FUNCTION(R_SetWndParms_h)
+	{
+		a.pushad();
+		a.call(GVR::Startup);
+		a.popad();
+
+		a.pushad();
+		a.call(ASM_TRAMPOLINE(R_SetWndParms_h));
+		a.push(x86::esi);
+		a.call(GVR::WindowParms);
+		a.add(x86::esp, 0x04);
+		a.popad();
+		a.ret();
+	}
+
+	// R_RenderScene and CG_Draw2D take their argument in eax.
+	ASM_FUNCTION(R_RenderScene_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::eax); // refdef
+		a.call(GVR::RenderScene);
+		a.add(x86::esp, 0x04);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(R_RenderScene_Original)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // refdef
+		a.call(ASM_TRAMPOLINE(R_RenderScene_h));
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CG_Draw2D_h)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::eax); // localClientNum
+		a.call(GVR::Draw2D);
+		a.add(x86::esp, 0x04);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CG_Draw2D_Original)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // localClientNum
+		a.call(ASM_TRAMPOLINE(CG_Draw2D_h));
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	// On the load of a view's own 2D command list, with the view in esi. Hooked there rather than on the
+	// call that walks the list: PolyHook follows a call at the hook address and would detour the walk
+	// itself, for every list in the frame.
+	ASM_FUNCTION(RB_ViewCommands_h)
+	{
+		a.pushad();
+		a.push(x86::esi); // viewInfo
+		a.call(GVR::ViewCommands);
+		a.add(x86::esp, 0x04);
+		a.popad();
+		a.jmp(ASM_TRAMPOLINE(RB_ViewCommands_h));
+	}
+
+	// Past CG_UpdateViewModelPose's null check, so the trampoline carries no branch, with the model in eax
+	// and cg.viewModelAxis about to become its pose.
+	ASM_FUNCTION(CG_UpdateViewModelPose_h)
+	{
+		a.pushad();
+		a.push(x86::eax); // obj
+		a.call(GVR::ViewModelPose);
+		a.add(x86::esp, 0x04);
+		a.popad();
+		a.jmp(ASM_TRAMPOLINE(CG_UpdateViewModelPose_h));
 	}
 }

@@ -28,6 +28,7 @@ A client modification for Call of Duty 4, powered by [IzEngine](https://github.c
 - Offline shader playback.
 - Post-processing tweaks: brightness, contrast, desaturation, glow and sun.
 - Frame limiter that waits on a high resolution timer instead of spinning the core.
+- VR support with OpenXR headsets enabled with `sr_vr 1` on SteamVR.
 
 ### Demos
 - Demo playback with missing fastfiles.

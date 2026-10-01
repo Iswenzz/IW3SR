@@ -15,6 +15,7 @@
 				"PLATFORM_WINDOWS": true,
 				"GRAPHICS_API_DX9": true,
 				"BUILD_CEF": true,
+				"BUILD_OPENXR": true,
 				"ENABLE_API": true
 			}
 		}

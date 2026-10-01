@@ -7,6 +7,7 @@
 #include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/UI/About.hpp"
 #include "Game/Renderer/UI/UI.hpp"
+#include "Game/Renderer/VR/VR.hpp"
 #include "Game/System/AssetDump.hpp"
 #include "Game/System/Assets.hpp"
 #include "Game/System/Capture.hpp"
@@ -46,12 +47,15 @@ namespace IW3SR
 		DX9GraphicsContext::Swap(dx->d3d9, dx->device);
 		Renderer::Initialize(RendererBackend::DX9);
 		GUI::Initialize();
+		GVR::Initialize();
 	}
 
 	void GRenderer::Shutdown(int window)
 	{
 		Swaps.Clear();
 		GPortal::Shutdown();
+		if (window)
+			GVR::Shutdown();
 
 		Browser::Lock();
 		Renderer::Shutdown();
@@ -81,6 +85,14 @@ namespace IW3SR
 		text.SetRectAlignment(Horizontal::Right, Vertical::Fullscreen);
 		text.SetAlignment(Alignment::Right, Alignment::Top);
 		text.Render();
+	}
+
+	// The headset's frame has to be waited for before the portal views are drawn into it.
+	void GRenderer::BeginFrame()
+	{
+		if (!GPortal::Rendering)
+			GVR::BeginFrame();
+		GPortal::BeginFrame();
 	}
 
 	void GRenderer::CalculateFPS()
@@ -145,6 +157,8 @@ namespace IW3SR
 
 	void GRenderer::ExecuteRenderCommandsLoop(void* cmds)
 	{
+		GVR::SharedCommands(cmds);
+
 		// HLSL offline gameTime constants
 		if (client_ui->connectionState != CA_ACTIVE)
 			R_SetGameTime(gfx_cmdBufSourceState, UI::Time());
@@ -163,17 +177,21 @@ namespace IW3SR
 		if (PendingMaterialUpdate.exchange(false))
 			ApplyMaterials();
 		Tasks.Submit();
+		GVR::BeforeOverlay();
 		Renderer::Frame();
 		Input::Reset();
 		Console::Frame();
+		GVR::AfterOverlay();
 
 		IDirect3DDevice9_EndScene_h(device);
+		GVR::Submit();
 
 		Capture::Frame(device);
 	}
 
 	HRESULT GRenderer::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)
 	{
+		GVR::PresentSize(pPresentationParameters);
 		DX9GraphicsContext::PresentParameters = *pPresentationParameters;
 
 		HRESULT hr = device->TestCooperativeLevel();

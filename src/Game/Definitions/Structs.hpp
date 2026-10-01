@@ -4680,7 +4680,7 @@ namespace IW3SR
 		int adapterFullscreenHeight;
 		int depthStencilFormat;
 		uint32_t displayModeCount;
-		void* displayModes[256];
+		D3DDISPLAYMODE displayModes[256];
 		const char* resolutionNameTable[257];
 		const char* refreshRateNameTable[257];
 		char modeText[5120];
@@ -4715,6 +4715,8 @@ namespace IW3SR
 		uint32_t mipBias;
 		void* swapFence;
 	};
+	static_assert(offsetof(DxGlobals, multiSampleType) == 0x2C5C);
+	static_assert(offsetof(DxGlobals, deviceLost) == 0x2C6C);
 
 	struct alignas(16) ShadowCookieList
 	{
@@ -5284,6 +5286,21 @@ namespace IW3SR
 		uint32_t maxTextureMaps;
 		bool deviceSupportsGamma;
 	};
+
+	struct GfxWindowParms
+	{
+		HWND hwnd;
+		int hz;
+		bool fullscreen;
+		int x;
+		int y;
+		int sceneWidth;
+		int sceneHeight;
+		int displayWidth;
+		int displayHeight;
+		int aaSamples;
+	};
+	static_assert(sizeof(GfxWindowParms) == 0x28);
 
 	struct clientDebugLineInfo_t
 	{
@@ -6184,6 +6201,9 @@ namespace IW3SR
 		hudElemSoundInfo_t hudElemSound[32];
 		int vehicleFrame;
 	};
+	static_assert(offsetof(cg_s, viewModelAxis) == 0x50460);
+	static_assert(offsetof(cg_s, viewModelPose) == 0xFE238);
+	static_assert(offsetof(cpose_t, origin) == 0x1C);
 
 	struct trigger_info_t
 	{

@@ -2,6 +2,7 @@
 
 #include "Game/Player/Movements/CS.hpp"
 #include "Game/Player/Movements/Q3.hpp"
+#include "Game/Renderer/VR/VR.hpp"
 #include "Game/System/Timestep.hpp"
 
 namespace IW3SR
@@ -26,6 +27,7 @@ namespace IW3SR
 	{
 		CL_FinishMove_h(cmd);
 		Timestep::Sample(*cmd);
+		GVR::FinishMove(cmd);
 
 		if (cgs->predictedPlayerState.pm_type != PM_NORMAL)
 			return;

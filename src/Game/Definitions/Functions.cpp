@@ -259,6 +259,21 @@ namespace IW3SR
 	Function<void()>
 		RB_EndTessSurface = 0x61A2F0;
 
+	Function<void(GfxViewInfo* viewInfo)>
+		RB_Draw3DInternal = ASM_LOAD(RB_Draw3DInternal);
+
+	Function<void()>
+		RB_StandardDrawCommandsCommon = 0x64B3A0;
+
+	Function<void(DObj_s* obj)>
+		CG_UpdateViewModelPose = ASM_LOAD(CG_UpdateViewModelPose);
+
+	Function<int(const cpose_t* pose, DObj_s* obj, unsigned int tagName, float (*tagMat)[3], float* origin)>
+		CG_DObjGetWorldTagMatrix = ASM_LOAD(CG_DObjGetWorldTagMatrix);
+
+	Function<void(ScreenPlacement* scrPlace, float x, float y, float width, float height)>
+		ScrPlace_SetupFloatViewport = 0x477420;
+
 	Function<void(unsigned int track, int fadeTime)>
 		SND_StopBackground = ASM_LOAD(SND_StopBackground);
 
@@ -716,6 +731,55 @@ namespace IW3SR
 		a.push(x86::dword_ptr(x86::ebp, 0x08));			 // velOut
 		a.call(0x40E330);
 		a.add(x86::esp, 0x04);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	// Draws one view's scene into the scene target, with the view in eax.
+	ASM_FUNCTION(CG_UpdateViewModelPose)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // obj
+		a.call(0x455890);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	// The tag in ecx and the axis out in edi; the rest on the stack.
+	ASM_FUNCTION(CG_DObjGetWorldTagMatrix)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.push(x86::edi);
+
+		a.mov(x86::ecx, x86::dword_ptr(x86::ebp, 0x10)); // tagName
+		a.mov(x86::edi, x86::dword_ptr(x86::ebp, 0x14)); // tagMat
+		a.push(x86::dword_ptr(x86::ebp, 0x18));			 // origin
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // obj
+		a.push(x86::dword_ptr(x86::ebp, 0x08));			 // pose
+		a.call(0x434070);
+		a.add(x86::esp, 0x0C);
+
+		a.pop(x86::edi);
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(RB_Draw3DInternal)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // viewInfo
+		a.call(0x64B7B0);
 
 		a.popad();
 		a.pop(x86::ebp);

@@ -73,6 +73,9 @@ namespace IW3SR
 	extern int* map_nameEnum;
 	extern UiContext* ui_cg_dc;
 	extern UiContext* ui_context;
+	extern ScreenPlacement* scrPlaceView;
+	extern ScreenPlacement* scrPlaceFull;
+	extern ScreenPlacement* scrPlaceFullUnsafe;
 	extern WinMouseVars_t* s_wmv;
 	extern WinVars_t* g_wv;
 	extern PlayerKeyState* player_keys;
@@ -90,6 +93,7 @@ namespace IW3SR
 	API extern level_locals_t* level_locals;
 	API extern corpseInfo_t* g_corpseInfo;
 	API extern uint16_t& scr_const_player;
+	extern uint16_t& scr_const_tag_weapon;
 
 	// Console
 	extern float* con_versionColor;

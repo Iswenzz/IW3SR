@@ -25,6 +25,8 @@
 #include "Timestep.hpp"
 #include "Zones.hpp"
 
+#include "Game/Renderer/VR/VR.hpp"
+
 namespace IW3SR
 {
 	void GSystem::Initialize()
@@ -138,6 +140,15 @@ namespace IW3SR
 	HWND GSystem::CreateMainWindow(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X,
 		int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 	{
+		// With a headset the engine asks for a window at the eye's size; the player's own is made instead.
+		if (GVR::OwnsWindow() && lpClassName && std::string_view(lpClassName) == "CoD4")
+		{
+			const glm::ivec2 client = GVR::WindowSize();
+			RECT rect = { 0, 0, client.x, client.y };
+			AdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle);
+			nWidth = rect.right - rect.left;
+			nHeight = rect.bottom - rect.top;
+		}
 		Borderless(lpClassName, dwStyle, X, Y, nWidth, nHeight);
 
 		HWND hwnd = CreateWindowExA_h(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent,
@@ -224,6 +235,8 @@ namespace IW3SR
 		if (GDownload::Command(command))
 			return;
 		if (Timestep::Command(command))
+			return;
+		if (GVR::Command(command))
 			return;
 
 		Cmd_ExecuteSingleCommand_h(localClientNum, controllerIndex, cmd);

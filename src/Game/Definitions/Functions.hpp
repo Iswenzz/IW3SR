@@ -263,6 +263,21 @@ namespace IW3SR
 	API extern Function<void()>
 		RB_EndTessSurface;
 
+	extern Function<void(GfxViewInfo* viewInfo)>
+		RB_Draw3DInternal;
+
+	extern Function<void()>
+		RB_StandardDrawCommandsCommon;
+
+	extern Function<void(DObj_s* obj)>
+		CG_UpdateViewModelPose;
+
+	extern Function<int(const cpose_t* pose, DObj_s* obj, unsigned int tagName, float (*tagMat)[3], float* origin)>
+		CG_DObjGetWorldTagMatrix;
+
+	extern Function<void(ScreenPlacement* scrPlace, float x, float y, float width, float height)>
+		ScrPlace_SetupFloatViewport;
+
 	extern Function<void(unsigned int track, int fadeTime)>
 		SND_StopBackground;
 
@@ -281,6 +296,8 @@ namespace IW3SR
 	ASM_FUNCTION(BG_AddWeapon);
 	ASM_FUNCTION(BG_EvaluateTrajectory);
 	ASM_FUNCTION(Cbuf_AddText);
+	ASM_FUNCTION(CG_DObjGetWorldTagMatrix);
+	ASM_FUNCTION(CG_UpdateViewModelPose);
 	ASM_FUNCTION(CL_ClearState);
 	ASM_FUNCTION(CL_DownloadsComplete);
 	ASM_FUNCTION(CL_InitDownloads);
@@ -306,6 +323,7 @@ namespace IW3SR
 	ASM_FUNCTION(PM_PlayerTrace);
 	ASM_FUNCTION(PM_ProjectVelocity);
 	ASM_FUNCTION(RB_BeginSurface);
+	ASM_FUNCTION(RB_Draw3DInternal);
 	ASM_FUNCTION(R_AddCmdDrawText);
 	ASM_FUNCTION(R_AddCmdDrawStretchPic);
 	ASM_FUNCTION(R_SetGameTime);

@@ -69,6 +69,9 @@ namespace IW3SR
 	uintptr_t* ui_white_material = Signature(0xCAF06F0);
 	UiContext* ui_cg_dc = Signature(0x746FA8);
 	UiContext* ui_context = Signature(0xCAEE200);
+	ScreenPlacement* scrPlaceView = Signature(0xE343D8);
+	ScreenPlacement* scrPlaceFull = Signature(0xE34420);
+	ScreenPlacement* scrPlaceFullUnsafe = Signature(0xE34468);
 	WinMouseVars_t* s_wmv = Signature(0xCC147C4);
 	WinVars_t* g_wv = Signature(0xCC1B6F4);
 	PlayerKeyState* player_keys = Signature(0x8F1DB8);
@@ -88,6 +91,7 @@ namespace IW3SR
 	level_locals_t* level_locals = Signature(0x13EB6A8);
 	corpseInfo_t* g_corpseInfo = Signature(0x13FB31C);
 	uint16_t& scr_const_player = Signature(0x1406EEC);
+	uint16_t& scr_const_tag_weapon = Signature(0x1406F36);
 
 	// Console
 	float* con_versionColor = Signature(0x6BDEF0);

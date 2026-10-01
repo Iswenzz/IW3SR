@@ -2,6 +2,7 @@
 #include "Structs.hpp"
 
 #include "Engine/Core/Memory/Assembler.hpp"
+#include "Engine/Core/Memory/Function.hpp"
 #include "Engine/Core/Memory/Hook.hpp"
 
 // clang-format off
@@ -180,6 +181,41 @@ namespace IW3SR
 	extern Hook<void()>
 		RB_LookupColor_h;
 
+	extern Hook<void(GfxWindowParms* parms)>
+		R_SetWndParms_h;
+
+	extern Hook<void(const refdef_s* refdef)>
+		R_RenderScene_h;
+
+	extern Hook<void(int localClientNum)>
+		CG_Draw2D_h;
+
+	extern Hook<void()>
+		RB_Draw3D_h;
+
+	extern Hook<void(GfxViewInfo* viewInfo)>
+		RB_ViewCommands_h;
+
+	extern Hook<void(DObj_s* obj)>
+		CG_UpdateViewModelPose_h;
+
+	extern Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DRENDERSTATETYPE state, DWORD value)>
+		IDirect3DDevice9_SetRenderState_h;
+
+	extern Hook<HRESULT STDCALL(IDirect3DDevice9* device, UINT swapChain, UINT index, D3DBACKBUFFER_TYPE type,
+		IDirect3DSurface9** surface)>
+		IDirect3DDevice9_GetBackBuffer_h;
+
+	extern Hook<HRESULT STDCALL(IDirect3D9* d3d, UINT adapter, D3DDEVTYPE type, HWND window, DWORD flags,
+		D3DPRESENT_PARAMETERS* parameters, IDirect3DDevice9** device)>
+		IDirect3D9_CreateDevice_h;
+
+	extern Function<void(const refdef_s* refdef)>
+		R_RenderScene_Original;
+
+	extern Function<void(int localClientNum)>
+		CG_Draw2D_Original;
+
 }
 // clang-format on
 namespace IW3SR
@@ -209,4 +245,11 @@ namespace IW3SR
 	ASM_FUNCTION(DSound_UpdateSample_h);
 	ASM_FUNCTION(Client_SendVoiceData_h);
 	ASM_FUNCTION(CaptureByteRate_h);
+	ASM_FUNCTION(R_SetWndParms_h);
+	ASM_FUNCTION(R_RenderScene_h);
+	ASM_FUNCTION(R_RenderScene_Original);
+	ASM_FUNCTION(CG_Draw2D_h);
+	ASM_FUNCTION(CG_Draw2D_Original);
+	ASM_FUNCTION(RB_ViewCommands_h);
+	ASM_FUNCTION(CG_UpdateViewModelPose_h);
 }
