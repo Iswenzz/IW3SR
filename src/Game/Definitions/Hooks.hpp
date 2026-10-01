@@ -196,8 +196,14 @@ namespace IW3SR
 	extern Hook<void(GfxViewInfo* viewInfo)>
 		RB_ViewCommands_h;
 
-	extern Hook<void(DObj_s* obj)>
+	extern Hook<bool(DObj_s* obj)>
 		CG_UpdateViewModelPose_h;
+
+	extern Hook<bool(DObj_s* obj, const cpose_t* pose, int entnum)>
+		R_AddDObjToScene_h;
+
+	extern Hook<bool()>
+		CG_Player_h;
 
 	extern Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DRENDERSTATETYPE state, DWORD value)>
 		IDirect3DDevice9_SetRenderState_h;
@@ -252,4 +258,6 @@ namespace IW3SR
 	ASM_FUNCTION(CG_Draw2D_Original);
 	ASM_FUNCTION(RB_ViewCommands_h);
 	ASM_FUNCTION(CG_UpdateViewModelPose_h);
+	ASM_FUNCTION(R_AddDObjToScene_h);
+	ASM_FUNCTION(CG_Player_h);
 }

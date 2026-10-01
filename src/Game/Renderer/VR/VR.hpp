@@ -2,9 +2,18 @@
 #include "Game/Base.hpp"
 
 #include "Engine/Backend/DX9/XRBridge.hpp"
+#include "Engine/Backend/DX9/XRD3D12Bridge.hpp"
 
 namespace IW3SR
 {
+	// The game's unit is the inch.
+	constexpr float UnitsPerMeter = 39.3701f;
+
+	// How close the free hand has to come to where the animation holds the weapon, in meters, to be left
+	// there, and how far before it follows its controller alone.
+	constexpr float VRGripNear = 0.09f;
+	constexpr float VRGripFar = 0.16f;
+
 	// Which pass the backend is in, so the captures know what the frame buffer holds.
 	enum class VRStage
 	{
@@ -42,6 +51,21 @@ namespace IW3SR
 		bool Recenter = false;
 	};
 
+	// Body trackers, by the role the runtime gave each one.
+	enum class VRTracker
+	{
+		Waist,
+		Chest,
+		LeftFoot,
+		RightFoot,
+		LeftKnee,
+		RightKnee,
+		LeftElbow,
+		RightElbow,
+		Count
+	};
+	constexpr int VRTrackerCount = static_cast<int>(VRTracker::Count);
+
 	struct VRActions
 	{
 		XrAction Move = XR_NULL_HANDLE;
@@ -58,6 +82,8 @@ namespace IW3SR
 		XrAction Recenter = XR_NULL_HANDLE;
 		XrAction HandGrip = XR_NULL_HANDLE;
 		XrAction HandAim = XR_NULL_HANDLE;
+		XrAction LeftGrip = XR_NULL_HANDLE;
+		XrAction Trackers[VRTrackerCount] = {};
 	};
 
 	// Everything a frame is drawn from, gathered as it starts. It outlives the frame until the next one
@@ -70,10 +96,13 @@ namespace IW3SR
 		bool Drawn = false;
 		bool Hud = false;
 		bool Holding = false;
+		bool RightTracked = false;
+		bool LeftTracked = false;
 		XRView Eyes[2];
 		XrPosef Head{ { 0, 0, 0, 1 }, { 0, 0, 0 } };
 		XrPosef Grip{ { 0, 0, 0, 1 }, { 0, 0, 0 } };
 		XrPosef Pointer{ { 0, 0, 0, 1 }, { 0, 0, 0 } };
+		XrPosef LeftGrip{ { 0, 0, 0, 1 }, { 0, 0, 0 } };
 		VRControls Input;
 		float Yaw = 0.0f;
 		float Pitch = 0.0f;
@@ -81,6 +110,13 @@ namespace IW3SR
 		float HandPitch = 0.0f;
 		vec3 HandOrigin{};
 		mat3 HandAxis{ 1.0f };
+		vec3 LeftOrigin{};
+		mat3 LeftAxis{ 1.0f };
+		uint32_t TrackerMask = 0;
+		XrPosef TrackerPoses[VRTrackerCount] = {};
+		vec3 TrackerOrigins[VRTrackerCount] = {};
+		mat3 TrackerAxes[VRTrackerCount] = {};
+		std::optional<float> Floor;
 		VRView Views[2];
 		vec3 Cull{};
 		float CullTanX = 1.0f;
@@ -93,6 +129,7 @@ namespace IW3SR
 	{
 	public:
 		static void Startup();
+		static IDirect3D9* STDCALL CreateDirect3D(UINT sdkVersion);
 		static void Initialize();
 		static void Shutdown();
 
@@ -112,7 +149,7 @@ namespace IW3SR
 		static void AfterOverlay();
 		static void Submit();
 		static void FinishMove(usercmd_s* cmd);
-		static void ViewModelPose(DObj_s* obj);
+		static bool ViewModelPose(DObj_s* obj);
 		static bool Command(const std::string& command);
 
 		static HRESULT STDCALL SetRenderState(IDirect3DDevice9* device, D3DRENDERSTATETYPE state, DWORD value);
@@ -122,8 +159,11 @@ namespace IW3SR
 			IDirect3DSurface9** surface);
 
 	private:
-		static inline XRD3D11 Graphics;
-		static inline Scope<DX9XRBridge> Bridge;
+		static inline XRD3D11 Direct3D11;
+		static inline XRD3D12 Direct3D12;
+		static inline XRGraphics* Graphics = nullptr;
+		static inline Scope<DX9XRCapture> Bridge;
+		static inline bool TwelveFailed = false;
 		static inline bool Enabled = false;
 		static inline bool Started = false;
 		static inline bool Ready = false;
@@ -135,6 +175,8 @@ namespace IW3SR
 		static inline glm::ivec2 DesktopSize{};
 		static inline bool DesktopFullscreen = false;
 		static inline IDirect3DSurface9* EngineTarget = nullptr;
+		static inline IDirect3DSurface9* WindowScreen = nullptr;
+		static inline IDirect3DSurface9* WindowCanvas = nullptr;
 		static inline IDirect3DSurface9* EngineDepth = nullptr;
 		static inline D3DVIEWPORT9 EngineViewport = {};
 
@@ -151,7 +193,11 @@ namespace IW3SR
 		static inline float RecenterYaw = 0.0f;
 		static inline vec3 RecenterPosition{};
 		static inline float Stale = 0.0f;
+		static inline mat3 TrackerMounts[VRTrackerCount] = {};
+		static inline uint32_t MountedTrackers = 0;
 		static inline std::chrono::steady_clock::time_point LastFrame;
+		static inline std::chrono::steady_clock::time_point LastShot;
+		static inline bool GunAimed = false;
 
 		static inline bool HudPass = false;
 		static inline DWORD Requested[5] = {};
@@ -173,6 +219,8 @@ namespace IW3SR
 		static inline dvar_s* TurnSpeedVar = nullptr;
 
 		static void RegisterDvars();
+		static bool Connect(XRGraphics& graphics, std::string& error);
+		static void Disconnect();
 		static void CreateActions();
 		static VRControls ReadControls();
 		static void Controls(float seconds);
@@ -180,6 +228,9 @@ namespace IW3SR
 		static void Recenter();
 		static void LayoutHud(bool headset);
 		static void Place(refdef_s& refdef, const mat3& body);
+		static void ShareState(const refdef_s& refdef, float body);
+		static void FollowView();
+		static void PlaceViewModel(DObj_s* obj, const mat3& axis, const vec3& origin);
 		static void Frustum(const vec3& head, const mat3& axis);
 		static void SetEye(GfxViewParms& parms, int eye);
 		static void BeginHud();

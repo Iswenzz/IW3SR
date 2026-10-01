@@ -9,6 +9,7 @@
 
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Renderer.hpp"
+#include "Game/Renderer/VR/VR.hpp"
 
 #ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
 	#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
@@ -76,6 +77,9 @@ namespace IW3SR
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
 
+		// The renderer's Direct3DCreate9, so a headset can have D3D9 made on its own device
+		Memory::CALL(0x5F473B, reinterpret_cast<uintptr_t>(&GVR::CreateDirect3D));
+
 		// Kill retail's client autoupdate RCE
 		Memory::NOP(0x46B8D0, 10);
 		Memory::NOP(0x46A919, 5);
@@ -137,6 +141,7 @@ namespace IW3SR
 		R_AddCmdDrawTextWithEffects_h.Install();
 		R_BeginFrame_h.Install();
 		R_SetWndParms_h.Install();
+		R_AddDObjToScene_h.Install();
 		R_Init_h.Install();
 		R_Shutdown_h.Install();
 		RB_ExecuteRenderCommandsLoop_h.Install();

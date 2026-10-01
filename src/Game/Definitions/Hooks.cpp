@@ -3,6 +3,7 @@
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/Renderer.hpp"
+#include "Game/Renderer/VR/Body.hpp"
 #include "Game/Renderer/VR/VR.hpp"
 
 #include "Game/System/Assets.hpp"
@@ -182,8 +183,14 @@ namespace IW3SR
 	Hook<void(GfxViewInfo* viewInfo)>
 		RB_ViewCommands_h(0x64B637, ASM_LOAD(RB_ViewCommands_h));
 
-	Hook<void(DObj_s* obj)>
+	Hook<bool(DObj_s* obj)>
 		CG_UpdateViewModelPose_h(0x455895, ASM_LOAD(CG_UpdateViewModelPose_h));
+
+	Hook<bool(DObj_s* obj, const cpose_t* pose, int entnum)>
+		R_AddDObjToScene_h(0x5F7B60, ASM_LOAD(R_AddDObjToScene_h));
+
+	Hook<bool()>
+		CG_Player_h(0x4453B0, ASM_LOAD(CG_Player_h));
 
 	Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DRENDERSTATETYPE state, DWORD value)>
 		IDirect3DDevice9_SetRenderState_h(GVR::SetRenderState);
@@ -759,14 +766,59 @@ namespace IW3SR
 	}
 
 	// Past CG_UpdateViewModelPose's null check, so the trampoline carries no branch, with the model in eax
-	// and cg.viewModelAxis about to become its pose.
+	// and cg.viewModelAxis about to become its pose. A pose GVR made itself skips to the function's end.
 	ASM_FUNCTION(CG_UpdateViewModelPose_h)
 	{
+		Label original = a.newLabel();
+
 		a.pushad();
 		a.push(x86::eax); // obj
 		a.call(GVR::ViewModelPose);
 		a.add(x86::esp, 0x04);
+		a.test(x86::al, x86::al);
 		a.popad();
+		a.jz(original);
+		a.jmp(0x4558D8);
+
+		a.bind(original);
 		a.jmp(ASM_TRAMPOLINE(CG_UpdateViewModelPose_h));
+	}
+
+	// The model in ecx, its pose in eax, the entity it belongs to first on the stack. The caller pops
+	// the arguments, so a model kept out returns straight away.
+	ASM_FUNCTION(R_AddDObjToScene_h)
+	{
+		Label skip = a.newLabel();
+
+		a.pushad();
+		a.push(x86::dword_ptr(x86::esp, 0x24)); // entnum
+		a.push(x86::eax);						 // pose
+		a.push(x86::ecx);						 // obj
+		a.call(GVRBody::SceneModel);
+		a.add(x86::esp, 0x0C);
+		a.test(x86::al, x86::al);
+		a.popad();
+		a.jz(skip);
+		a.jmp(ASM_TRAMPOLINE(R_AddDObjToScene_h));
+
+		a.bind(skip);
+		a.ret();
+	}
+
+	// Reached once CG_Player knows it is drawing the player the view belongs to, which it goes on to only
+	// in third person.
+	ASM_FUNCTION(CG_Player_h)
+	{
+		Label skip = a.newLabel();
+
+		a.pushad();
+		a.call(GVRBody::PlayerVisible);
+		a.test(x86::al, x86::al);
+		a.popad();
+		a.jz(skip);
+		a.jmp(0x4453BD);
+
+		a.bind(skip);
+		a.jmp(0x4454FD);
 	}
 }

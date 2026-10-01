@@ -51,6 +51,7 @@ namespace IW3SR
 			APPLICATION_VERSION);
 		RegisterString("sr_voice", DvarFlags(DVAR_READONLY | DVAR_USERINFO), "Voice relay framing this client speaks",
 			"1");
+		RegisterString("sr_vrView", DvarFlags(DVAR_READONLY | DVAR_USERINFO), "VR state this client can draw", "1");
 		RegisterString("cef_url", DvarFlags(DVAR_TEMP), "CEF URL", "about:blank");
 
 		if (!Patch::UseCoD4X)

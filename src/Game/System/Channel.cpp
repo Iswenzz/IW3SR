@@ -4,6 +4,7 @@
 #include "Game/System/Download.hpp"
 #include "Game/System/Patch.hpp"
 #include "Game/System/Protocol.hpp"
+#include "Game/Renderer/VR/Network.hpp"
 
 #include <cstring>
 #include <deque>
@@ -377,7 +378,7 @@ namespace IW3SR
 
 	// The two things CL_PacketEvent would have done before a dispatch retail does not have: check the
 	// packet came from the server, and refresh the timeout clock (cl_main.c:3385-3397).
-	static bool FromServer(const netadr_t& from)
+	bool GChannel::FromServer(const netadr_t& from)
 	{
 		const netadr_t& server = clc.netchan.remoteAddress;
 
@@ -393,6 +394,8 @@ namespace IW3SR
 	// one cannot be mistaken for a tagged one.
 	int GChannel::PacketEvent(const netadr_t* from, msg_t* msg, int time)
 	{
+		if (GVRNetwork::Packet(from, msg))
+			return 1;
 		if (Patch::UseCoD4X || !from || !msg || !msg->data || msg->cursize < 4)
 			return 0;
 

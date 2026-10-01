@@ -275,6 +275,12 @@ namespace IW3SR
 	extern Function<int(const cpose_t* pose, DObj_s* obj, unsigned int tagName, float (*tagMat)[3], float* origin)>
 		CG_DObjGetWorldTagMatrix;
 
+	extern Function<int(DObj_s* obj, unsigned int tagName, uint8_t* boneIndex)>
+		DObjGetBoneIndex;
+
+	extern Function<unsigned int(const char* string, unsigned int size)>
+		SL_FindStringOfSize;
+
 	extern Function<void(ScreenPlacement* scrPlace, float x, float y, float width, float height)>
 		ScrPlace_SetupFloatViewport;
 
@@ -298,6 +304,7 @@ namespace IW3SR
 	ASM_FUNCTION(Cbuf_AddText);
 	ASM_FUNCTION(CG_DObjGetWorldTagMatrix);
 	ASM_FUNCTION(CG_UpdateViewModelPose);
+	ASM_FUNCTION(DObjGetBoneIndex);
 	ASM_FUNCTION(CL_ClearState);
 	ASM_FUNCTION(CL_DownloadsComplete);
 	ASM_FUNCTION(CL_InitDownloads);

@@ -1,16 +1,16 @@
 #include "VR.hpp"
+#include "Body.hpp"
 
 #include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Timestep.hpp"
 
+#include <glm/gtc/quaternion.hpp>
+
 namespace IW3SR
 {
 	namespace
 	{
-		// The game's unit is the inch.
-		constexpr float UnitsPerMeter = 39.3701f;
-
 		// D3D9 caps render targets here on any card that can drive a headset, and the game sizes every
 		// buffer it draws through to the display.
 		constexpr int MaxRenderSize = 8192;
@@ -21,7 +21,14 @@ namespace IW3SR
 
 		constexpr float StickDeadzone = 0.15f;
 		constexpr float TriggerThreshold = 0.5f;
+
+		// The gun keeps the aim this long past the trigger, for shots that leave a few commands later.
+		constexpr std::chrono::milliseconds GunAimHold{ 300 };
+
 		constexpr float CullMargin = 1.02f;
+
+		// How far the body turns from where the head looks, at most, in degrees.
+		constexpr float MaxTwist = 60.0f;
 
 		// How far the view may follow the headset sideways, the reach of a lean. Further, the eye would
 		// leave the player's hitbox and look through walls it cannot pass. Height is never followed, since
@@ -33,6 +40,9 @@ namespace IW3SR
 		constexpr float StaleDistance = 0.5f;
 		constexpr float StaleSeconds = 1.5f;
 
+		// The game reaches Direct3DCreate9 through its import thunk, which other mods may have redirected.
+		constexpr uintptr_t Direct3DCreate9Thunk = 0x670284;
+
 		constexpr uintptr_t DrawScene = 0xD584070;
 		constexpr int DrawSceneStandard = 3;
 
@@ -41,8 +51,30 @@ namespace IW3SR
 		constexpr size_t ViewInfoStride = 0x67B0;
 		constexpr size_t ViewInfoCommands = 0x5688;
 
+		// D3D9On12 presents a window's back buffer black past a size, around 800x540 on the user's machine
+		// though not by area alone; at most this it shows, stretched to the window.
+		constexpr glm::ivec2 MaxMirrorOn12{ 768, 432 };
+
 		// Projection matrices are scaled just under one, as InfinitePerspectiveMatrix builds them.
 		constexpr float ProjectionScale = 0.99951172f;
+
+		// One pose action per tracker role, in VRTracker's order.
+		struct TrackerRole
+		{
+			const char* Action;
+			const char* Name;
+			const char* Path;
+		};
+		constexpr TrackerRole TrackerRoles[VRTrackerCount] = {
+			{ "tracker_waist", "Waist tracker", "/user/vive_tracker_htcx/role/waist/input/grip/pose" },
+			{ "tracker_chest", "Chest tracker", "/user/vive_tracker_htcx/role/chest/input/grip/pose" },
+			{ "tracker_left_foot", "Left foot tracker", "/user/vive_tracker_htcx/role/left_foot/input/grip/pose" },
+			{ "tracker_right_foot", "Right foot tracker", "/user/vive_tracker_htcx/role/right_foot/input/grip/pose" },
+			{ "tracker_left_knee", "Left knee tracker", "/user/vive_tracker_htcx/role/left_knee/input/grip/pose" },
+			{ "tracker_right_knee", "Right knee tracker", "/user/vive_tracker_htcx/role/right_knee/input/grip/pose" },
+			{ "tracker_left_elbow", "Left elbow tracker", "/user/vive_tracker_htcx/role/left_elbow/input/grip/pose" },
+			{ "tracker_right_elbow", "Right elbow tracker", "/user/vive_tracker_htcx/role/right_elbow/input/grip/pose" },
+		};
 
 		constexpr int KeyCatchConsole = 0x1;
 		constexpr int KeyCatchUi = 0x10;
@@ -114,11 +146,34 @@ namespace IW3SR
 			}
 		}
 
+		// Pitch, yaw and roll, in degrees, of an axis in the game's frame: x forward, y left, z up.
+		vec3 AxisAngles(const mat3& axis)
+		{
+			const vec3 forward = axis[0];
+			const float yaw = Math::RadToDeg(std::atan2(forward.y, forward.x));
+			const float pitch = Math::RadToDeg(-std::asin(std::clamp(forward.z, -1.0f, 1.0f)));
+			const float roll = Math::RadToDeg(std::atan2(axis[1].z, axis[2].z));
+			return { pitch, yaw, roll };
+		}
+
 		// Heading and pitch, in degrees, of a direction in the game's frame.
 		vec2 Heading(const vec3& forward)
 		{
 			return { Math::RadToDeg(std::atan2(forward.y, forward.x)),
 				Math::RadToDeg(-std::asin(std::clamp(forward.z, -1.0f, 1.0f))) };
+		}
+
+		mat3 YawAxis(float yaw)
+		{
+			vec3 forward, right, up;
+			Math::AngleVectors({ 0.0f, yaw, 0.0f }, forward, right, up);
+			return mat3(forward, -right, up);
+		}
+
+		mat3 ToAxis(const float (&axis)[3][3])
+		{
+			return { vec3(axis[0][0], axis[0][1], axis[0][2]), vec3(axis[1][0], axis[1][1], axis[1][2]),
+				vec3(axis[2][0], axis[2][1], axis[2][2]) };
 		}
 
 		char ToMove(float value)
@@ -186,7 +241,7 @@ namespace IW3SR
 			"VR resolution, relative to what the headset asks for. Applies on vid_restart", 1.0f, 0.5f, 2.0f);
 		HudFovVar = Dvar::RegisterFloat("sr_vr_hud_fov", DVAR_SAVED, "Width of the VR HUD panel, in degrees", 60.0f,
 			20.0f, 100.0f);
-		GunVar = Dvar::RegisterBool("sr_vr_gun", DVAR_SAVED, "Draw the weapon in VR", false);
+		GunVar = Dvar::RegisterBool("sr_vr_gun", DVAR_SAVED, "Draw the weapon in VR", true);
 		TurnSpeedVar = Dvar::RegisterFloat("sr_vr_turn_speed", DVAR_SAVED,
 			"VR controller turning speed, in degrees a second", 180.0f, 30.0f, 720.0f);
 
@@ -215,11 +270,13 @@ namespace IW3SR
 		Actions.Recenter = OpenXR::CreateAction("recenter", "Recenter", XR_ACTION_TYPE_BOOLEAN_INPUT);
 		Actions.HandGrip = OpenXR::CreateAction("hand_grip", "Weapon hand", XR_ACTION_TYPE_POSE_INPUT);
 		Actions.HandAim = OpenXR::CreateAction("hand_aim", "Weapon aim", XR_ACTION_TYPE_POSE_INPUT);
+		Actions.LeftGrip = OpenXR::CreateAction("left_grip", "Free hand", XR_ACTION_TYPE_POSE_INPUT);
 
 		OpenXR::SuggestBindings("/interaction_profiles/oculus/touch_controller",
 			{
 				{ Actions.HandGrip, "/user/hand/right/input/grip/pose" },
 				{ Actions.HandAim, "/user/hand/right/input/aim/pose" },
+				{ Actions.LeftGrip, "/user/hand/left/input/grip/pose" },
 				{ Actions.Move, "/user/hand/left/input/thumbstick" },
 				{ Actions.Turn, "/user/hand/right/input/thumbstick" },
 				{ Actions.Jump, "/user/hand/right/input/a/click" },
@@ -238,6 +295,7 @@ namespace IW3SR
 			{
 				{ Actions.HandGrip, "/user/hand/right/input/grip/pose" },
 				{ Actions.HandAim, "/user/hand/right/input/aim/pose" },
+				{ Actions.LeftGrip, "/user/hand/left/input/grip/pose" },
 				{ Actions.Move, "/user/hand/left/input/thumbstick" },
 				{ Actions.Turn, "/user/hand/right/input/thumbstick" },
 				{ Actions.Jump, "/user/hand/right/input/a/click" },
@@ -251,10 +309,25 @@ namespace IW3SR
 				{ Actions.Recenter, "/user/hand/right/input/thumbstick/click" },
 			});
 
+		// Body trackers, when the runtime has them: SteamVR's own, SlimeVR, or a Quest's body forwarded by
+		// Virtual Desktop as trackers.
+		if (OpenXR::HasExtension(XR_HTCX_VIVE_TRACKER_INTERACTION_EXTENSION_NAME))
+		{
+			std::vector<XRBinding> trackers;
+			for (int i = 0; i < VRTrackerCount; i++)
+			{
+				Actions.Trackers[i] = OpenXR::CreateAction(TrackerRoles[i].Action, TrackerRoles[i].Name,
+					XR_ACTION_TYPE_POSE_INPUT);
+				trackers.push_back({ Actions.Trackers[i], TrackerRoles[i].Path });
+			}
+			OpenXR::SuggestBindings("/interaction_profiles/htc/vive_tracker_htcx", trackers);
+		}
+
 		OpenXR::SuggestBindings("/interaction_profiles/khr/simple_controller",
 			{
 				{ Actions.HandGrip, "/user/hand/right/input/grip/pose" },
 				{ Actions.HandAim, "/user/hand/right/input/aim/pose" },
+				{ Actions.LeftGrip, "/user/hand/left/input/grip/pose" },
 				{ Actions.Attack, "/user/hand/right/input/select/click" },
 				{ Actions.Menu, "/user/hand/left/input/menu/click" },
 			});
@@ -278,8 +351,8 @@ namespace IW3SR
 		return input;
 	}
 
-	// Runs from R_SetWndParms, before the window and the device exist, since a headset decides both
-	// their size and whether the monitor's refresh may pace the game.
+	// Runs as the renderer makes its D3D9, before the window and the device exist, since a headset decides
+	// what D3D9 runs on, their size, and whether the monitor's refresh may pace the game.
 	void GVR::Startup()
 	{
 		if (Started)
@@ -298,14 +371,38 @@ namespace IW3SR
 		if (!Enabled)
 			return;
 
+		// A Direct3D 12 session gets the frames without them leaving the GPU, once the game's D3D9 runs on its
+		// device. Direct3D 11 takes them through system memory, and is what is left when that cannot be.
 		std::string error;
-		if (!OpenXR::Initialize(Graphics, error))
+		if ((TwelveFailed || !Connect(Direct3D12, error)) && !Connect(Direct3D11, error))
 		{
 			Com_PrintMessage(CON_CHANNEL_ERROR, std::format("^1VR: {}, staying on the monitor.\n", error).c_str(), 0);
 			Enabled = false;
 			return;
 		}
-		Bridge = CreateScope<DX9XRBridge>(Graphics);
+		if (dx && dx->d3d9)
+			IDirect3D9_CreateDevice_h.Update(VTABLE(dx->d3d9, 16));
+
+		R_RenderScene_h.Install();
+		CG_Draw2D_h.Install();
+		RB_Draw3D_h.Install();
+		RB_ViewCommands_h.Install();
+		CG_UpdateViewModelPose_h.Install();
+		CG_Player_h.Install();
+	}
+
+	// Starts OpenXR on a graphics API, with the bridge that carries the frames to it and the actions.
+	bool GVR::Connect(XRGraphics& graphics, std::string& error)
+	{
+		OpenXR::RequestExtension(XR_HTCX_VIVE_TRACKER_INTERACTION_EXTENSION_NAME);
+		if (!OpenXR::Initialize(graphics, error))
+			return false;
+
+		Graphics = &graphics;
+		if (Graphics == &Direct3D12)
+			Bridge = CreateScope<DX9XRD3D12Bridge>(Direct3D12);
+		else
+			Bridge = CreateScope<DX9XRBridge>(Direct3D11);
 		OpenXR::OnStateChanged = [](XrSessionState state)
 		{ Com_PrintMessage(CON_CHANNEL_LOG, std::format("VR: session {}.\n", OpenXR::StateName(state)).c_str(), 0); };
 		CreateActions();
@@ -316,17 +413,52 @@ namespace IW3SR
 		size = glm::clamp(size, glm::ivec2(256), glm::max(limit, glm::ivec2(256)));
 		RenderSize = size & ~1;
 
-		if (dx && dx->d3d9)
-			IDirect3D9_CreateDevice_h.Update(VTABLE(dx->d3d9, 16));
-
+		const char* path = Graphics == &Direct3D12 ? "Direct3D 12" : "Direct3D 11 through system memory";
 		Com_PrintMessage(CON_CHANNEL_LOG,
-			std::format("VR: {} at {}x{} per eye.\n", OpenXR::RuntimeName(), RenderSize.x, RenderSize.y).c_str(), 0);
+			std::format("VR: {} at {}x{} per eye, {}.\n", OpenXR::RuntimeName(), RenderSize.x, RenderSize.y, path).c_str(),
+			0);
+		return true;
+	}
 
-		R_RenderScene_h.Install();
-		CG_Draw2D_h.Install();
-		RB_Draw3D_h.Install();
-		RB_ViewCommands_h.Install();
-		CG_UpdateViewModelPose_h.Install();
+	void GVR::Disconnect()
+	{
+		Bridge.reset();
+		OpenXR::Shutdown();
+		OpenXR::OnStateChanged = nullptr;
+		Actions = {};
+		Graphics = nullptr;
+	}
+
+	// In place of the renderer's Direct3DCreate9. With a Direct3D 12 session, the game's D3D9 is made by
+	// D3D9On12 on its device; failing that, the session moves to Direct3D 11.
+	IDirect3D9* STDCALL GVR::CreateDirect3D(UINT sdkVersion)
+	{
+		Startup();
+
+		IDirect3D9* d3d = nullptr;
+		if (Enabled && Graphics == &Direct3D12)
+		{
+			d3d = DX9XRD3D12Bridge::CreateDirect3D(Direct3D12, sdkVersion);
+			if (!d3d)
+			{
+				Com_PrintMessage(CON_CHANNEL_ERROR, "^1VR: D3D9On12 is unavailable, frames go through system memory.\n", 0);
+				TwelveFailed = true;
+				Disconnect();
+
+				std::string error;
+				if (!Connect(Direct3D11, error))
+				{
+					Com_PrintMessage(CON_CHANNEL_ERROR, std::format("^1VR: {}, staying on the monitor.\n", error).c_str(), 0);
+					Enabled = false;
+					RenderSize = {};
+				}
+			}
+		}
+		if (!d3d)
+			d3d = reinterpret_cast<IDirect3D9*(WINAPI*)(UINT)>(Direct3DCreate9Thunk)(sdkVersion);
+		if (d3d && OwnsWindow())
+			IDirect3D9_CreateDevice_h.Update(VTABLE(d3d, 16));
+		return d3d;
 	}
 
 	// The engine is told the display is the headset's eye, which sizes every buffer it draws through. The
@@ -397,8 +529,15 @@ namespace IW3SR
 		if (!window || !GetClientRect(window, &client))
 			return;
 
-		parameters->BackBufferWidth = static_cast<UINT>(std::max(1L, client.right - client.left));
-		parameters->BackBufferHeight = static_cast<UINT>(std::max(1L, client.bottom - client.top));
+		glm::ivec2 size(std::max(1L, client.right - client.left), std::max(1L, client.bottom - client.top));
+		if (Graphics == &Direct3D12)
+		{
+			const float scale = std::min({ 1.0f, static_cast<float>(MaxMirrorOn12.x) / size.x,
+				static_cast<float>(MaxMirrorOn12.y) / size.y });
+			size = glm::max(glm::ivec2(glm::round(vec2(size) * scale)), glm::ivec2(1));
+		}
+		parameters->BackBufferWidth = static_cast<UINT>(size.x);
+		parameters->BackBufferHeight = static_cast<UINT>(size.y);
 		parameters->MultiSampleType = D3DMULTISAMPLE_NONE;
 		parameters->MultiSampleQuality = 0;
 	}
@@ -446,6 +585,17 @@ namespace IW3SR
 
 		if (Ready || !Enabled || !dx || !dx->device)
 			return;
+
+		// The copies on the GPU need the device D3D9On12 made on the session's own; the restart that follows
+		// one that is not goes through system memory.
+		if (!Bridge->Attach(dx->device))
+		{
+			Com_PrintMessage(CON_CHANNEL_ERROR, "^1VR: the game's D3D9 is not on the headset's GPU, restarting.\n", 0);
+			Shutdown();
+			TwelveFailed = true;
+			Cbuf_AddText(0, "vid_restart\n");
+			return;
+		}
 
 		std::string error;
 		if (!OpenXR::CreateSession(RenderSize, HudSize, error))
@@ -499,10 +649,9 @@ namespace IW3SR
 		RB_Draw3D_h.Remove();
 		RB_ViewCommands_h.Remove();
 		CG_UpdateViewModelPose_h.Remove();
-
-		Bridge.reset();
-		OpenXR::Shutdown();
-		OpenXR::OnStateChanged = nullptr;
+		CG_Player_h.Remove();
+		GVRBody::Reset();
+		Disconnect();
 
 		if (SmpBackend && SmpRestore)
 			SmpBackend->current.enabled = true;
@@ -533,6 +682,7 @@ namespace IW3SR
 
 		Frame = {};
 		Stage = VRStage::None;
+		GVRBody::Reset();
 
 		const auto now = std::chrono::steady_clock::now();
 		const float seconds = std::clamp(std::chrono::duration<float>(now - LastFrame).count(), 0.0f, 0.1f);
@@ -594,16 +744,36 @@ namespace IW3SR
 		Frame.Yaw = looking.x;
 		Frame.Pitch = looking.y;
 
-		// The gun is held in the right hand whenever it is drawn and the controller is tracked, and aims
-		// from there.
-		Frame.Holding = GunVar && GunVar->current.enabled && OpenXR::GetPose(Actions.HandGrip, Frame.Grip)
-			&& OpenXR::GetPose(Actions.HandAim, Frame.Pointer);
+		// The hands are followed whenever tracked, and the gun held in the right one whenever it is drawn,
+		// aiming from there.
+		Frame.RightTracked =
+			OpenXR::GetPose(Actions.HandGrip, Frame.Grip) && OpenXR::GetPose(Actions.HandAim, Frame.Pointer);
+		Frame.LeftTracked = OpenXR::GetPose(Actions.LeftGrip, Frame.LeftGrip);
+		Frame.Holding = Frame.RightTracked && GunVar && GunVar->current.enabled;
 		if (Frame.Holding)
 		{
 			const vec2 hand = Heading(ToGamePose(Frame.Pointer, RecenterYaw, RecenterPosition).Axis[0]);
 			Frame.HandYaw = hand.x;
 			Frame.HandPitch = hand.y;
 		}
+
+		// A tracker sits on the body however it was strapped on, which is taken the first time it is seen
+		// after a recenter, the player standing straight and facing the way it looks.
+		for (int i = 0; i < VRTrackerCount; i++)
+		{
+			if (!Actions.Trackers[i] || !OpenXR::GetPose(Actions.Trackers[i], Frame.TrackerPoses[i]))
+				continue;
+
+			Frame.TrackerMask |= 1u << i;
+			if (MountedTrackers & (1u << i))
+				continue;
+			const GamePose tracker = ToGamePose(Frame.TrackerPoses[i], RecenterYaw, RecenterPosition);
+			TrackerMounts[i] = glm::transpose(tracker.Axis) * YawAxis(Frame.Yaw);
+			MountedTrackers |= 1u << i;
+		}
+		float floor = 0.0f;
+		if (Frame.TrackerMask && OpenXR::FloorHeight(floor))
+			Frame.Floor = floor;
 	}
 
 	// The game lays out its 2D for the screen it believes it has, set once when the renderer starts.
@@ -649,6 +819,7 @@ namespace IW3SR
 
 		RecenterPending = false;
 		Stale = 0.0f;
+		MountedTrackers = 0;
 
 		const vec3 forward = Rotate(Frame.Head.orientation, { 0, 0, -1 });
 		RecenterYaw = std::atan2(-forward.x, -forward.z);
@@ -662,6 +833,8 @@ namespace IW3SR
 	{
 		Timestep::CalcViewValues(localClientNum);
 
+		if (!Frame.Active)
+			FollowView();
 		if (!Frame.Active || !Frame.Tracked || GPortal::Rendering || !cgs || !clients)
 			return;
 
@@ -674,9 +847,7 @@ namespace IW3SR
 		if (Controlled(ps))
 			yaw = clients->viewangles[YAW] + ps.delta_angles[YAW];
 
-		vec3 forward, right, up;
-		Math::AngleVectors({ 0.0f, yaw, 0.0f }, forward, right, up);
-		const mat3 body(forward, -right, up);
+		const mat3 body = YawAxis(yaw);
 		const vec3 origin = refdef.vieworg;
 
 		Place(refdef, body);
@@ -693,6 +864,75 @@ namespace IW3SR
 		if (GunVar && !GunVar->current.enabled)
 			Hide(DrawGun, "cg_drawGun", GunHidden);
 		Frame.Armed = true;
+
+		ShareState(refdef, yaw);
+	}
+
+	// What others need to draw this player's body, and spectators to see through its eyes, relative to
+	// where the player stands, and what the player sees of its own. The body faces the way the waist or
+	// chest tracker does; without one, the way the player turned it, the play space's forward, kept within
+	// a twist of where the head looks.
+	void GVR::ShareState(const refdef_s& refdef, float body)
+	{
+		const bool gun = GunVar && GunVar->current.enabled;
+		const playerState_s& ps = cgs->predictedPlayerState;
+		if (!Controlled(ps) || ps.pm_type == PM_SPECTATOR || ps.pm_type >= PM_DEAD || cgs->renderingThirdPerson)
+		{
+			GVRBody::SetOwn(nullptr, gun);
+			return;
+		}
+
+		const vec3 origin = ps.origin;
+		const auto pose = [&](const vec3& at, const mat3& axis) { return VRNetPose{ at - origin, glm::quat_cast(axis) }; };
+
+		VRNetState state;
+		state.Parts = VRPartHead;
+		state.HeadAngles = AxisAngles(refdef.viewaxis);
+		const auto worn = [](VRTracker role) { return Frame.TrackerMask & (1u << static_cast<int>(role)); };
+		if (worn(VRTracker::Waist) || worn(VRTracker::Chest))
+		{
+			const VRTracker hips = worn(VRTracker::Waist) ? VRTracker::Waist : VRTracker::Chest;
+			state.BodyYaw = Heading(Frame.TrackerAxes[static_cast<int>(hips)][0]).x;
+		}
+		else
+			state.BodyYaw = state.HeadAngles[YAW]
+				+ std::clamp(Math::AngleDelta(body, state.HeadAngles[YAW]), -MaxTwist, MaxTwist);
+		state.Head = pose(refdef.vieworg, refdef.viewaxis);
+		if (Frame.RightTracked)
+		{
+			state.Parts |= VRPartRight;
+			state.RightHand = pose(Frame.HandOrigin, Frame.HandAxis);
+		}
+		if (Frame.LeftTracked)
+		{
+			state.Parts |= VRPartLeft;
+			state.LeftHand = pose(Frame.LeftOrigin, Frame.LeftAxis);
+		}
+		state.Trackers = Frame.TrackerMask;
+		for (int i = 0; i < VRTrackerCount; i++)
+		{
+			if (state.Trackers & (1u << i))
+				state.TrackerPoses[i] = pose(Frame.TrackerOrigins[i], Frame.TrackerAxes[i]);
+		}
+		GVRNetwork::Send(state);
+		GVRBody::SetOwn(&state, gun);
+	}
+
+	// Following a VR player, the view is where that player's head is and looks, rather than where it
+	// aims. Its head is relative to where it stands, which carries it however late the server shows it.
+	void GVR::FollowView()
+	{
+		if (!cgs || GPortal::Rendering || clc.demoplaying)
+			return;
+
+		const playerState_s& ps = cgs->predictedPlayerState;
+		const VRNetState* state = ps.clientNum != cgs->clientNum ? GVRNetwork::Get(ps.clientNum) : nullptr;
+		if (!state || !(state->Parts & VRPartHead))
+			return;
+
+		cgs->refdef.vieworg = vec3(ps.origin) + state->Head.Offset;
+		cgs->refdef.viewaxis = glm::mat3_cast(state->Head.Rotation);
+		cgs->refdefViewAngles = state->HeadAngles;
 	}
 
 	// The eyes keep their spacing around the head, and the head follows the headset sideways as far as a
@@ -723,10 +963,30 @@ namespace IW3SR
 			view.Up = std::tan(fov.angleUp);
 		}
 
-		if (Frame.Holding)
+		if (Frame.RightTracked)
 		{
 			Frame.HandOrigin = place(ToGamePose(Frame.Grip, RecenterYaw, RecenterPosition).Position);
 			Frame.HandAxis = body * ToGamePose(Frame.Pointer, RecenterYaw, RecenterPosition).Axis;
+		}
+		if (Frame.LeftTracked)
+		{
+			const GamePose left = ToGamePose(Frame.LeftGrip, RecenterYaw, RecenterPosition);
+			Frame.LeftOrigin = place(left.Position);
+			Frame.LeftAxis = body * left.Axis;
+		}
+
+		// Trackers stand on the floor, which the game keeps at the player's feet whatever height it gives
+		// the view.
+		const float feet = cgs->predictedPlayerState.origin[2];
+		for (int i = 0; i < VRTrackerCount; i++)
+		{
+			if (!(Frame.TrackerMask & (1u << i)))
+				continue;
+			const GamePose tracker = ToGamePose(Frame.TrackerPoses[i], RecenterYaw, RecenterPosition);
+			Frame.TrackerOrigins[i] = place(tracker.Position);
+			if (Frame.Floor)
+				Frame.TrackerOrigins[i].z = feet + (tracker.Position.z - (*Frame.Floor - RecenterPosition.y)) * UnitsPerMeter;
+			Frame.TrackerAxes[i] = body * tracker.Axis * TrackerMounts[i];
 		}
 
 		const vec3 origin = place(head.Position);
@@ -943,19 +1203,34 @@ namespace IW3SR
 			|| !screen)
 			return;
 
+		// The back buffer can be smaller than the window, and the overlay is laid out for the window, so then
+		// both are drawn at the window's size and shrunk into it after.
+		IDirect3DSurface9* target = screen;
+		RECT client = {};
+		D3DSURFACE_DESC desc = {};
+		screen->GetDesc(&desc);
+		if (g_wv && GetClientRect(g_wv->hWnd, &client))
+		{
+			const glm::ivec2 window(client.right - client.left, client.bottom - client.top);
+			if (window.x > 0 && window.y > 0 && window != glm::ivec2(desc.Width, desc.Height))
+				WindowCanvas = target = Bridge->Canvas(device, window);
+		}
+		if (!target)
+			target = screen;
+		WindowScreen = screen;
+
 		// Without a headset frame, from a session that ended or before one started, the engine drew its
 		// ordinary view into its buffer, and that is what the window gets.
 		if (Frame.Active)
-			Bridge->Mirror(screen, Frame.Drawn, Frame.Hud, MirrorFocus());
+			Bridge->Mirror(target, Frame.Drawn, Frame.Hud, MirrorFocus());
 		else
-			Bridge->Mirror(screen, FrameBuffer());
+			Bridge->Mirror(target, FrameBuffer());
 
 		device->GetRenderTarget(0, &EngineTarget);
 		device->GetDepthStencilSurface(&EngineDepth);
 		device->GetViewport(&EngineViewport);
-		device->SetRenderTarget(0, screen);
+		device->SetRenderTarget(0, target);
 		device->SetDepthStencilSurface(nullptr);
-		screen->Release();
 	}
 
 	void GVR::AfterOverlay()
@@ -963,6 +1238,14 @@ namespace IW3SR
 		if (GPortal::Rendering || !dx || !dx->device)
 			return;
 
+		if (WindowScreen)
+		{
+			if (WindowCanvas)
+				dx->device->StretchRect(WindowCanvas, nullptr, WindowScreen, nullptr, D3DTEXF_LINEAR);
+			WindowScreen->Release();
+			WindowScreen = nullptr;
+			WindowCanvas = nullptr;
+		}
 		if (EngineTarget)
 		{
 			IDirect3DDevice9* device = dx->device;
@@ -994,33 +1277,45 @@ namespace IW3SR
 		layers.Panel = Frame.Hud;
 		layers.PanelDistance = HudDistance;
 		layers.PanelSize = HudTangents() * (2.0f * HudDistance);
-		Bridge->Queue(layers);
 
 		XRLayers ready;
-		if (!Bridge->Submit(ready))
+		if (!Bridge->Deliver(layers, ready))
 			ready = {};
 		OpenXR::EndFrame(ready);
 	}
 
-	// The gun in the hand aims, or the head when there is none: its yaw is added to the body's and its
-	// pitch replaces the mouse's, which is dropped. Moving always goes the head's way. The controllers add
-	// their movement and buttons on top of the keyboard's. The command is built before the next frame is
-	// drawn, from the last one's head and controllers.
+	// The head aims, so whoever follows the player sees what the player sees: its yaw is added to the
+	// body's and its pitch replaces the mouse's, which is dropped. The gun in the hand takes over while it
+	// fires, moving still going the head's way. The controllers add their movement and buttons on top of
+	// the keyboard's. The command is built before the next frame is drawn, from the last one's head and
+	// controllers.
 	void GVR::FinishMove(usercmd_s* cmd)
 	{
 		if (!cmd || !Frame.Tracked || !cgs || !clients)
 			return;
 
+		if (!client_ui || !(client_ui->keyCatchers & (KeyCatchConsole | KeyCatchUi | KeyCatchMessage)))
+			ApplyControls(cmd);
+
+		const auto now = std::chrono::steady_clock::now();
+		const bool firing = Frame.Holding && (cmd->buttons & BUTTON_FIRE);
+		if (firing)
+			LastShot = now;
+		const bool gun = Frame.Holding && now - LastShot < GunAimHold;
+
+		// The server aims a shot with the angles of the command before it, so the gun takes the aim one
+		// command before the trigger goes through.
+		if (firing && !GunAimed)
+			cmd->buttons &= ~BUTTON_FIRE;
+		GunAimed = gun;
+
 		const playerState_s& ps = cgs->predictedPlayerState;
-		const float yaw = Frame.Holding ? Frame.HandYaw : Frame.Yaw;
-		const float pitch = Frame.Holding ? Frame.HandPitch : Frame.Pitch;
+		const float yaw = gun ? Frame.HandYaw : Frame.Yaw;
+		const float pitch = gun ? Frame.HandPitch : Frame.Pitch;
 		clients->viewangles[PITCH] = 0.0f;
 		cmd->angles[PITCH] = ANGLE2SHORT(pitch - ps.delta_angles[PITCH]);
 		cmd->angles[YAW] = ANGLE2SHORT(clients->viewangles[YAW] + yaw);
-
-		if (!client_ui || !(client_ui->keyCatchers & (KeyCatchConsole | KeyCatchUi | KeyCatchMessage)))
-			ApplyControls(cmd);
-		if (Frame.Holding)
+		if (gun)
 			Steer(cmd, Frame.Yaw - yaw);
 	}
 
@@ -1051,41 +1346,44 @@ namespace IW3SR
 		cmd->buttons |= buttons;
 	}
 
-	// The gun follows the right hand: the model is placed so the bone the gun hangs from lands in the
-	// controller, turned the way it points. Where that bone sits in the model moves with every animation,
-	// so it is measured each time, from the model first posed at the hand.
-	void GVR::ViewModelPose(DObj_s* obj)
+	// The view weapon is not drawn in VR, the player's body holds the gun, but its muzzle flash and laser
+	// still come from it, so it is placed in the hand: the bone the gun hangs from lands in the controller,
+	// turned the way it points. Where that bone sits in the model moves with every animation, so it is
+	// measured each time, from the model first posed at the hand. The engine's posing is done here too,
+	// and true skips the rest of it.
+	bool GVR::ViewModelPose(DObj_s* obj)
 	{
 		if (Posing || !Frame.Armed || !Frame.Holding || !obj || !cgs || GPortal::Rendering)
-			return;
+			return false;
 
-		const auto place = [](const mat3& axis, const vec3& origin)
-		{
-			for (int i = 0; i < 3; i++)
-			{
-				for (int j = 0; j < 3; j++)
-					cgs->viewModelAxis[i][j] = axis[i][j];
-				cgs->viewModelAxis[3][i] = origin[i];
-			}
-		};
 		const mat3& hand = Frame.HandAxis;
-		place(hand, Frame.HandOrigin);
+		PlaceViewModel(obj, hand, Frame.HandOrigin);
+
+		float tag[3][3] = {};
+		vec3 tagOrigin{};
+		if (CG_DObjGetWorldTagMatrix(&cgs->viewModelPose, obj, scr_const_tag_weapon, tag, &tagOrigin[0]))
+		{
+			const mat3 local = glm::transpose(hand) * ToAxis(tag);
+			const vec3 offset = glm::transpose(hand) * (tagOrigin - Frame.HandOrigin);
+			const mat3 root = hand * glm::transpose(local);
+			PlaceViewModel(obj, root, Frame.HandOrigin - root * offset);
+		}
+		return true;
+	}
+
+	// The engine poses the model from cg.viewModelAxis, forgetting every bone worked out so far.
+	void GVR::PlaceViewModel(DObj_s* obj, const mat3& axis, const vec3& origin)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+				cgs->viewModelAxis[i][j] = axis[i][j];
+			cgs->viewModelAxis[3][i] = origin[i];
+		}
 
 		Posing = true;
 		CG_UpdateViewModelPose(obj);
 		Posing = false;
-
-		float tag[3][3] = {};
-		vec3 tagOrigin{};
-		if (!CG_DObjGetWorldTagMatrix(&cgs->viewModelPose, obj, scr_const_tag_weapon, tag, &tagOrigin[0]))
-			return;
-
-		const mat3 bone(vec3(tag[0][0], tag[0][1], tag[0][2]), vec3(tag[1][0], tag[1][1], tag[1][2]),
-			vec3(tag[2][0], tag[2][1], tag[2][2]));
-		const mat3 local = glm::transpose(hand) * bone;
-		const vec3 offset = glm::transpose(hand) * (tagOrigin - Frame.HandOrigin);
-		const mat3 root = hand * glm::transpose(local);
-		place(root, Frame.HandOrigin - root * offset);
 	}
 
 	bool GVR::Command(const std::string& command)

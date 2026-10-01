@@ -20,6 +20,7 @@ namespace IW3SR
 		static int PacketEvent(const netadr_t* from, msg_t* msg, int time);
 
 		static bool Send(int32_t command, const uint8_t* body, int length);
+		static bool FromServer(const netadr_t& from);
 		static ReliableMessages& Instance();
 		static bool IsEnabled();
 

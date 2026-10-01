@@ -271,6 +271,12 @@ namespace IW3SR
 	Function<int(const cpose_t* pose, DObj_s* obj, unsigned int tagName, float (*tagMat)[3], float* origin)>
 		CG_DObjGetWorldTagMatrix = ASM_LOAD(CG_DObjGetWorldTagMatrix);
 
+	Function<int(DObj_s* obj, unsigned int tagName, uint8_t* boneIndex)>
+		DObjGetBoneIndex = ASM_LOAD(DObjGetBoneIndex);
+
+	Function<unsigned int(const char* string, unsigned int size)>
+		SL_FindStringOfSize = 0x517F70;
+
 	Function<void(ScreenPlacement* scrPlace, float x, float y, float width, float height)>
 		ScrPlace_SetupFloatViewport = 0x477420;
 
@@ -768,6 +774,22 @@ namespace IW3SR
 		a.add(x86::esp, 0x0C);
 
 		a.pop(x86::edi);
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	// The model in ecx; the index is read as a hint, 254 for none, as the engine's own callers pass it.
+	ASM_FUNCTION(DObjGetBoneIndex)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+
+		a.mov(x86::ecx, x86::dword_ptr(x86::ebp, 0x08)); // obj
+		a.push(x86::dword_ptr(x86::ebp, 0x10));			 // boneIndex
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // tagName
+		a.call(0x57F2B0);
+		a.add(x86::esp, 0x08);
+
 		a.pop(x86::ebp);
 		a.ret();
 	}
