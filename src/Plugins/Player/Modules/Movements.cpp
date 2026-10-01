@@ -147,7 +147,12 @@ namespace IW3SR::Addons
 			// Clear jump while in air so oldcmd is clean on landing, preserve on mantle and ladder
 			else if (!inMantle && !inLadder && !mantleAvailable)
 			{
-				cmd->buttons &= ~(BUTTON_JUMP | BUTTON_SPRINT);
+				cmd->buttons &= ~BUTTON_JUMP;
+
+				// Releasing sprint lifts sprintButtonUpRequired so it restarts on landing, but only once
+				// it has ended: a fresh press while sprinting toggles it off in PM_UpdateSprint.
+				if (!(ps->pm_flags & PMF_SPRINTING))
+					cmd->buttons &= ~BUTTON_SPRINT;
 			}
 		}
 		if (BhopToggled && PMove::OnGround())
