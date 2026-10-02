@@ -8,6 +8,10 @@ namespace IW3SR
 		// The wrist sits behind the middle of a controller's grip, along the way the hand points, in game units.
 		constexpr float WristBack = 3.0f;
 
+		// How far below the view the player's own neck is kept, in game units, so a jump that lifts the body
+		// does not bring its inside into view.
+		constexpr float NeckClearance = 7.0f;
+
 		// How far the back bends to bring the head over the player's own, at most, in radians.
 		constexpr float MaxBend = 0.7f;
 
@@ -218,6 +222,12 @@ namespace IW3SR
 				const vec3 camera = at(state.Head);
 				skeleton.Bend("j_spinelower", "j_head", vec3(camera.x - sight.x, camera.y - sight.y, head.z), MaxBend);
 			}
+
+			vec3 neck{};
+			const float top = at(state.Head).z - NeckClearance;
+			if (headless && (state.Parts & VRPartHead) && skeleton.World("j_neck", neck, frame) && neck.z > top
+				&& skeleton.World("j_mainroot", hips, frame))
+				skeleton.Move("j_mainroot", glm::quat::wxyz(1.0f, 0.0f, 0.0f, 0.0f), hips, hips - vec3(0.0f, 0.0f, neck.z - top));
 		}
 
 		// The legs reach for the feet trackers, bent toward the knee trackers or the way the body faces, and

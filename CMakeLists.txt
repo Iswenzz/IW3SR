@@ -41,12 +41,15 @@ set(SENTRY_DSN "https://549fb8644c528d116b01e65a61214004@o4512017499815936.inges
 add_subdirectory(engine)
 add_subdirectory(src)
 
+# Resources/*.zip, packed from the engine's resources/ and ours.
+iz_resource_archives(TARGET IW3SR SOURCE ${CMAKE_SOURCE_DIR}/resources
+	DESTINATION ${COD4}/iw3sr/Resources
+	NAMES fonts shaders textures)
+
 # Install
 install(TARGETS CEF CrashReporter RUNTIME
 	DESTINATION ${COD4}/iw3sr/Bin)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources/
-	DESTINATION ${COD4}/iw3sr/Resources)
 
 install(FILES ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/locales/en-US.pak
 	DESTINATION ${COD4}/iw3sr/Bin)
