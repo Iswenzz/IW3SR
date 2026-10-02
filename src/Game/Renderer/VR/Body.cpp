@@ -23,6 +23,14 @@ namespace IW3SR
 		constexpr float LongestArm = 33.5f;
 		constexpr float UsualArm = 23.6f;
 
+		// A reach this far out of the longest is an arm held straight: the longest includes the shoulder
+		// pushed forward, which an arm hanging at the side never has.
+		constexpr float BentReach = 0.7f;
+		constexpr float StraightReach = 0.85f;
+
+		// How far a straightened arm may overshoot the hand, which then slides back up the forearm.
+		constexpr float MaxSlide = 3.0f;
+
 		constexpr int ProneFlag = 0x8;
 		constexpr int NoGround = 1023;
 
@@ -280,7 +288,51 @@ namespace IW3SR
 			if (!(state.Parts & VRPartHead))
 				return 0.0f;
 			const vec3 shoulder = headset + across * (side ? -ShoulderWidth : ShoulderWidth) - vec3(0.0f, 0.0f, ShoulderDrop);
-			return Extension(entnum, side, shoulder, hand);
+			const float extension = Extension(entnum, side, shoulder, hand);
+			return std::clamp((extension - BentReach) / (StraightReach - BentReach), 0.0f, 1.0f);
+		};
+
+		// The helper bones around the elbow and along the forearm are posed for the animation's bent arm.
+		// The bulge takes half of the elbow's turn since, and the forearm half of the wrist's, or the elbow
+		// keeps its bend in the skin and the forearm twists like a wrapper.
+		struct ArmRest
+		{
+			mat3 Shoulder{ 1.0f }, Elbow{ 1.0f }, Wrist{ 1.0f }, Bulge{ 1.0f }, Twist{ 1.0f };
+			bool Known = false;
+		};
+		ArmRest rests[2];
+		for (int side = 0; side < 2; side++)
+		{
+			ArmRest& rest = rests[side];
+			vec3 point{};
+			rest.Known = skeleton.World(Bone("j_shoulder_", side).c_str(), point, rest.Shoulder)
+				&& skeleton.World(Bone("j_elbow_", side).c_str(), point, rest.Elbow)
+				&& skeleton.World(Bone("j_wrist_", side).c_str(), point, rest.Wrist)
+				&& skeleton.World(Bone("j_elbow_bulge_", side).c_str(), point, rest.Bulge)
+				&& skeleton.World(Bone("j_wristtwist_", side).c_str(), point, rest.Twist);
+		}
+		const auto relax = [&](int side)
+		{
+			const ArmRest& rest = rests[side];
+			vec3 point{};
+			mat3 shoulder{ 1.0f };
+			mat3 elbow{ 1.0f };
+			mat3 wrist{ 1.0f };
+			if (!rest.Known || !skeleton.World(Bone("j_shoulder_", side).c_str(), point, shoulder)
+				|| !skeleton.World(Bone("j_elbow_", side).c_str(), point, elbow)
+				|| !skeleton.World(Bone("j_wrist_", side).c_str(), point, wrist))
+				return;
+
+			const glm::quat identity = glm::quat::wxyz(1.0f, 0.0f, 0.0f, 0.0f);
+			const glm::quat bent = glm::quat_cast(glm::transpose(shoulder) * elbow
+				* glm::transpose(glm::transpose(rest.Shoulder) * rest.Elbow));
+			skeleton.Turn(Bone("j_elbow_bulge_", side).c_str(),
+				shoulder * glm::mat3_cast(glm::slerp(identity, bent, 0.5f)) * glm::transpose(rest.Shoulder) * rest.Bulge);
+
+			const glm::quat rolled = glm::quat_cast(glm::transpose(elbow) * wrist
+				* glm::transpose(glm::transpose(rest.Elbow) * rest.Wrist));
+			skeleton.Turn(Bone("j_wristtwist_", side).c_str(),
+				elbow * glm::mat3_cast(glm::slerp(identity, rolled, 0.5f)) * glm::transpose(rest.Elbow) * rest.Twist);
 		};
 		const auto arm = [&](int side, const vec3& target, float straight)
 		{
@@ -308,7 +360,9 @@ namespace IW3SR
 
 			const float reach = glm::distance(root, target);
 			const float wanted = std::min(straight, 0.999f) * length;
-			const vec3 aimed = wanted > reach && reach > 0.01f ? root + (target - root) * (wanted / reach) : target;
+			const vec3 aimed = wanted > reach && reach > 0.01f
+				? root + (target - root) * (std::min(wanted, reach + MaxSlide) / reach)
+				: target;
 			if (!skeleton.Reach(shoulder.c_str(), elbowBone.c_str(), wristBone.c_str(), aimed, pole))
 				return false;
 			if (aimed != target && skeleton.World(wristBone.c_str(), end, frame))
@@ -328,7 +382,10 @@ namespace IW3SR
 				gunAt = at(state.RightHand);
 				gun = axis(state.RightHand);
 				if (arm(1, gunAt + gun * (toGun * (rightWrist - grip)), straightness(1, gunAt)))
+				{
 					skeleton.Turn("j_wrist_ri", gun * toGun * rightHand);
+					relax(1);
+				}
 			}
 			else
 				skeleton.World("tag_weapon_right", gunAt, gun);
@@ -351,7 +408,10 @@ namespace IW3SR
 					straight = straightness(0, at(state.LeftHand)) * follow;
 				}
 				if (arm(0, target, straight))
+				{
 					skeleton.Turn("j_wrist_le", glm::mat3_cast(turn));
+					relax(0);
+				}
 			}
 		}
 
