@@ -130,6 +130,7 @@ namespace IW3SR
 	public:
 		static void Startup();
 		static IDirect3D9* STDCALL CreateDirect3D(UINT sdkVersion);
+		static void MouseEvent(int x, int y);
 		static void Initialize();
 		static void Shutdown();
 

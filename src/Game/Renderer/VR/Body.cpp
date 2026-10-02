@@ -8,14 +8,23 @@ namespace IW3SR
 		// The wrist sits behind the middle of a controller's grip, along the way the hand points, in game units.
 		constexpr float WristBack = 3.0f;
 
-		// How far below the view the player's own neck is kept, in game units, so a jump that lifts the body
-		// does not bring its inside into view.
+		// How far below the view the player's own neck is kept in the air, in game units, so a jump that lifts
+		// the body does not bring its inside into view. On the ground it stays where it stands, or the arms
+		// could not reach the hands at its sides.
 		constexpr float NeckClearance = 7.0f;
 
 		// How far the back bends to bring the head over the player's own, at most, in radians.
 		constexpr float MaxBend = 0.7f;
 
+		// Where a player's shoulders sit against its eyes, and how long its arms may be, in game units.
+		constexpr float ShoulderDrop = 9.0f;
+		constexpr float ShoulderWidth = 7.0f;
+		constexpr float ShortestArm = 19.7f;
+		constexpr float LongestArm = 33.5f;
+		constexpr float UsualArm = 23.6f;
+
 		constexpr int ProneFlag = 0x8;
+		constexpr int NoGround = 1023;
 
 		// The parent of a model melded onto the body by bone names, the head among them; the weapon and the
 		// knife hang from a bone of the hands instead.
@@ -106,6 +115,17 @@ namespace IW3SR
 		{
 			return state.Trackers & (1u << static_cast<int>(tracker));
 		}
+
+		// How straight a player's real arm is: its hand against the shoulder below the head, over the longest
+		// reach that player was seen to make, which soon is its arm's length.
+		float Extension(int entnum, int side, const vec3& shoulder, const vec3& hand)
+		{
+			static float longest[64][2] = {};
+			float& arm = longest[entnum & 63][side];
+			const float reach = glm::distance(shoulder, hand);
+			arm = std::clamp(std::max(arm > 0.0f ? arm : UsualArm, reach), ShortestArm, LongestArm);
+			return std::clamp(reach / arm, 0.0f, 1.0f);
+		}
 	}
 
 	void GVRBody::Reset()
@@ -144,6 +164,7 @@ namespace IW3SR
 		// A player's pose is the first thing in its entity.
 		const auto* cent = reinterpret_cast<const centity_s*>(pose);
 		const bool prone = cent->nextState.lerp.eFlags & ProneFlag;
+		const bool airborne = cent->nextState.groundEntityNum == NoGround;
 		const float* angles = cgs->bgs.clientinfo[entnum].playerAngles;
 		const vec3 aim(angles[0], angles[1], angles[2]);
 
@@ -155,20 +176,20 @@ namespace IW3SR
 				std::memset(obj->hidePartBits, 0, sizeof(obj->hidePartBits));
 
 			if (OwnShown)
-				Pose(obj, pose, Own, aim, prone, !cgs->renderingThirdPerson);
+				Pose(obj, pose, entnum, Own, aim, prone, !cgs->renderingThirdPerson, airborne);
 			return true;
 		}
 
 		if (const VRNetState* state = GVRNetwork::Get(entnum))
-			Pose(obj, pose, *state, aim, prone, false);
+			Pose(obj, pose, entnum, *state, aim, prone, false, false);
 		return true;
 	}
 
 	// The state's poses are offsets from where the player stands. The animation is measured first, then
 	// moved from the hips outward, each step on the bones the one before left in place. Lying down, only
 	// the arms and the head follow.
-	void GVRBody::Pose(DObj_s* obj, const cpose_t* pose, const VRNetState& state, const vec3& aim, bool prone,
-		bool headless)
+	void GVRBody::Pose(DObj_s* obj, const cpose_t* pose, int entnum, const VRNetState& state, const vec3& aim,
+		bool prone, bool headless, bool airborne)
 	{
 		// The eyes are turned onto the headset and the head with them. Looking at them works out bones of
 		// the head model, which would not follow the body's after that, so the skeleton starts over.
@@ -225,7 +246,7 @@ namespace IW3SR
 
 			vec3 neck{};
 			const float top = at(state.Head).z - NeckClearance;
-			if (headless && (state.Parts & VRPartHead) && skeleton.World("j_neck", neck, frame) && neck.z > top
+			if (headless && airborne && (state.Parts & VRPartHead) && skeleton.World("j_neck", neck, frame) && neck.z > top
 				&& skeleton.World("j_mainroot", hips, frame))
 				skeleton.Move("j_mainroot", glm::quat::wxyz(1.0f, 0.0f, 0.0f, 0.0f), hips, hips - vec3(0.0f, 0.0f, neck.z - top));
 		}
@@ -250,8 +271,18 @@ namespace IW3SR
 				skeleton.Turn(ankle.c_str(), axis(tracked(foot)) * rest);
 		}
 
-		// The elbows hang down and out, unless trackers say where.
-		const auto arm = [&](int side, const vec3& target)
+		// The elbows hang down and out, unless trackers say where. The model's arm is as straight as the
+		// player's, and where that reaches past the hand, the hand slides back up the forearm onto it.
+		const vec3 headset = at(state.Head);
+		const vec3 across = AnglesAxis({ 0.0f, state.BodyYaw, 0.0f })[1];
+		const auto straightness = [&](int side, const vec3& hand)
+		{
+			if (!(state.Parts & VRPartHead))
+				return 0.0f;
+			const vec3 shoulder = headset + across * (side ? -ShoulderWidth : ShoulderWidth) - vec3(0.0f, 0.0f, ShoulderDrop);
+			return Extension(entnum, side, shoulder, hand);
+		};
+		const auto arm = [&](int side, const vec3& target, float straight)
 		{
 			const VRTracker elbow = side ? VRTracker::RightElbow : VRTracker::LeftElbow;
 			const std::string shoulder = Bone("j_shoulder_", side);
@@ -267,8 +298,22 @@ namespace IW3SR
 				if (glm::length2(out) > 1e-4f)
 					pole += glm::normalize(out) * 0.5f;
 			}
-			return skeleton.Reach(shoulder.c_str(), Bone("j_elbow_", side).c_str(), Bone("j_wrist_", side).c_str(),
-				target, pole);
+			const std::string elbowBone = Bone("j_elbow_", side);
+			const std::string wristBone = Bone("j_wrist_", side);
+			vec3 joint{};
+			vec3 end{};
+			float length = 0.0f;
+			if (skeleton.World(wristBone.c_str(), end, frame) && skeleton.World(elbowBone.c_str(), joint, frame))
+				length = glm::distance(root, joint) + glm::distance(joint, end);
+
+			const float reach = glm::distance(root, target);
+			const float wanted = std::min(straight, 0.999f) * length;
+			const vec3 aimed = wanted > reach && reach > 0.01f ? root + (target - root) * (wanted / reach) : target;
+			if (!skeleton.Reach(shoulder.c_str(), elbowBone.c_str(), wristBone.c_str(), aimed, pole))
+				return false;
+			if (aimed != target && skeleton.World(wristBone.c_str(), end, frame))
+				skeleton.Move(wristBone.c_str(), glm::quat::wxyz(1.0f, 0.0f, 0.0f, 0.0f), end, target);
+			return true;
 		};
 
 		if (armed)
@@ -282,7 +327,7 @@ namespace IW3SR
 			{
 				gunAt = at(state.RightHand);
 				gun = axis(state.RightHand);
-				if (arm(1, gunAt + gun * (toGun * (rightWrist - grip))))
+				if (arm(1, gunAt + gun * (toGun * (rightWrist - grip)), straightness(1, gunAt)))
 					skeleton.Turn("j_wrist_ri", gun * toGun * rightHand);
 			}
 			else
@@ -294,6 +339,7 @@ namespace IW3SR
 			{
 				vec3 target = gunAt + gun * (toGun * (leftWrist - grip));
 				glm::quat turn = glm::quat_cast(gun * toGun * leftHand);
+				float straight = 0.0f;
 				if (state.Parts & VRPartLeft)
 				{
 					const mat3 hand = axis(state.LeftHand);
@@ -302,8 +348,9 @@ namespace IW3SR
 					const float follow = std::clamp((reach - VRGripNear) / (VRGripFar - VRGripNear), 0.0f, 1.0f);
 					target = glm::mix(target, free, follow);
 					turn = glm::slerp(turn, glm::quat_cast(hand * toGun * leftHand), follow);
+					straight = straightness(0, at(state.LeftHand)) * follow;
 				}
-				if (arm(0, target))
+				if (arm(0, target, straight))
 					skeleton.Turn("j_wrist_le", glm::mat3_cast(turn));
 			}
 		}

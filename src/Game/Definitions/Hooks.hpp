@@ -205,6 +205,9 @@ namespace IW3SR
 	extern Hook<bool()>
 		CG_Player_h;
 
+	extern Hook<void(int x, int y)>
+		UI_MouseEvent_h;
+
 	extern Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DRENDERSTATETYPE state, DWORD value)>
 		IDirect3DDevice9_SetRenderState_h;
 

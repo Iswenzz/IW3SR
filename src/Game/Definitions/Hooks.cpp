@@ -192,6 +192,9 @@ namespace IW3SR
 	Hook<bool()>
 		CG_Player_h(0x4453B0, ASM_LOAD(CG_Player_h));
 
+	Hook<void(int x, int y)>
+		UI_MouseEvent_h(0x549470, GVR::MouseEvent);
+
 	Hook<HRESULT STDCALL(IDirect3DDevice9* device, D3DRENDERSTATETYPE state, DWORD value)>
 		IDirect3DDevice9_SetRenderState_h(GVR::SetRenderState);
 

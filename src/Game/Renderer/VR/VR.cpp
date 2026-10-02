@@ -15,9 +15,10 @@ namespace IW3SR
 		// buffer it draws through to the display.
 		constexpr int MaxRenderSize = 8192;
 
-		// The panel covers a fraction of the view, so a HUD at full eye width would only be scaled down.
-		constexpr int MaxHudWidth = 1440;
 		constexpr float HudDistance = 1.5f;
+
+		// The game reaches Direct3DCreate9 through its import thunk, which other mods may have redirected.
+		constexpr uintptr_t Direct3DCreate9Thunk = 0x670284;
 
 		constexpr float StickDeadzone = 0.15f;
 		constexpr float TriggerThreshold = 0.5f;
@@ -40,9 +41,6 @@ namespace IW3SR
 		constexpr float StaleDistance = 0.5f;
 		constexpr float StaleSeconds = 1.5f;
 
-		// The game reaches Direct3DCreate9 through its import thunk, which other mods may have redirected.
-		constexpr uintptr_t Direct3DCreate9Thunk = 0x670284;
-
 		constexpr uintptr_t DrawScene = 0xD584070;
 		constexpr int DrawSceneStandard = 3;
 
@@ -50,10 +48,6 @@ namespace IW3SR
 		// own 2D command list are taken from RB_StandardDrawCommandsCommon.
 		constexpr size_t ViewInfoStride = 0x67B0;
 		constexpr size_t ViewInfoCommands = 0x5688;
-
-		// D3D9On12 presents a window's back buffer black past a size, around 800x540 on the user's machine
-		// though not by area alone; at most this it shows, stretched to the window.
-		constexpr glm::ivec2 MaxMirrorOn12{ 768, 432 };
 
 		// Projection matrices are scaled just under one, as InfinitePerspectiveMatrix builds them.
 		constexpr float ProjectionScale = 0.99951172f;
@@ -389,6 +383,7 @@ namespace IW3SR
 		RB_ViewCommands_h.Install();
 		CG_UpdateViewModelPose_h.Install();
 		CG_Player_h.Install();
+		UI_MouseEvent_h.Install();
 	}
 
 	// Starts OpenXR on a graphics API, with the bridge that carries the frames to it and the actions.
@@ -461,6 +456,25 @@ namespace IW3SR
 		return d3d;
 	}
 
+	// The menus take the pointer in the window's pixels and divide them by their own layout, which in VR is
+	// the HUD band shown fitted to the window. The pointer is put in the band's pixels first.
+	void GVR::MouseEvent(int x, int y)
+	{
+		RECT client = {};
+		const glm::ivec2 area = Frame.Active ? HudArea : RenderSize;
+		if (!OwnsWindow() || !g_wv || !GetClientRect(g_wv->hWnd, &client) || area.x <= 0 || area.y <= 0)
+		{
+			UI_MouseEvent_h(x, y);
+			return;
+		}
+
+		const vec2 window(std::max(1L, client.right), std::max(1L, client.bottom));
+		const float scale = std::min(window.x / area.x, window.y / area.y);
+		const vec2 offset = (window - vec2(area) * scale) * 0.5f;
+		UI_MouseEvent_h(static_cast<int>(std::lround((x - offset.x) / scale)),
+			static_cast<int>(std::lround((y - offset.y) / scale)));
+	}
+
 	// The engine is told the display is the headset's eye, which sizes every buffer it draws through. The
 	// window is kept as the player set it up; the device's back buffer follows the window, not this.
 	void GVR::WindowParms(GfxWindowParms* parms)
@@ -480,11 +494,13 @@ namespace IW3SR
 		// monitor shows it whole and the panel in the headset matches.
 		const glm::ivec2 window = WindowSize();
 		const float aspect = window.x > 0 && window.y > 0 ? static_cast<float>(window.x) / window.y : 16.0f / 9.0f;
-		const float width = std::min(static_cast<float>(RenderSize.x), RenderSize.y * aspect);
+		// Never wider than the window either: the console and the menus draw in pixels, which a band at a
+		// supersampled eye's width would shrink.
+		const float width = std::min({ static_cast<float>(RenderSize.x), RenderSize.y * aspect,
+			static_cast<float>(std::max(window.x, 1)) });
 		HudArea = { static_cast<int>(width), static_cast<int>(std::lround(width / aspect)) };
 
-		const int hudWidth = std::min(HudArea.x, MaxHudWidth);
-		HudSize = { hudWidth, std::max(1, static_cast<int>(std::lround(hudWidth / aspect))) };
+		HudSize = HudArea;
 
 		// The desktop copy must not wait on the monitor's refresh while the headset sets the pace. Read
 		// once when the device is made, and put back as soon as it has been.
@@ -529,15 +545,8 @@ namespace IW3SR
 		if (!window || !GetClientRect(window, &client))
 			return;
 
-		glm::ivec2 size(std::max(1L, client.right - client.left), std::max(1L, client.bottom - client.top));
-		if (Graphics == &Direct3D12)
-		{
-			const float scale = std::min({ 1.0f, static_cast<float>(MaxMirrorOn12.x) / size.x,
-				static_cast<float>(MaxMirrorOn12.y) / size.y });
-			size = glm::max(glm::ivec2(glm::round(vec2(size) * scale)), glm::ivec2(1));
-		}
-		parameters->BackBufferWidth = static_cast<UINT>(size.x);
-		parameters->BackBufferHeight = static_cast<UINT>(size.y);
+		parameters->BackBufferWidth = static_cast<UINT>(std::max(1L, client.right - client.left));
+		parameters->BackBufferHeight = static_cast<UINT>(std::max(1L, client.bottom - client.top));
 		parameters->MultiSampleType = D3DMULTISAMPLE_NONE;
 		parameters->MultiSampleQuality = 0;
 	}
@@ -650,6 +659,7 @@ namespace IW3SR
 		RB_ViewCommands_h.Remove();
 		CG_UpdateViewModelPose_h.Remove();
 		CG_Player_h.Remove();
+		UI_MouseEvent_h.Remove();
 		GVRBody::Reset();
 		Disconnect();
 
@@ -1203,20 +1213,18 @@ namespace IW3SR
 			|| !screen)
 			return;
 
-		// The back buffer can be smaller than the window, and the overlay is laid out for the window, so then
-		// both are drawn at the window's size and shrunk into it after.
+		// D3D9On12 presents large back buffers black, so on that path the mirror and the overlay are drawn
+		// into a canvas the bridge shows itself.
 		IDirect3DSurface9* target = screen;
 		RECT client = {};
-		D3DSURFACE_DESC desc = {};
-		screen->GetDesc(&desc);
-		if (g_wv && GetClientRect(g_wv->hWnd, &client))
+		if (Graphics == &Direct3D12 && g_wv && GetClientRect(g_wv->hWnd, &client))
 		{
 			const glm::ivec2 window(client.right - client.left, client.bottom - client.top);
-			if (window.x > 0 && window.y > 0 && window != glm::ivec2(desc.Width, desc.Height))
-				WindowCanvas = target = Bridge->Canvas(device, window);
+			if (window.x > 0 && window.y > 0)
+				WindowCanvas = Bridge->Canvas(device, window);
+			if (WindowCanvas)
+				target = WindowCanvas;
 		}
-		if (!target)
-			target = screen;
 		WindowScreen = screen;
 
 		// Without a headset frame, from a session that ended or before one started, the engine drew its
@@ -1238,14 +1246,6 @@ namespace IW3SR
 		if (GPortal::Rendering || !dx || !dx->device)
 			return;
 
-		if (WindowScreen)
-		{
-			if (WindowCanvas)
-				dx->device->StretchRect(WindowCanvas, nullptr, WindowScreen, nullptr, D3DTEXF_LINEAR);
-			WindowScreen->Release();
-			WindowScreen = nullptr;
-			WindowCanvas = nullptr;
-		}
 		if (EngineTarget)
 		{
 			IDirect3DDevice9* device = dx->device;
@@ -1257,6 +1257,14 @@ namespace IW3SR
 				EngineDepth->Release();
 			EngineTarget = nullptr;
 			EngineDepth = nullptr;
+		}
+		if (WindowScreen)
+		{
+			if (WindowCanvas && !(g_wv && Bridge->Present(g_wv->hWnd)))
+				dx->device->StretchRect(WindowCanvas, nullptr, WindowScreen, nullptr, D3DTEXF_LINEAR);
+			WindowScreen->Release();
+			WindowScreen = nullptr;
+			WindowCanvas = nullptr;
 		}
 		RestoreView();
 		Stage = VRStage::None;

@@ -22,8 +22,8 @@ namespace IW3SR
 		static inline bool OwnGun = true;
 		static inline DObj_s* Hidden = nullptr;
 
-		static void Pose(DObj_s* obj, const cpose_t* pose, const VRNetState& state, const vec3& aim, bool prone,
-			bool headless);
+		static void Pose(DObj_s* obj, const cpose_t* pose, int entnum, const VRNetState& state, const vec3& aim,
+			bool prone, bool headless, bool airborne);
 		static void Hide(DObj_s* obj, bool gun);
 	};
 }
