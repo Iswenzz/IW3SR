@@ -42,6 +42,8 @@ namespace IW3SR
 
 	private:
 		static inline std::array<VRNetState, 64> Players = {};
+		static inline std::array<VRNetState, 64> Previous = {};
+		static inline std::array<VRNetState, 64> Blended = {};
 		static inline int LastSend = 0;
 	};
 }

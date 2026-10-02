@@ -217,6 +217,7 @@ namespace IW3SR
 		static inline dvar_s* ScaleVar = nullptr;
 		static inline dvar_s* HudFovVar = nullptr;
 		static inline dvar_s* GunVar = nullptr;
+		static inline dvar_s* BodyVar = nullptr;
 		static inline dvar_s* TurnSpeedVar = nullptr;
 
 		static void RegisterDvars();

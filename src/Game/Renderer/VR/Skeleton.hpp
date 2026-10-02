@@ -19,7 +19,7 @@ namespace IW3SR
 		bool Rest(const char* name, mat3& axis) const;
 		void Move(const char* name, const glm::quat& turn, const vec3& from, const vec3& to) const;
 		bool Reach(const char* upper, const char* lower, const char* end, const vec3& target, const vec3& pole) const;
-		void Bend(const char* name, const char* end, const vec3& target, float limit) const;
+		void Bend(const char* name, const char* end, const vec3& target, float limit, float share = 1.0f) const;
 		void Turn(const char* name, const mat3& axis) const;
 		void Orient(const char* name, const char* pivot, const mat3& axis, float share) const;
 
@@ -29,5 +29,7 @@ namespace IW3SR
 		const XModel* Model = nullptr;
 
 		int Bone(const char* name) const;
+		bool Hinge(int bone, const vec3& a, const vec3& b, const vec3& c, const mat3& upperAxis, const mat3& lowerAxis,
+			vec3& upperHinge, vec3& lowerHinge) const;
 	};
 }

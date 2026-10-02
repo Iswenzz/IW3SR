@@ -24,6 +24,7 @@ namespace IW3SR
 	constexpr const char* FinishMoveSignature = "?? ?? ?? ?? ?? 15 ?? ?? ?? ?? 8B 44 24 10 88 50 14 8B 15";
 	constexpr const char* RespawnSignature = "?? ?? ?? ?? ?? ?? ?? ?? ?? C7 44 24 08 64 2F 00 00 83 C0 0C C7";
 	constexpr const char* RenderCommandsSignature = "?? ?? ?? ?? ?? 44 24 1C 0F B7 00 8D 5C 24 1C";
+	constexpr const char* PacketEventSignature = "?? ?? ?? ?? ?? EC 3C 8B 5C 24 54 8B 7C 24 50 83 7B 14 03";
 	constexpr const char* QuitSignature =
 		"83 EC 1C A1 ?? ?? ?? ?? 83 C0 30 89 04 24 FF 15 ?? ?? ?? ?? 83 EC 04 C7 04 24 01 00 00 00 FF 15";
 	constexpr const char* XAssetsInitStdCountSignature =
@@ -74,6 +75,7 @@ namespace IW3SR
 
 		CL_Connect_h.Update(Signature(COD4X_BIN, ConnectSignature));
 		CL_FinishMove_h.Update(Signature(COD4X_BIN, FinishMoveSignature));
+		CL_PacketEventCoD4X_h.Update(Signature(COD4X_BIN, PacketEventSignature));
 		CL_RestartForDemo_h.Update(FindRestartForDemo());
 		CG_Respawn_h.Update(Signature(COD4X_BIN, RespawnSignature));
 		MainWndProc_h.Update(FindMainWndProc());
@@ -162,6 +164,7 @@ namespace IW3SR
 		const std::pair<const char*, bool> resolved[] = {
 			{ "CL_Connect", CL_Connect_h.IsEnabled },
 			{ "CL_FinishMove", CL_FinishMove_h.IsEnabled },
+			{ "CL_PacketEvent", CL_PacketEventCoD4X_h.IsEnabled },
 			{ "CL_FindAndRunOldVersion2", CL_RestartForDemo_h.IsEnabled },
 			{ "CG_Respawn", CG_Respawn_h.IsEnabled },
 			{ "MainWndProc", MainWndProc_h.IsEnabled },

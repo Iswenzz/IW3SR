@@ -64,6 +64,9 @@ namespace IW3SR
 	extern Hook<void(netadr_t from)>
 		CL_PacketEvent_h;
 
+	extern Hook<void(CoD4XNetadr* from, msg_t* msg)>
+		CL_PacketEventCoD4X_h;
+
 	extern Hook<void(const char* remoteName)>
 		CL_BeginDownload_h;
 

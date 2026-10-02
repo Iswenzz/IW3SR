@@ -86,6 +86,66 @@ namespace IW3SR::UC
 			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
 		}
 
+		// Set the way the console sets it: a latched dvar keeps its value for the next restart, and the
+		// config is written again.
+		void SetDvar(const char* name, const std::string& value)
+		{
+			Dvar_SetFromStringByNameFromSource(name, value.c_str(), 0);
+		}
+
+		bool Latched(const dvar_s* dvar)
+		{
+			return dvar->flags & DVAR_LATCHED;
+		}
+
+		// Flags a latched dvar whose new value still waits for vid_restart.
+		bool Pending(const dvar_s* dvar)
+		{
+			if (!Latched(dvar))
+				return false;
+			return dvar->type == DvarType::BOOLEAN ? dvar->latched.enabled != dvar->current.enabled
+				: dvar->latched.value != dvar->current.value;
+		}
+
+		void PendingIcon(const dvar_s* dvar)
+		{
+			if (!Pending(dvar))
+				return;
+			ImGui::SameLine();
+			ImGui::TextDisabled(ICON_FA_ROTATE_RIGHT);
+			ImGui::Tooltip("Applies on vid_restart.");
+		}
+
+		// A switch that shows a latched dvar's next value rather than the one in use.
+		void LatchedSetting(const char* label, const char* name, const char* tooltip)
+		{
+			const auto dvar = Dvar::Find(name);
+			if (!dvar)
+				return;
+
+			bool value = dvar->latched.enabled;
+			ImGui::Property(label);
+			if (ImGui::Switch(std::string("##") + name, &value))
+				SetDvar(name, value ? "1" : "0");
+			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
+			PendingIcon(dvar);
+		}
+
+		void Slider(const char* label, const char* name, const char* format, const char* tooltip)
+		{
+			const auto dvar = Dvar::Find(name);
+			if (!dvar)
+				return;
+
+			float value = Latched(dvar) ? dvar->latched.value : dvar->current.value;
+			ImGui::Property(label, Pending(dvar) ? ImGui::GetFontSize() : 0.0f);
+			if (ImGui::SliderFloat((std::string("##") + name).c_str(), &value, dvar->domain.value.min,
+					dvar->domain.value.max, format, ImGuiSliderFlags_AlwaysClamp))
+				SetDvar(name, std::to_string(value));
+			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
+			PendingIcon(dvar);
+		}
+
 		// Marks the selected row with an accent bar over its left edge.
 		void Accent()
 		{
@@ -322,7 +382,7 @@ namespace IW3SR::UC
 
 	void Main::Settings()
 	{
-		Header("Settings", std::string("Interface") + Dot + "Input" + Dot + "Client");
+		Header("Settings", std::string("Interface") + Dot + "Input" + Dot + "Client" + Dot + "VR");
 
 		BeginPanel("##settings", { 0, 0 }, PanelColor);
 		if (ImGui::BeginSection("Interface"))
@@ -356,6 +416,37 @@ namespace IW3SR::UC
 				ImGui::TextDisabled(ICON_FA_ROTATE_RIGHT);
 				ImGui::Tooltip("Restart the game to apply.");
 			}
+			ImGui::EndSection();
+		}
+		if (ImGui::BeginSection("VR"))
+		{
+			LatchedSetting("Enabled", "sr_vr",
+				"Plays in an OpenXR headset, through the runtime set as active (SteamVR, Meta).\n"
+				"The window keeps a mirror of the view.");
+			Slider("Resolution", "sr_vr_scale", "%.2fx",
+				"Render size, relative to what the headset asks for. Above 1 is sharper and slower.");
+			Slider("HUD Width", "sr_vr_hud_fov", "%.0f deg",
+				"How wide the HUD, menus and console panel float in front of you.");
+			Slider("Turn Speed", "sr_vr_turn_speed", "%.0f deg/s", "Turning speed on the right stick.");
+			Setting("Body", "sr_vr_body",
+				"Draws your own body and the weapon in your hand. Off, you see neither,\n"
+				"while others still see your body move.");
+			Setting("Weapon", "sr_vr_gun", "Draws the weapon in your hand.");
+
+			const auto enabled = Dvar::Find("sr_vr");
+			const auto scale = Dvar::Find("sr_vr_scale");
+			const bool pending = (enabled && Pending(enabled)) || (scale && Pending(scale));
+
+			ImGui::BeginDisabled(!pending);
+			if (ImGui::Button("Apply (vid_restart)", ImVec2(-FLT_MIN, 0)))
+				Cbuf_AddText(0, "vid_restart\n");
+			ImGui::EndDisabled();
+
+			ImGui::BeginDisabled(!enabled || !enabled->current.enabled);
+			if (ImGui::Button("Recenter", ImVec2(-FLT_MIN, 0)))
+				Cbuf_AddText(0, "sr_vr_recenter\n");
+			ImGui::Tooltip("Faces the view forward from where you stand. Also on a right stick click.");
+			ImGui::EndDisabled();
 			ImGui::EndSection();
 		}
 		if (System::IsDebug() && ImGui::BeginSection("Debug", false))

@@ -87,6 +87,9 @@ namespace IW3SR
 	Hook<void(netadr_t from)>
 		CL_PacketEvent_h(0x46C320, ASM_LOAD(CL_PacketEvent_h));
 
+	Hook<void(CoD4XNetadr* from, msg_t* msg)>
+		CL_PacketEventCoD4X_h(uintptr_t(0), GChannel::CoD4XPacketEvent);
+
 	Hook<void(const char* remoteName)>
 		CL_BeginDownload_h(0x46AB00, ASM_LOAD(CL_BeginDownload_h));
 

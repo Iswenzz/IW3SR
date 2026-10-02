@@ -236,6 +236,7 @@ namespace IW3SR
 		HudFovVar = Dvar::RegisterFloat("sr_vr_hud_fov", DVAR_SAVED, "Width of the VR HUD panel, in degrees", 60.0f,
 			20.0f, 100.0f);
 		GunVar = Dvar::RegisterBool("sr_vr_gun", DVAR_SAVED, "Draw the weapon in VR", true);
+		BodyVar = Dvar::RegisterBool("sr_vr_body", DVAR_SAVED, "Draw your own body and weapon in VR", true);
 		TurnSpeedVar = Dvar::RegisterFloat("sr_vr_turn_speed", DVAR_SAVED,
 			"VR controller turning speed, in degrees a second", 180.0f, 30.0f, 720.0f);
 
@@ -382,7 +383,6 @@ namespace IW3SR
 		RB_Draw3D_h.Install();
 		RB_ViewCommands_h.Install();
 		CG_UpdateViewModelPose_h.Install();
-		CG_Player_h.Install();
 		UI_MouseEvent_h.Install();
 	}
 
@@ -658,7 +658,6 @@ namespace IW3SR
 		RB_Draw3D_h.Remove();
 		RB_ViewCommands_h.Remove();
 		CG_UpdateViewModelPose_h.Remove();
-		CG_Player_h.Remove();
 		UI_MouseEvent_h.Remove();
 		GVRBody::Reset();
 		Disconnect();
@@ -925,7 +924,8 @@ namespace IW3SR
 				state.TrackerPoses[i] = pose(Frame.TrackerOrigins[i], Frame.TrackerAxes[i]);
 		}
 		GVRNetwork::Send(state);
-		GVRBody::SetOwn(&state, gun);
+		// Shared all the same: only the player's own view goes without it.
+		GVRBody::SetOwn(BodyVar && !BodyVar->current.enabled ? nullptr : &state, gun);
 	}
 
 	// Following a VR player, the view is where that player's head is and looks, rather than where it

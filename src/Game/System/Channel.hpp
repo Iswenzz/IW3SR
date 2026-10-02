@@ -18,9 +18,11 @@ namespace IW3SR
 		static void Frame();
 
 		static int PacketEvent(const netadr_t* from, msg_t* msg, int time);
+		static void CoD4XPacketEvent(CoD4XNetadr* from, msg_t* msg);
 
 		static bool Send(int32_t command, const uint8_t* body, int length);
 		static bool FromServer(const netadr_t& from);
+		static netadr_t ServerAddress();
 		static ReliableMessages& Instance();
 		static bool IsEnabled();
 

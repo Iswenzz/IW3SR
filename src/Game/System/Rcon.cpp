@@ -1,5 +1,6 @@
 #include "Rcon.hpp"
 
+#include "Game/System/Channel.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Patch.hpp"
 
@@ -219,9 +220,10 @@ namespace IW3SR
 	// A server we are playing on wins over one named by 'rcon host', the order the engine picks in.
 	bool GRcon::Target(netadr_t& address)
 	{
-		if (client_ui && client_ui->connectionState >= CA_CONNECTED && clc.netchan.remoteAddress.type == NA_IP)
+		const netadr_t server = GChannel::ServerAddress();
+		if (client_ui && client_ui->connectionState >= CA_CONNECTED && server.type == NA_IP)
 		{
-			address = clc.netchan.remoteAddress;
+			address = server;
 			return true;
 		}
 		if (Host.type == NA_IP)

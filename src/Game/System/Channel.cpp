@@ -28,6 +28,19 @@ namespace IW3SR
 	// says whether a profile was actually loaded into it.
 	constexpr uintptr_t StatsAddress = 0xCC18C90;
 	constexpr int StatsSize = 8192;
+
+	namespace
+	{
+		// IPv6 has no retail form, and comes out as a bad address.
+		netadr_t Retail(const CoD4XNetadr& address)
+		{
+			netadr_t retail{};
+			retail.type = address.type == 0 ? NA_BOT : address.type == 2 ? NA_LOOPBACK : address.type == 4 ? NA_IP : NA_BAD;
+			retail.port = address.port;
+			std::copy_n(address.ip, sizeof(retail.ip), retail.ip);
+			return retail;
+		}
+	}
 	constexpr uintptr_t StatsValidAddress = StatsAddress + StatsSize;
 
 	// Part of the wire format, not a secret: the server decrypts against the same vector
@@ -380,7 +393,7 @@ namespace IW3SR
 	// packet came from the server, and refresh the timeout clock (cl_main.c:3385-3397).
 	bool GChannel::FromServer(const netadr_t& from)
 	{
-		const netadr_t& server = clc.netchan.remoteAddress;
+		const netadr_t server = ServerAddress();
 
 		if (from.type != server.type)
 			return false;
@@ -388,6 +401,23 @@ namespace IW3SR
 			return true;
 
 		return from.port == server.port && std::equal(std::begin(from.ip), std::end(from.ip), std::begin(server.ip));
+	}
+
+	// The server's address as retail lays it out, which NET_SendPacket takes even under CoD4X: its
+	// wrapper converts from that layout, while CoD4X keeps clc's own address in its layout.
+	netadr_t GChannel::ServerAddress()
+	{
+		return Patch::UseCoD4X ? Retail(reinterpret_cast<const CoD4XNetadr&>(clc.netchan.remoteAddress))
+			: clc.netchan.remoteAddress;
+	}
+
+	// CoD4X runs every packet through its own CL_PacketEvent, which never calls retail's, so the relay
+	// is taken off here instead. Its own channel it handles itself.
+	void GChannel::CoD4XPacketEvent(CoD4XNetadr* from, msg_t* msg)
+	{
+		const netadr_t retail = from ? Retail(*from) : netadr_t{};
+		if (!GVRNetwork::Packet(from ? &retail : nullptr, msg))
+			CL_PacketEventCoD4X_h(from, msg);
 	}
 
 	// Returns non zero to swallow the datagram. A short packet is left for the engine so a malformed

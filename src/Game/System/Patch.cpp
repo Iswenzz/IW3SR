@@ -142,6 +142,7 @@ namespace IW3SR
 		R_BeginFrame_h.Install();
 		R_SetWndParms_h.Install();
 		R_AddDObjToScene_h.Install();
+		CG_Player_h.Install();
 		R_Init_h.Install();
 		R_Shutdown_h.Install();
 		RB_ExecuteRenderCommandsLoop_h.Install();

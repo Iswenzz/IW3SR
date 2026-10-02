@@ -4096,6 +4096,17 @@ namespace IW3SR
 		char ipx[10];
 	};
 
+	// CoD4X's own address, kept in the same 20 bytes as retail's, clc's included
+	// (CoD4x_Client_pub/src/qcommon.h:160). Its types: bot 0, loopback 2, IPv4 4, IPv6 5.
+	struct CoD4XNetadr
+	{
+		uint8_t type;
+		uint8_t scopeId;
+		uint16_t port;
+		uint8_t ip[16];
+	};
+	static_assert(sizeof(CoD4XNetadr) == sizeof(netadr_t));
+
 	struct msg_t
 	{
 		int overflowed;
