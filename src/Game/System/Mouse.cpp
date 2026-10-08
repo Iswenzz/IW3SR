@@ -235,14 +235,24 @@ namespace IW3SR
 		if (IsRectEmpty(&client))
 			return;
 
-		const POINT center = { (client.left + client.right) / 2, (client.top + client.bottom) / 2 };
-		const RECT rect = { center.x, center.y, center.x + 1, center.y + 1 };
+		POINT pin = { (client.left + client.right) / 2, (client.top + client.bottom) / 2 };
 
-		if (EqualRect(&rect, &clipped))
-			return;
+		// A menu opened without the mouse (the quick message one) parks the pointer through IN_SetCursorPos,
+		// whose spot the clip refuses but oldPos keeps, so the gap read as view motion. Pinned there for a frame.
+		POINT cursor;
+		if (s_wmv && GetCursorPos(&cursor) && (s_wmv->oldPos.x != cursor.x || s_wmv->oldPos.y != cursor.y)
+			&& PtInRect(&client, s_wmv->oldPos))
+			pin = s_wmv->oldPos;
 
-		clipped = rect;
-		ClipCursor(&rect);
+		const RECT rect = { pin.x, pin.y, pin.x + 1, pin.y + 1 };
+		if (!EqualRect(&rect, &clipped))
+		{
+			clipped = rect;
+			ClipCursor(&rect);
+		}
+
+		if (s_wmv)
+			s_wmv->oldPos = pin;
 	}
 
 	// CL_MouseEvent owns the cursor counter, but it only runs while the engine drives the pointer.
