@@ -85,6 +85,12 @@ namespace IW3SR
 	Function<bool()>
 		DB_ModFileExists = 0x48BA10;
 
+	Function<void(unsigned int index)>
+		DB_SetStreamIndex = 0x48BF70;
+
+	Function<void()>
+		Load_GfxWorldVertexData = 0x4854B0;
+
 	Function<void()>
 		DB_ShutdownXAssets = 0x48B200;
 
@@ -233,7 +239,7 @@ namespace IW3SR
 		R_EndFrame = 0x5F7680;
 
 	Function<void()>
-		R_SyncRenderThread = 0x5F78F0;
+		R_SyncRenderThread = 0x5F6070;
 
 	Function<void(uint32_t drawType)>
 		R_IssueRenderCommands = 0x5F6210;

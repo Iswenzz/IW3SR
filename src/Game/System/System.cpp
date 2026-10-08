@@ -250,6 +250,15 @@ namespace IW3SR
 		Application::Dispatch(event);
 	}
 
+	void GSystem::MessageKey(int localClientNum, int key)
+	{
+		EventClientChatKey event(key);
+		Application::Dispatch(event);
+
+		if (!event.PreventDefault)
+			Message_Key_h(localClientNum, key);
+	}
+
 	void GSystem::ScriptMenuResponse(int localClientNum, itemDef_s* item, const char** args)
 	{
 		std::string arguments = *args;

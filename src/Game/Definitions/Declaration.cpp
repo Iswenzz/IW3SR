@@ -74,7 +74,7 @@ namespace IW3SR
 	ScreenPlacement* scrPlaceFullUnsafe = Signature(0xE34468);
 	WinMouseVars_t* s_wmv = Signature(0xCC147C4);
 	WinVars_t* g_wv = Signature(0xCC1B6F4);
-	PlayerKeyState* player_keys = Signature(0x8F1DB8);
+	PlayerKeyState* player_keys = Signature(0x8F1CA0);
 	clientUIActive_t* client_ui = Signature(0xC5F8F4);
 	int* map_nameEnum = Signature(0xCAF2330);
 	int* g_typeEnum = Signature(0xCAF1820);

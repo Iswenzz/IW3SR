@@ -15,6 +15,8 @@ target_sources(IW3SR PRIVATE
 	Channel.cpp
 	CoD4X.hpp
 	CoD4X.cpp
+	Collision.hpp
+	Collision.cpp
 	Colors.hpp
 	Colors.cpp
 	Profile.hpp

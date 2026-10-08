@@ -3,6 +3,7 @@
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/Renderer.hpp"
+#include "Game/Renderer/Shadows.hpp"
 #include "Game/Renderer/VR/Body.hpp"
 #include "Game/Renderer/VR/VR.hpp"
 
@@ -10,6 +11,7 @@
 #include "Game/System/Capture.hpp"
 #include "Game/System/Channel.hpp"
 #include "Game/System/Client.hpp"
+#include "Game/System/Collision.hpp"
 #include "Game/System/CoD4X.hpp"
 #include "Game/System/Colors.hpp"
 #include "Game/System/Console.hpp"
@@ -113,6 +115,9 @@ namespace IW3SR
 
 	Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h(0x463A60, PMove::FinishMove);
+
+	Hook<void FASTCALL(int localClientNum, int key)>
+		Message_Key_h(0x467600, GSystem::MessageKey);
 
 	Hook<int()>
 		G_GetFreeCorpseSlot_h(0x4C9770, GServer::GetFreeCorpseSlot);
@@ -238,6 +243,12 @@ namespace IW3SR
 
 	Hook<void()>
 		R_BeginFrame_h(0x5F75A0, GRenderer::BeginFrame);
+
+	Hook<void(GfxViewInfo* viewInfo)>
+		R_ChooseShadowedLights_h(0x5FBC60, GShadows::ChooseShadowedLights);
+
+	Hook<void(unsigned int threadContext)>
+		CM_InitThreadData_h(0x4ED880, GCollision::InitThreadData);
 
 	Hook<void(int localClientNum, itemDef_s *item, const char **args)>
 		Script_ScriptMenuResponse_h(0x54DD90, GSystem::ScriptMenuResponse);

@@ -1,14 +1,17 @@
 #include "Patch.hpp"
 #include "CoD4X.hpp"
+#include "Collision.hpp"
 #include "Autocomplete.hpp"
 #include "Huffman.hpp"
 #include "PMem.hpp"
 #include "Profile.hpp"
 #include "Shell.hpp"
 #include "Voice.hpp"
+#include "Zones.hpp"
 
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Renderer.hpp"
+#include "Game/Renderer/Shadows.hpp"
 #include "Game/Renderer/VR/VR.hpp"
 
 #ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
@@ -86,6 +89,9 @@ namespace IW3SR
 
 		FixDownloadRate();
 		DisableAimAssistTargets();
+		GShadows::Initialize();
+		GCollision::Initialize();
+		GZones::PatchWorldVertices();
 
 		RenameConsolePrompt();
 		RecolorConsoleText();
@@ -126,6 +132,7 @@ namespace IW3SR
 		CL_ReadDemoMessage_h.Install();
 		CL_CreateNewCommands_h.Install();
 		CL_FinishMove_h.Install();
+		Message_Key_h.Install();
 		DB_LoadXAssets_h.Install();
 		DL_BeginDownload_h.Install();
 		G_GetFreeCorpseSlot_h.Install();
@@ -140,6 +147,7 @@ namespace IW3SR
 		R_AddCmdDrawText_h.Install();
 		R_AddCmdDrawTextWithEffects_h.Install();
 		R_BeginFrame_h.Install();
+		R_ChooseShadowedLights_h.Install();
 		R_SetWndParms_h.Install();
 		R_AddDObjToScene_h.Install();
 		CG_Player_h.Install();
@@ -324,6 +332,6 @@ namespace IW3SR
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_STRINGTABLE, 800);
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_WEAPON, 2400);
 		ReallocXAssetPool(XAssetType::ASSET_TYPE_XANIMPARTS, 8192);
-		ReallocXAssetPool(XAssetType::ASSET_TYPE_XMODEL, 5125);
+		ReallocXAssetPool(XAssetType::ASSET_TYPE_XMODEL, 8192);
 	}
 }

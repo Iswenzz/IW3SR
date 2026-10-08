@@ -65,9 +65,7 @@ namespace IW3SR
 		}
 
 		// With r_smp_backend the render thread can still be drawing the last frame, and its EndFrame
-		// would restore the maps from under the swaps made below. Only on a frame that will swap: a
-		// loading screen is drawn by the render thread on its own, and taking ownership back in the
-		// middle of that leaves the next R_IssueRenderCommands waiting forever (/reconnect).
+		// would restore the maps from under the swaps made below. Only on a frame that will swap.
 		const bool ready = Ready();
 		if (ready && !Surfaces.empty() && Threaded && Threaded->current.enabled)
 			R_SyncRenderThread();
@@ -466,8 +464,7 @@ namespace IW3SR
 		R_SetLodOrigin(&view);
 		R_RenderScene(&view);
 		R_EndFrame();
-		R_IssueRenderCommands(1); // render without presenting
-		R_SyncRenderThread();	  // r_smp_backend hands the pass off, so wait before copying
+		R_IssueRenderCommands(1); // render without presenting, on this thread while r_smp_backend is off
 		Rendering = false;
 
 		if (Capture(target))

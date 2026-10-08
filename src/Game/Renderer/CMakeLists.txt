@@ -8,4 +8,6 @@ target_sources(IW3SR PRIVATE
 	Materials.hpp
 	Materials.cpp
 	Renderer.hpp
-	Renderer.cpp)
+	Renderer.cpp
+	Shadows.hpp
+	Shadows.cpp)

@@ -91,6 +91,9 @@ namespace IW3SR
 	extern Hook<void(usercmd_s* cmd)>
 		CL_FinishMove_h;
 
+	extern Hook<void FASTCALL(int localClientNum, int key)>
+		Message_Key_h;
+
 	extern Hook<int()>
 		G_GetFreeCorpseSlot_h;
 
@@ -156,6 +159,12 @@ namespace IW3SR
 
 	API extern Hook<void()>
 		R_BeginFrame_h;
+
+	extern Hook<void(GfxViewInfo* viewInfo)>
+		R_ChooseShadowedLights_h;
+
+	extern Hook<void(unsigned int threadContext)>
+		CM_InitThreadData_h;
 
 	extern Hook<void(int localClientNum, itemDef_s *item, const char **args)>
 		Script_ScriptMenuResponse_h;

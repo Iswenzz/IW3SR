@@ -5,6 +5,7 @@
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
+#include "Game/Renderer/Shadows.hpp"
 #include "Game/Renderer/UI/About.hpp"
 #include "Game/Renderer/UI/UI.hpp"
 #include "Game/Renderer/VR/VR.hpp"
@@ -90,6 +91,7 @@ namespace IW3SR
 	// The headset's frame has to be waited for before the portal views are drawn into it.
 	void GRenderer::BeginFrame()
 	{
+		GShadows::BeginFrame();
 		if (!GPortal::Rendering)
 			GVR::BeginFrame();
 		GPortal::BeginFrame();

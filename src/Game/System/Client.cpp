@@ -1,6 +1,7 @@
 #include "Client.hpp"
 
 #include "Game/Renderer/Renderer.hpp"
+#include "Game/Renderer/Shadows.hpp"
 #include "Game/System/Capture.hpp"
 #include "Game/System/CdKey.hpp"
 #include "Game/System/Channel.hpp"
@@ -31,6 +32,7 @@ namespace IW3SR
 
 		Dvar::InitializeGame();
 		GRenderer::UpdateMaterials();
+		GShadows::LoadMap();
 
 		auto& players = Player::GetAll();
 		for (int i = 0; i < players.size(); i++)

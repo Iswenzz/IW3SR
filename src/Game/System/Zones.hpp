@@ -19,6 +19,7 @@ namespace IW3SR
 		static std::filesystem::path Root();
 		static int FileSize(const char* name, int size);
 		static bool LoadLoadscreen(const char* map);
+		static void PatchWorldVertices();
 
 	private:
 		static inline dvar_s* Enabled = nullptr;
@@ -40,6 +41,7 @@ namespace IW3SR
 		static void ComRestart();
 		static void Collect();
 		static void MountIwd();
+		static void LoadWorldVertices();
 		static bool Resolvable(const PatchZone& zone);
 		static const PatchZone* Match(std::string_view path);
 

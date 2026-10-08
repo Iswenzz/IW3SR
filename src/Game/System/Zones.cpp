@@ -67,10 +67,20 @@ namespace IW3SR
 	//   0046aa88: e8 73 fd ff ff   call 0x46a800
 	constexpr uintptr_t MapLoadscreenSite = 0x46AA88;
 
+	// Load_GfxWorld's one call to Load_GfxWorldVertexData, which takes nothing and reads the stream
+	// globals alone:
+	//   004875fc: e8 af de ff ff   call 0x4854b0
+	constexpr uintptr_t WorldVerticesSite = 0x4875FC;
+	constexpr uintptr_t WorldVerticesTarget = 0x4854B0;
+	constexpr uintptr_t StreamPosIndexAddress = 0x10F93E4; // g_streamPosIndex
+	constexpr uintptr_t StreamZoneMemAddress = 0x104417C;  // g_streamZoneMem
+	constexpr unsigned int LargeBlock = 5;				   // XFILE_BLOCK_LARGE
+
 	constexpr uintptr_t GameDirChangedAddress = 0xC5B69C; // cls.gameDirChanged
 	constexpr uintptr_t WaitingForServerAddress = 0x8F4CDC; // g_waitingForServer
 	constexpr uintptr_t MapNameAddress = 0xCAE6158;			// g_mapname, set by UI_SetMap
 	constexpr uintptr_t ModFastFileAddress = 0xCC9D13C;		// gfxCfg.modFastFileName
+	constexpr uintptr_t InUpdateFrameAddress = 0xD5EC422;	// set around every SCR_UpdateScreen
 
 	constexpr int SndKeepReverb = 1; // SND_StopSounds flag, what CL_Vid_Restart_f passes (0x46a280)
 
@@ -231,6 +241,31 @@ namespace IW3SR
 		Memory::CALL(VidRestartSite, reinterpret_cast<uintptr_t>(&GZones::VidRestart));
 		Memory::CALL(ComRestartSite, reinterpret_cast<uintptr_t>(&GZones::ComRestart));
 		Memory::CALL(DownloadRestartSite, reinterpret_cast<uintptr_t>(&GZones::DownloadRestart));
+	}
+
+	// IzFF's linker keeps a world past 128 MB of vertices in block 5, which no stock zone sizes, so a
+	// zone that sizes it is one of those, and the stream moves there for the array alone. SR-Server
+	// does the same. Applied under CoD4x too: it leaves the zone loader as retail has it.
+	void GZones::PatchWorldVertices()
+	{
+		if (Memory::Get<uint8_t>(WorldVerticesSite) != 0xE8
+			|| WorldVerticesSite + 5 + Memory::Get<int32_t>(WorldVerticesSite + 1) != WorldVerticesTarget)
+			return;
+
+		Memory::CALL(WorldVerticesSite, reinterpret_cast<uintptr_t>(&GZones::LoadWorldVertices));
+	}
+
+	void GZones::LoadWorldVertices()
+	{
+		const XZoneMemory* zone = Memory::Get<XZoneMemory*>(StreamZoneMemAddress);
+		const bool large = zone && zone->blocks[LargeBlock].size;
+		const unsigned int previous = Memory::Get<unsigned int>(StreamPosIndexAddress);
+
+		if (large)
+			DB_SetStreamIndex(LargeBlock);
+		Load_GfxWorldVertexData();
+		if (large)
+			DB_SetStreamIndex(previous);
 	}
 
 	// CoD4X's map change (cl_main.c:9448) leaves the UI with no map, so a download runs over a black

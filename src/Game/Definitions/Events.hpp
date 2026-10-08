@@ -72,6 +72,13 @@ namespace IW3SR
 		std::string command;
 	};
 
+	class EventClientChatKey : public Event
+	{
+		EVENT_CLASS("client.chat.key")
+		EventClientChatKey(int key) : key(key) { }
+		int key;
+	};
+
 	class EventClientLoadPosition : public Event
 	{
 		EVENT_CLASS("client.load.position")

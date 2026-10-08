@@ -244,6 +244,6 @@ namespace IW3SR
 		XAssetStdCount[XAssetType::ASSET_TYPE_STRINGTABLE] = 800;
 		XAssetStdCount[XAssetType::ASSET_TYPE_WEAPON] = 2400;
 		XAssetStdCount[XAssetType::ASSET_TYPE_XANIMPARTS] = 8192;
-		XAssetStdCount[XAssetType::ASSET_TYPE_XMODEL] = 5125;
+		XAssetStdCount[XAssetType::ASSET_TYPE_XMODEL] = 8192;
 	}
 }

@@ -8,6 +8,8 @@ namespace IW3SR::Addons
 		DrawGlow = false;
 		DrawSun = true;
 		SunOverride = false;
+		ShadowOverride = false;
+		ShadowForce = true;
 
 		TweakBrightness = 0;
 		TweakContrast = 1;
@@ -23,6 +25,9 @@ namespace IW3SR::Addons
 		SunIntensity = 2;
 		SunColor = { 1, 1, 1, 1 };
 		SunDirection = { 270, 90, 0 };
+
+		ShadowNear = 256;
+		ShadowFar = 4096;
 	}
 
 	// Hands film and glow back to the vision set, which is where they come from when nothing overrides them.
@@ -34,6 +39,7 @@ namespace IW3SR::Addons
 			dvar->current.enabled = false;
 		if (const auto dvar = Dvar::Find("r_drawSun"))
 			dvar->current.enabled = true;
+		GShadows::UseOverride = false;
 	}
 
 	void Tweaks::Menu()
@@ -85,6 +91,39 @@ namespace IW3SR::Addons
 			ImGui::SliderFloat3("##direction", &SunDirection.x, -360, 360);
 			ImGui::EndSection();
 		}
+		if (ImGui::BeginSection("Shadows"))
+		{
+			ImGui::Property("Override");
+			ImGui::Switch("##override", &ShadowOverride);
+			ImGui::Tooltip(
+				"Replace the sun shadow range with the values below.\n"
+				"Off, a map that states its own range keeps it, and any other the stock one.");
+			ImGui::Property("Near");
+			ImGui::SliderFloat("##near", &ShadowNear, 64, 2048, "%.0f");
+			ImGui::Tooltip("Width of the sharp partition around the view, in units. Stock is 256.");
+			ImGui::Property("Distance");
+			ImGui::SliderFloat("##far", &ShadowFar, 256, 16384, "%.0f");
+			ImGui::Tooltip("How far shadows reach, in units, at the same 1024 texels. Stock is 1024.");
+			ImGui::Property("Force");
+			ImGui::Switch("##force", &ShadowForce);
+			ImGui::Tooltip(
+				"Draw the sun's shadow map every frame, not only when lit world geometry is in view.\n"
+				"Maps built of models need it for rooms to stay out of the sun.");
+
+			const std::array<int, 6> casters = GShadows::CasterCounts();
+			ImGui::Property("Near Casters");
+			ImGui::Text("world %d, models %d, entities %d", casters[0], casters[1], casters[2]);
+			ImGui::Property("Far Casters");
+			ImGui::Text("world %d, models %d, entities %d", casters[3], casters[4], casters[5]);
+			ImGui::Tooltip("Surfaces drawn into the sun shadow map this frame. Near holds 4096 of each, far 8192.");
+			const std::array<int, 2> buffers = GShadows::DrawBuffers();
+			ImGui::Property("Draw Buffers");
+			ImGui::Text("%d of 65536, surfaces %d of 32768", buffers[0], buffers[1]);
+			ImGui::Tooltip(
+				"What the last frame used of the engine's shared draw lists.\n"
+				"At the limit, the far shadow partition's model casters are dropped first.");
+			ImGui::EndSection();
+		}
 	}
 
 	// Only a group that is switched on writes its dvars, so enabling the module for one of them leaves
@@ -129,6 +168,9 @@ namespace IW3SR::Addons
 		}
 		if (SunOverride)
 			ApplySun();
+
+		GShadows::UseOverride = ShadowOverride;
+		GShadows::Override = { ShadowNear, ShadowFar, ShadowForce };
 	}
 
 	// The renderer only rebuilds the sun when these dvars are flagged modified, so they are written only

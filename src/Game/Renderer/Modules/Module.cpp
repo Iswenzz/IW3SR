@@ -26,6 +26,7 @@ namespace IW3SR
 	void Module::OnLoadPosition() { }
 
 	void Module::OnExecuteCommand(EventClientCommand& event) { }
+	void Module::OnChatKey(EventClientChatKey& event) { }
 	void Module::OnMenuResponse(EventScriptMenuResponse& event) { }
 
 	void Module::OnDraw3D(EventRenderer3D& event) { }
@@ -53,6 +54,7 @@ namespace IW3SR
 		dispatcher.Dispatch<EventPMoveFinish>(EVENT_BIND(OnFinishMove));
 
 		dispatcher.Dispatch<EventClientCommand>(EVENT_BIND(OnExecuteCommand));
+		dispatcher.Dispatch<EventClientChatKey>(EVENT_BIND(OnChatKey));
 		dispatcher.Dispatch<EventScriptMenuResponse>(EVENT_BIND(OnMenuResponse));
 
 		dispatcher.Dispatch<EventRenderer3D>(EVENT_BIND(OnDraw3D));

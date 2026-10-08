@@ -86,11 +86,12 @@ namespace IW3SR::UC
 			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
 		}
 
-		// Set the way the console sets it: a latched dvar keeps its value for the next restart, and the
-		// config is written again.
-		void SetDvar(const char* name, const std::string& value)
+		// Set the way the console sets it (the external source; the internal one skips the latch), so a
+		// latched dvar keeps its value for the next restart. Latching alone does not flag the config.
+		void SetDvar(const dvar_s* dvar, const std::string& value)
 		{
-			Dvar_SetFromStringByNameFromSource(name, value.c_str(), 0);
+			Dvar_SetFromStringByNameFromSource(dvar->name, value.c_str(), 1);
+			dvar_modifiedFlags |= dvar->flags;
 		}
 
 		bool Latched(const dvar_s* dvar)
@@ -126,7 +127,7 @@ namespace IW3SR::UC
 			bool value = dvar->latched.enabled;
 			ImGui::Property(label);
 			if (ImGui::Switch(std::string("##") + name, &value))
-				SetDvar(name, value ? "1" : "0");
+				SetDvar(dvar, value ? "1" : "0");
 			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
 			PendingIcon(dvar);
 		}
@@ -141,7 +142,7 @@ namespace IW3SR::UC
 			ImGui::Property(label, Pending(dvar) ? ImGui::GetFontSize() : 0.0f);
 			if (ImGui::SliderFloat((std::string("##") + name).c_str(), &value, dvar->domain.value.min,
 					dvar->domain.value.max, format, ImGuiSliderFlags_AlwaysClamp))
-				SetDvar(name, std::to_string(value));
+				SetDvar(dvar, std::to_string(value));
 			ImGui::Tooltip(std::string(tooltip) + "\n\n" + name);
 			PendingIcon(dvar);
 		}
@@ -391,6 +392,9 @@ namespace IW3SR::UC
 			ImGui::Keybind("##menu", &UI::KeyOpen.Input, false, vec2(-FLT_MIN, 0));
 			ImGui::Property("Design Mode");
 			ImGui::Switch("##design", &UI::DesignMode);
+			ImGui::Tooltip(
+				"While the menu is open, the mod's on-screen panels get a frame you can drag\n"
+				"to move them and pull at the edges to resize them.");
 			ImGui::EndSection();
 		}
 		if (ImGui::BeginSection("Input"))

@@ -30,6 +30,7 @@ namespace IW3SR
 		virtual void OnFinishMove(EventPMoveFinish& event);
 		virtual void OnLoadPosition();
 		virtual void OnExecuteCommand(EventClientCommand& event);
+		virtual void OnChatKey(EventClientChatKey& event);
 		virtual void OnMenuResponse(EventScriptMenuResponse& event);
 		virtual void OnDraw3D(EventRenderer3D& event);
 		virtual void OnDraw2D(EventRenderer2D& event);

@@ -89,6 +89,12 @@ namespace IW3SR
 	extern Function<bool()>
 		DB_ModFileExists;
 
+	extern Function<void(unsigned int index)>
+		DB_SetStreamIndex;
+
+	extern Function<void()>
+		Load_GfxWorldVertexData;
+
 	extern Function<void()>
 		DB_ShutdownXAssets;
 

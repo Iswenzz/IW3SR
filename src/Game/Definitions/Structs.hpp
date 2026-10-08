@@ -2697,8 +2697,9 @@ namespace IW3SR
 
 	struct CollisionPartition
 	{
-		char triCount;
-		char borderCount;
+		uint8_t triCount;
+		uint8_t borderCount;
+		uint16_t window;
 		int firstTri;
 		CollisionBorder* borders;
 	};
@@ -5708,6 +5709,7 @@ namespace IW3SR
 
 	struct PlayerKeyState
 	{
+		field_t chatField;
 		int chat_team;
 		int overstrikeMode;
 		int anyKeyDown;
