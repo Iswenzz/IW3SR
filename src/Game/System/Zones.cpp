@@ -252,7 +252,12 @@ namespace IW3SR
 		if (!map || !*map || !Assets::ZoneExists(std::string(map) + "_load"))
 			return false;
 
+		// The UI was just told there is no map, which the render thread's loading frames would draw: a 640x480
+		// black box on a wide screen. They go through SCR_UpdateScreen, which skips while one is marked running.
+		const uint8_t updating = Memory::Get<uint8_t>(InUpdateFrameAddress);
+		Memory::Set<uint8_t>(InUpdateFrameAddress, 1);
 		LoadMapLoadscreen(map);
+		Memory::Set<uint8_t>(InUpdateFrameAddress, updating);
 		return true;
 	}
 
