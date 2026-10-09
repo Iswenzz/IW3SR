@@ -20,6 +20,7 @@ namespace IW3SR
 		static void ExecuteRenderCommandsLoop(void* cmds);
 		static void STDCALL Frame(IDirect3DDevice9* device);
 		static HRESULT STDCALL Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters);
+		static void UpdateLoopingSounds();
 		static void UpdateMaterials();
 		static void ReleaseMaterials();
 

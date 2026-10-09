@@ -244,6 +244,9 @@ namespace IW3SR
 	Hook<void()>
 		R_BeginFrame_h(0x5F75A0, GRenderer::BeginFrame);
 
+	Hook<void()>
+		SND_UpdateLoopingSounds_h(0x5C4C60, GRenderer::UpdateLoopingSounds);
+
 	Hook<void(GfxViewInfo* viewInfo)>
 		R_ChooseShadowedLights_h(0x5FBC60, GShadows::ChooseShadowedLights);
 

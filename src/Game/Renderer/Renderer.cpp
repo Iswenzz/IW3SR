@@ -225,6 +225,14 @@ namespace IW3SR
 		return hr;
 	}
 
+	// R_RenderScene updates the sound for client 0, so the water and portal passes did as well, before
+	// cgame renewed the frame's loops: every looping sound stopped and started over from its first samples.
+	void GRenderer::UpdateLoopingSounds()
+	{
+		if (!GPortal::Rendering)
+			SND_UpdateLoopingSounds_h();
+	}
+
 	// Deferred to the next visible frame so the swaps are only ever touched from the render thread.
 	void GRenderer::UpdateMaterials()
 	{

@@ -160,6 +160,9 @@ namespace IW3SR
 	API extern Hook<void()>
 		R_BeginFrame_h;
 
+	extern Hook<void()>
+		SND_UpdateLoopingSounds_h;
+
 	extern Hook<void(GfxViewInfo* viewInfo)>
 		R_ChooseShadowedLights_h;
 

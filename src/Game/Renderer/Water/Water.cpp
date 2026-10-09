@@ -35,7 +35,8 @@ namespace IW3SR
 
 	void GWater::Initialize()
 	{
-		Enabled = Dvar::RegisterBool("sr_water_reflection", DVAR_SAVED, "Mirror the scene in IzFF's water", true);
+		// Off unless asked for: a mirrored pass draws the whole scene a second time.
+		Enabled = Dvar::RegisterBool("sr_water_reflection", DVAR_SAVED, "Mirror the scene in IzFF's water", false);
 		Scale = Dvar::RegisterFloat("sr_water_scale", DVAR_SAVED, "Water reflection resolution, relative to the screen",
 			0.5f, 0.125f, 1.0f);
 		Distance = Dvar::RegisterFloat("sr_water_distance", DVAR_SAVED,
@@ -62,9 +63,11 @@ namespace IW3SR
 		if (GPortal::Rendering)
 			return;
 
-		const bool ready = Ready();
-		if (ready && !Surfaces.empty() && Threaded && Threaded->current.enabled)
+		// With r_smp_backend the render thread is often still inside the last frame's scene here,
+		// which Ready reads as busy: skipped, that one frame went unmirrored and the water flickered.
+		if (!Surfaces.empty() && Threaded && Threaded->current.enabled && dx && dx->device && !dx->deviceLost)
 			R_SyncRenderThread();
+		const bool ready = Ready();
 		Restore();
 		if (!ready)
 			return void(DebugStage = "not ready");
@@ -268,6 +271,7 @@ namespace IW3SR
 		for (int i = 0; i < 3; i++)
 			view.viewaxis[i].z = -view.viewaxis[i].z;
 		view.viewaxis[2] = -view.viewaxis[2];
+		view.dof = {};
 
 		R_SyncRenderThread();
 		GPortal::Rendering = true;
@@ -284,8 +288,12 @@ namespace IW3SR
 		const GfxBackEndData* data = gfx_frontEndDataOut ? *gfx_frontEndDataOut : nullptr;
 		if (data && data->viewInfo && data->viewInfoCount > 0)
 		{
-			const auto* info = reinterpret_cast<const GfxViewInfo*>(
-				reinterpret_cast<const uint8_t*>(data->viewInfo) + (data->viewInfoCount - 1) * VIEW_INFO_STRIDE);
+			auto* info = reinterpret_cast<GfxViewInfo*>(
+				reinterpret_cast<uint8_t*>(data->viewInfo) + (data->viewInfoCount - 1) * VIEW_INFO_STRIDE);
+
+			// The water in this view asks for a floatZ pass, a second draw of the whole scene for the few
+			// reflected surfaces that would read it. The real frame builds its own.
+			info->needsFloatZ = false;
 			const GfxMatrix& inverse = info->viewParms.inverseViewProjectionMatrix;
 			const float world[4] = { 0.0f, 0.0f, 1.0f, -(plane.Height + PLANE_LIFT) };
 
