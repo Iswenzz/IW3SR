@@ -45,6 +45,10 @@ namespace IW3SR
 		static void EndFrame();
 		static void DrawDebug();
 
+		// Shared with the water reflection, which draws its own offscreen frames the same way.
+		static void BeginCommandList();
+		static uint32_t Unbind(IDirect3DTexture9* texture);
+
 	private:
 		static inline PortalTarget Targets[2];
 		static inline std::vector<PortalSurface> Surfaces;
@@ -75,11 +79,9 @@ namespace IW3SR
 		static bool Collect(PortalEndpoint (&pair)[2]);
 		static bool Paired();
 		static bool Visible(const PortalEndpoint& endpoint);
-		static void BeginCommandList();
 		static void Render(int index, const PortalEndpoint& into, const PortalEndpoint& out);
 		static bool Resize(int index, PortalTarget& target, const vec2& size);
 		static bool Capture(PortalTarget& target);
-		static uint32_t Unbind(IDirect3DTexture9* texture);
 		static void Blank();
 		static void Bind(const PortalTarget& target, const PortalEndpoint& endpoint);
 		static void Assign(Material* material, IDirect3DTexture9* texture);

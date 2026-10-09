@@ -9,6 +9,7 @@
 #include "Game/Renderer/UI/About.hpp"
 #include "Game/Renderer/UI/UI.hpp"
 #include "Game/Renderer/VR/VR.hpp"
+#include "Game/Renderer/Water/Water.hpp"
 #include "Game/System/AssetDump.hpp"
 #include "Game/System/Assets.hpp"
 #include "Game/System/Capture.hpp"
@@ -43,6 +44,7 @@ namespace IW3SR
 
 		Dvar::InitializeRenderer();
 		GPortal::Initialize();
+		GWater::Initialize();
 		Modules::Deserialize();
 
 		DX9GraphicsContext::Swap(dx->d3d9, dx->device);
@@ -55,6 +57,7 @@ namespace IW3SR
 	{
 		Swaps.Clear();
 		GPortal::Shutdown();
+		GWater::Shutdown();
 		if (window)
 			GVR::Shutdown();
 
@@ -94,6 +97,7 @@ namespace IW3SR
 		GShadows::BeginFrame();
 		if (!GPortal::Rendering)
 			GVR::BeginFrame();
+		GWater::BeginFrame();
 		GPortal::BeginFrame();
 	}
 
@@ -107,6 +111,7 @@ namespace IW3SR
 	{
 		CG_DrawCrosshair_h(localClientNum);
 		GPortal::DrawDebug();
+		GWater::DrawDebug();
 		DrawViewpos();
 
 		EventRenderer2D event;
@@ -175,6 +180,7 @@ namespace IW3SR
 			return;
 		}
 		GPortal::EndFrame(); // the world has been drawn, so the borrowed colour maps go back here
+		GWater::EndFrame();
 
 		if (PendingMaterialUpdate.exchange(false))
 			ApplyMaterials();
@@ -203,6 +209,7 @@ namespace IW3SR
 		Browser::Lock();
 		Swaps.Clear();
 		GPortal::Shutdown(); // hand the colour maps back before the render targets are released
+		GWater::Shutdown();
 
 		GPUResource::NotifyBeforeReset();
 		ImGui_ImplAPI_InvalidateDeviceObjects();
