@@ -1,4 +1,5 @@
 #include "CoD4X.hpp"
+#include "PMem.hpp"
 #include "Patch.hpp"
 
 #include "Game/Renderer/Materials.hpp"
@@ -38,9 +39,12 @@ namespace IW3SR
 		"55 57 56 53 81 EC 4C 09 00 00 C7 04 24 ?? ?? ?? ?? 8B 9C 24 60 09 00 00";
 	constexpr const char* RestartForDemoSignatureEax = "55 57 56 53 89 C3 81 EC 3C 09 00 00";
 
+	// The launcher loads a DLL to read its version, frees it and loads it again to run it, and the
+	// second image maps at the same base without any of the patches below. They all go in again on
+	// every load, which each of them survives.
 	void GCoD4X::Attach(HMODULE mod)
 	{
-		if (!mod || reinterpret_cast<uintptr_t>(mod) == COD4X_BASE)
+		if (!mod)
 			return;
 		Patch::UseCoD4X = true;
 
@@ -53,6 +57,7 @@ namespace IW3SR
 
 		Crash::Patch(COD4X_BASE);
 		TightenFrameLimiter();
+		GPMem::RaiseCoD4X();
 	}
 
 	void GCoD4X::Install()

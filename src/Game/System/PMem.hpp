@@ -12,6 +12,7 @@ namespace IW3SR
 
 		static void Initialize();
 		static void InitDvars();
+		static void RaiseCoD4X();
 
 		static int Reserved();
 
