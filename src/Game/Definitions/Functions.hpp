@@ -189,6 +189,9 @@ namespace IW3SR
 		NET_SendPacket;
 
 	API extern Function<void(pmove_t* pm)>
+		Pmove;
+
+	API extern Function<void(pmove_t* pm)>
 		PmoveSingle;
 
 	API extern Function<void(pmove_t* pm, int entity_num)>

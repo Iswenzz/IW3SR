@@ -185,6 +185,9 @@ namespace IW3SR
 		NET_SendPacket = ASM_LOAD(NET_SendPacket);
 
 	Function<void(pmove_t* pm)>
+		Pmove = 0x414D10;
+
+	Function<void(pmove_t* pm)>
 		PmoveSingle = 0x4143A0;
 
 	Function<void(pmove_t* pm, int entity_num)>

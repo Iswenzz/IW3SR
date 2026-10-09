@@ -2,7 +2,6 @@
 
 #include "Engine/Core/Utils/StringUtils.hpp"
 
-#include "Game/System/Client.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/System.hpp"
 
@@ -645,6 +644,24 @@ namespace IW3SR
 		}
 	}
 
+	// The state was predicted last frame, against movers the traces now find where they are this frame.
+	// The engine's replay places the player on the mover's new position, so the steps start from there.
+	static void FollowMover(playerState_s& ps)
+	{
+		const int ground = ps.groundEntityNum;
+		if (ground < 0 || ground >= ENTITYNUM_NONE)
+			return;
+
+		const centity_s& cent = cg_entities[ground];
+		if (cent.nextState.eType != ET_SCRIPTMOVER && cent.nextState.eType != ET_PLANE)
+			return;
+
+		vec3 from, to;
+		BG_EvaluateTrajectory(&cent.currentState.pos, cgs->oldTime, from);
+		BG_EvaluateTrajectory(&cent.currentState.pos, cgs->time, to);
+		ps.origin += to - from;
+	}
+
 	// Builds one command per movement step by running the engine's own builder that many times, each
 	// with the clocks it reads pointed at that step. Sampling input per step rather than per frame is
 	// what a client really running at com_maxfps does, and it has to be done this way round rather
@@ -709,6 +726,17 @@ namespace IW3SR
 			Stamp = frameTime - msec;
 		}
 
+		// Only a state predicted up to the newest command can be carried to the next one. One that was
+		// interpolated instead, following another player or with cg_nopredict, is not ours to move.
+		playerState_s& ps = cgs->predictedPlayerState;
+		const bool advance = count > 1 && ps.pm_type == PM_NORMAL
+			&& ps.commandTime == clients->cmds[clients->cmdNumber & 0x7F].serverTime;
+		if (advance)
+		{
+			Predicted = ps;
+			FollowMover(ps);
+		}
+
 		int time = plan.Clock;
 		for (int i = 1; i <= count; i++)
 		{
@@ -740,19 +768,40 @@ namespace IW3SR
 			// deciding whether it is standing on something, the strafe helpers - sees it advance.
 			// Left to the engine's one call a frame, every command in a frame is built against the
 			// state the frame started in, and a landing lands on the wrong command. The last step
-			// is skipped because the engine predicts right after this returns, which keeps the
-			// predictions per second the same as the client being imitated pays.
-			if (i < count)
-				Client::Predict(localClientNum);
+			// is skipped because the engine predicts right after this returns.
+			if (advance && i < count)
+				Advance();
 		}
 		Emitted += count;
 		Last = time;
+
+		// The engine has to predict from the state it left. From one advanced here, the events of the
+		// frame's steps would count as played already, and on a mover its miss check would take the
+		// mover's travel since the last frame for an error.
+		if (advance)
+			cgs->predictedPlayerState = Predicted;
 
 		clients->serverTimeDelta = Server.Delta;
 		clients->serverTime = serverTime;
 		com_frameTime = frameTime;
 		cls->frametime = frametime;
 		frame_msec = msec;
+	}
+
+	// One pmove of the newest command, the step the engine's replay takes for it. The replay itself
+	// starts over from the snapshot and reruns every command the server has not acknowledged, so
+	// running it per step made each step cost that many pmoves, a long frame owe more steps, and the
+	// next frame come out longer still, until the frame rate collapsed.
+	void Timestep::Advance()
+	{
+		pmove_t pm = *pmove;
+		pm.ps = &cgs->predictedPlayerState;
+		pm.cmd = clients->cmds[clients->cmdNumber & 0x7F];
+		pm.oldcmd = clients->cmds[(clients->cmdNumber - 1) & 0x7F];
+		pm.tracemask = MASK_PLAYERSOLID;
+		pm.handler = 0;
+
+		Pmove(&pm);
 	}
 
 	bool Timestep::Active()

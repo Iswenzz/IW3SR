@@ -61,6 +61,7 @@ namespace IW3SR
 	private:
 		static bool Active();
 		static void Split(int localClientNum);
+		static void Advance();
 		static Steps PlanSteps(int* widths, int step, int target, int frametime);
 		static void SeedClock(int target);
 		static void Receive(int target, int frametime);
@@ -97,6 +98,9 @@ namespace IW3SR
 
 		// The command as the engine built it, before any module had a say in it.
 		static inline usercmd_s Raw = {};
+
+		// The engine's prediction, put back once the frame's commands are built.
+		static inline playerState_s Predicted = {};
 
 		static inline std::ofstream Trace;
 		static inline int Stepped = 0;
