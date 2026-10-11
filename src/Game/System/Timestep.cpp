@@ -801,7 +801,38 @@ namespace IW3SR
 		pm.tracemask = MASK_PLAYERSOLID;
 		pm.handler = 0;
 
+		const int sequence = pm.ps->eventSequence;
 		Pmove(&pm);
+		ForceStance(*pm.ps, sequence);
+	}
+
+	// Pmove forces a stance, standing up to sprint or crouching under a ledge, through an event the
+	// cgame answers with CL_SetStance when the frame is predicted. The steps left in the frame would
+	// still send the old stance until then, and a crouch on the step after a sprint starts ends it
+	// for good: sprint has to be released before it can start again.
+	void Timestep::ForceStance(const playerState_s& ps, int sequence)
+	{
+		// CL_SetStance leaves the stance alone while a hold to crouch or hold to prone key is down.
+		if (playersKb[11].active || playersKb[24].active)
+			return;
+
+		// The sequence is a byte, and only the last 4 events are kept.
+		const int count = std::min((ps.eventSequence - sequence) & 0xFF, 4);
+		for (int i = ps.eventSequence - count; i < ps.eventSequence; i++)
+		{
+			switch (ps.events[i & 3])
+			{
+			case EV_STANCE_FORCE_STAND:
+				clients->stance = CL_STANCE_STAND;
+				break;
+			case EV_STANCE_FORCE_CROUCH:
+				clients->stance = CL_STANCE_CROUCH;
+				break;
+			case EV_STANCE_FORCE_PRONE:
+				clients->stance = CL_STANCE_PRONE;
+				break;
+			}
+		}
 	}
 
 	bool Timestep::Active()
