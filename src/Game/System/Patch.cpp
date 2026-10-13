@@ -80,6 +80,10 @@ namespace IW3SR
 		// Increase fps cap for menus and loadscreen
 		Memory::NOP(0x5001A8, 2);
 
+		// fx_enable is registered cheat-protected by FX_InitSystem on every map load, which re-adds the
+		// flag and resets it to 1, so a later override of its flags never sticks
+		Memory::Set<uint32_t>(0x4993ED, DVAR_SAVED);
+
 		// The renderer's Direct3DCreate9, so a headset can have D3D9 made on its own device
 		Memory::CALL(0x5F473B, reinterpret_cast<uintptr_t>(&GVR::CreateDirect3D));
 

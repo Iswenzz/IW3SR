@@ -97,9 +97,6 @@ namespace IW3SR
 		if (const auto r_fog = Find("r_fog"))
 			r_fog->flags = DVAR_SAVED;
 
-		if (const auto fx_enable = Find("fx_enable"))
-			fx_enable->flags = DVAR_SAVED;
-
 		for (const char* name : { "sm_sunEnable", "sm_spotEnable", "sm_sunSampleSizeNear", "sm_sunShadowScale",
 				 "sm_sunShadowCenter", "sm_strictCull", "sm_fastSunShadow", "sm_qualitySpotShadow",
 				 "sm_debugFastSunShadow", "sm_showOverlay", "sm_showOverlayDepthBounds" })
