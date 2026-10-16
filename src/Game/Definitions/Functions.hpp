@@ -149,6 +149,9 @@ namespace IW3SR
 	extern Function<void(const char* path, const char* dir)>
 		FS_AddIwdFilesForGameDirectory;
 
+	extern Function<void(int file)>
+		FS_FCloseFile;
+
 	extern Function<int(void* buffer, int length, int file)>
 		FS_Read;
 
@@ -321,6 +324,7 @@ namespace IW3SR
 	ASM_FUNCTION(Dvar_FindVar);
 	ASM_FUNCTION(Dvar_RegisterVariant);
 	ASM_FUNCTION(Dvar_SetFromStringByNameFromSource);
+	ASM_FUNCTION(FS_FCloseFile);
 	ASM_FUNCTION(G_MissileTrace);
 	ASM_FUNCTION(Jump_Check);
 	ASM_FUNCTION(LoadMapLoadscreen);

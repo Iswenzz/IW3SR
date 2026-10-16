@@ -145,6 +145,9 @@ namespace IW3SR
 	Function<void(const char* path, const char* dir)>
 		FS_AddIwdFilesForGameDirectory = 0x55D8B0;
 
+	Function<void(int file)>
+		FS_FCloseFile = ASM_LOAD(FS_FCloseFile);
+
 	Function<int(void* buffer, int length, int file)>
 		FS_Read = 0x55C120;
 
@@ -408,6 +411,20 @@ namespace IW3SR
 		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // name
 		a.call(0x56D0A0);
 		a.add(x86::esp, 0x08);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(FS_FCloseFile)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // file
+		a.call(0x55B3B0);
 
 		a.popad();
 		a.pop(x86::ebp);

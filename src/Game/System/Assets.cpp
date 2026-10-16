@@ -16,6 +16,8 @@ namespace IW3SR
 	constexpr int AssetTypeXModel = 3;
 	constexpr int AssetTypeFx = 25;
 	static const char* const* const DefaultAssetNames = reinterpret_cast<const char* const*>(0x726678);
+	// What Image_GetPicmip (0x616D40) hands out per semantic: colour, normal, specular.
+	static const int* const ImagePicmip = reinterpret_cast<const int*>(0xD4F28E0);
 
 	constexpr const char* StockViewhands = "viewmodel_base_viewhands";
 
@@ -116,6 +118,37 @@ namespace IW3SR
 		DB_LoadXAssets_h(zones.data(), static_cast<unsigned int>(zones.size()), sync);
 	}
 
+	// The engine loads fileSizeForPicmip[picmip] - 28 bytes of an .iwi with no check, and some converters
+	// wrote that table negative past the second level (mp_deathrun_mirroredge, mp_deathrun_horror). At
+	// r_picmip 2 or 3 that asks Image_AllocTempMemory for ~4096 MB, a Com_Error on the loader thread.
+	// Only the engine ever sets noPicmip and never clears it, so setting it loads such a file whole.
+	static bool PicmipTableBroken(const GfxImage* image, void* reader)
+	{
+		if (image->noPicmip || !image->name || std::max({ ImagePicmip[0], ImagePicmip[1], ImagePicmip[2] }) <= 0)
+			return false;
+
+		const auto open = reinterpret_cast<int(__cdecl*)(const char* path, int* file)>(reader);
+		const std::string path = std::format("images/{}.iwi", image->name);
+		int file = 0;
+		if (open(path.c_str(), &file) < 0)
+			return false;
+
+		GfxImageFileHeader header{};
+		const bool read = FS_Read(&header, sizeof(header), file) == sizeof(header);
+		FS_FCloseFile(file);
+		if (!read || header.flags & (IMG_FLAG_NOPICMIP | IMG_FLAG_NOMIPMAPS)
+			|| std::min(header.dimensions[0], header.dimensions[1]) < 32)
+			return false;
+
+		for (int level = 1; level < 4; level++)
+		{
+			const int size = header.fileSizeForPicmip[level];
+			if (size < static_cast<int>(sizeof(header)) || size > header.fileSizeForPicmip[level - 1])
+				return true;
+		}
+		return false;
+	}
+
 	// An image whose .iwi cannot be read is fatal at one of the five sites that load one (0x616F2B):
 	// it reports "Couldn't load image" through Com_Error, and on the fastfile loader thread that is a
 	// message box and a dead process. The other sites already recover by handing the image the default
@@ -123,6 +156,12 @@ namespace IW3SR
 	// already named the file it could not open by the time this runs.
 	bool Assets::LoadImageFromFile(GfxImage* image, void* reader)
 	{
+		if (image && PicmipTableBroken(image, reader))
+		{
+			image->noPicmip = true;
+			Log::WriteLine(Channel::Warning, "Image '{}' has a broken mip table; loading it at full resolution.",
+				image->name ? image->name : "?");
+		}
 		if (Image_LoadFromFile_h(image, reader))
 			return true;
 
