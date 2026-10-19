@@ -259,6 +259,9 @@ namespace IW3SR
 	Function<void(const refdef_s* refdef)>
 		R_RenderScene = ASM_LOAD(R_RenderScene);
 
+	Function<bool(GfxStaticModelDrawInst* smodelDrawInst, unsigned int smodelIndex)>
+		R_AllocStaticModelLighting = 0x62EBB0;
+
 	Function<int(const char* text, int maxChars, Font_s* font)>
 		R_TextWidth = ASM_LOAD(R_TextWidth);
 

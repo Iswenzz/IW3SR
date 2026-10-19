@@ -26,6 +26,10 @@ namespace IW3SR
 		static std::array<int, 6> CasterCounts();
 		static std::array<int, 2> DrawBuffers();
 
+		static bool CasterLighting(GfxStaticModelDrawInst* smodelDrawInst, unsigned int smodelIndex);
+		static bool HasLighting(unsigned int smodelIndex);
+		static uint32_t UncachedModelId(unsigned int smodelIndex, int lod);
+
 	private:
 		static inline double Ratio = 4.0;
 		static inline float RatioFixed = 4.0f;

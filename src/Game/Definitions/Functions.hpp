@@ -263,6 +263,9 @@ namespace IW3SR
 	API extern Function<void(const refdef_s* refdef)>
 		R_RenderScene;
 
+	extern Function<bool(GfxStaticModelDrawInst* smodelDrawInst, unsigned int smodelIndex)>
+		R_AllocStaticModelLighting;
+
 	extern Function<int(const char* text, int maxChars, Font_s* font)>
 		R_TextWidth;
 
