@@ -63,6 +63,8 @@ target_sources(IW3SR PRIVATE
 	Patch.cpp
 	Server.hpp
 	Server.cpp
+	ServerDemo.hpp
+	ServerDemo.cpp
 	ServerFilter.hpp
 	ServerFilter.cpp
 	Shell.hpp

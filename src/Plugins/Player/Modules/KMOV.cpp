@@ -1,5 +1,7 @@
 #include "KMOV.hpp"
 
+#include "Game/System/ServerDemo.hpp"
+
 #include <random>
 
 constexpr const char* modes = "Player\0FPS\0Velocity\0Map\0Timer\0Health\0Hook\0";
@@ -112,8 +114,10 @@ namespace IW3SR::Addons
 		const auto q3rl = BG_FindWeaponIndexForName("gl_ak47_mp");
 		const auto q3pg = BG_FindWeaponIndexForName("gl_g3_mp");
 		const auto portal = BG_FindWeaponIndexForName("portalgun_mp");
-		const bool isFire = pmove->cmd.buttons & KEY_MASK_FIRE;
-		const bool isAds = pmove->cmd.buttons & KEY_MASK_ADS;
+		const auto demo = ServerDemo::Get();
+		const int buttons = demo ? demo->Buttons : pmove->cmd.buttons;
+		const bool isFire = buttons & KEY_MASK_FIRE;
+		const bool isAds = buttons & KEY_MASK_ADS;
 
 		// Q3
 		if (isFire && (ps.weapon == q3rl || ps.weapon == q3pg))
@@ -226,25 +230,29 @@ namespace IW3SR::Addons
 		static const auto com_maxfps = Dvar::Find("com_maxfps");
 		static const auto mapname = Dvar::Find("mapname");
 
+		const auto demo = ServerDemo::Get();
 		node.Element.Value = "";
 
 		switch (node.Type)
 		{
 		case NodeEnum::Player:
-			node.Element.Value = name->current.string;
+			node.Element.Value = demo ? demo->Name : name->current.string;
 			break;
 		case NodeEnum::FPS:
-			node.Element.Value = std::format("{} FPS", com_maxfps->current.integer);
+			node.Element.Value = std::format("{} FPS", demo ? demo->FPS : com_maxfps->current.integer);
 			break;
 		case NodeEnum::Velocity:
-			node.Element.Value = std::format("{} UPS", static_cast<int>(glm::length(vec2(pmove->ps->velocity))));
+		{
+			const int velocity = demo ? demo->Velocity : static_cast<int>(glm::length(vec2(pmove->ps->velocity)));
+			node.Element.Value = std::format("{} UPS", velocity);
 			break;
+		}
 		case NodeEnum::Map:
 			node.Element.Value = mapname->current.string;
 			break;
 		case NodeEnum::Timer:
 		{
-			float seconds = UI::Time() - StartTime;
+			float seconds = demo ? ServerDemo::RunTime() / 1000.0f : UI::Time() - StartTime;
 			int minutes = static_cast<int>(seconds) / 60;
 			float secs = fmod(seconds, 60.0f);
 			char buffer[16];
