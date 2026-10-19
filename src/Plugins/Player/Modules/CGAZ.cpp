@@ -41,13 +41,13 @@ namespace IW3SR::Addons
 		}
 	}
 
-	void CGAZ::Compute(float wishspeed, float accel, float gravity)
+	void CGAZ::Compute(float wishspeed, float accelWishspeed, float accel, float gravity)
 	{
 		g_squared = gravity * gravity;
 		v_squared = glm::dot(vec2(pml.previous_velocity), vec2(pml.previous_velocity));
 		vf_squared = glm::dot(vec2(pm.ps->velocity), vec2(pm.ps->velocity));
 		w_speed = wishspeed;
-		a = accel * wishspeed * pml.frametime;
+		a = accel * accelWishspeed * pml.frametime;
 		a_squared = a * a;
 
 		if (!UseGroundZones || v_squared - vf_squared >= 2 * a * wishspeed - a_squared)
@@ -142,7 +142,7 @@ namespace IW3SR::Addons
 		if (!Update())
 			return;
 
-		Compute(w_speed, accelerate, slick_gravity);
+		Compute(w_speed, accel_wishspeed, accelerate, slick_gravity);
 
 		const float yaw = atan2(w_vel[1], w_vel[0]) - d_vel;
 		DrawAngleYaw(-d_min, +d_min, yaw, ColorBackground);

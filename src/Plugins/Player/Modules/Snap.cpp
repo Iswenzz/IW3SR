@@ -109,10 +109,10 @@ namespace IW3SR::Addons
 			return;
 
 		static const auto com_maxfps = Dvar::Find("com_maxfps");
-		const int fps = com_maxfps->current.integer;
+		const int fps = demo && demo->FPS > 0 ? demo->FPS : com_maxfps->current.integer;
 
 		const float msec = fps > 0 ? std::floor(1000.0f / fps) : static_cast<float>(cgs->frametime);
-		const float accel = std::min(accelerate * w_speed * (std::max(msec, 1.0f) / 1000.0f), MAX_ACCEL);
+		const float accel = std::min(accelerate * accel_wishspeed * (std::max(msec, 1.0f) / 1000.0f), MAX_ACCEL);
 		if (accel <= 0.0f)
 			return;
 

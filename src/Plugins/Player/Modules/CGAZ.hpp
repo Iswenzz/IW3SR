@@ -39,7 +39,7 @@ namespace IW3SR::Addons
 		float d_max = 0;
 		float d_vel = 0;
 
-		void Compute(float wishspeed, float accel, float gravity);
+		void Compute(float wishspeed, float accelWishspeed, float accel, float gravity);
 
 		static float SafeAcos(float num, float den);
 		float Min();

@@ -1,6 +1,11 @@
 #include "PmoveHud.hpp"
 
 #include "Game/Player/Movements/CoD4.hpp"
+#include "Game/System/Protocol.hpp"
+
+#include <bit>
+
+#define POF_FOLLOW 0x2
 
 #define cod4_accelerate 9.0f
 #define cod4_crouch_accelerate 12.0f
@@ -8,6 +13,10 @@
 #define cod4_airaccelerate 1.0f
 
 #define q3_accelerate 10.0f
+#define q3_crouch_accelerate 15.0f
+#define q3_prone_accelerate 10.0f
+#define q3_duck_scale 0.25f
+#define q3_prone_scale 0.25f
 #define q3_airaccelerate 1.0f
 
 #define q3cpm_accelerate 15.0f
@@ -25,21 +34,28 @@ namespace IW3SR::Addons
 	// modules see the same wish direction and acceleration pmove is about to use
 	bool PmoveHud::Update(bool forceAir)
 	{
-		if (!pmove || !pmove->ps)
+		const bool following = cgs->predictedPlayerState.otherFlags & POF_FOLLOW;
+		if (!pmove || (!pmove->ps && !following))
 			return false;
 
-		ps = *pmove->ps;
+		ps = following ? cgs->predictedPlayerState : *pmove->ps;
 		pm = *pmove;
 		pm.ps = &ps;
+		demo = ServerDemo::Get();
 
-		if ((pm.ps->pm_flags & PMF_DUCKED) || !glm::length(vec2(pm.ps->velocity)))
+		if (following)
+			Follow();
+		if (demo)
+			ApplyDemo();
+		if (!glm::length(vec2(pm.ps->velocity)))
 			return false;
 
 		w_speed = 0;
+		accel_wishspeed = 0;
 		accelerate = 0;
 		slick_gravity = 0;
 
-		pml.frametime = static_cast<float>(cgs->frametime) / 1000.f;
+		pml.frametime = static_cast<float>(demo && demo->FPS > 0 ? 1000 / demo->FPS : cgs->frametime) / 1000.f;
 		pml.previous_velocity = pm.ps->velocity;
 		Math::AngleVectors(pm.ps->viewangles, pml.forward, pml.right, pml.up);
 
@@ -55,6 +71,41 @@ namespace IW3SR::Addons
 			AirMove();
 
 		return true;
+	}
+
+	// Following a player, the cgame runs no pmove, so cg_pmove still holds this client's own last command.
+	// SR-Server copies each player's command into the dof fields of its state, which reach whoever follows
+	// it; its sr_vrRelay is how a client tells it apart.
+	void PmoveHud::Follow()
+	{
+		pm.cmd = {};
+		if (GProtocol::SystemInfoValue("sr_vrRelay") == "1")
+		{
+			pm.cmd.forwardmove = static_cast<char>(std::bit_cast<uint32_t>(ps.dofNearStart));
+			pm.cmd.rightmove = static_cast<char>(std::bit_cast<uint32_t>(ps.dofNearEnd));
+			pm.cmd.buttons = std::bit_cast<int>(ps.dofFarStart);
+		}
+		pm.cmd.serverTime = ps.commandTime;
+
+		// The command before it is unknown, so a held jump counts as held rather than pressed again.
+		pm.oldcmd = pm.cmd;
+		pm.tracemask = MASK_PLAYERSOLID;
+		pm.mins = { -15.0f, -15.0f, 0.0f };
+		pm.maxs = { 15.0f, 15.0f, ps.viewHeightCurrent == 11 ? 30.0f : ps.viewHeightCurrent == 40 ? 50.0f : 70.0f };
+	}
+
+	// Watching a demo the server plays, the player is linked to the camera and pmove clears a linked player's
+	// velocity, so the movement comes from the snapshots, which the cgame already interpolates when following,
+	// and the keys with the demo's state.
+	void PmoveHud::ApplyDemo()
+	{
+		if (!(ps.otherFlags & POF_FOLLOW) && cgs->snap && cgs->nextSnap)
+			ps.velocity = glm::mix(cgs->snap->ps.velocity, cgs->nextSnap->ps.velocity, cgs->frameInterpolation);
+
+		pm.cmd.forwardmove = static_cast<char>(demo->ForwardMove);
+		pm.cmd.rightmove = static_cast<char>(demo->RightMove);
+		pm.cmd.buttons = demo->Buttons;
+		pm.oldcmd = pm.cmd;
 	}
 
 	void PmoveHud::WalkMove()
@@ -87,7 +138,16 @@ namespace IW3SR::Addons
 		// Only the CoD4 walk move scales by damage, stance, weapon and strafe direction
 		const float scale = mode == MovementMode::COD4 ? DamageScaleWalk(pm.ps->damageTimer) * CmdScaleWalk(&pm.cmd)
 													   : CmdScale(pm.ps, &pm.cmd);
-		const float wishspeed = scale * glm::length(w_vel);
+		float wishspeed = scale * glm::length(w_vel);
+
+		if (is_q3)
+		{
+			const float speed = static_cast<float>(pm.ps->speed);
+			if (pm.ps->pm_flags & PMF_DUCKED)
+				wishspeed = std::min(wishspeed, speed * q3_duck_scale);
+			else if (pm.ps->pm_flags & PMF_PRONE)
+				wishspeed = std::min(wishspeed, speed * q3_prone_scale);
+		}
 
 		// When a player gets hit, they temporarily lose full control, which allows them to be moved a bit
 		if ((is_slick || CoD4::InKnockback(pm.ps)) && mode != MovementMode::CS)
@@ -105,16 +165,21 @@ namespace IW3SR::Addons
 				accelerate = cod4_crouch_accelerate;
 			break;
 		case MovementMode::Q3:
-			accelerate = q3_accelerate;
-			break;
 		case MovementMode::Q3CPM:
-			accelerate = q3cpm_accelerate;
+			accelerate = mode == MovementMode::Q3CPM ? q3cpm_accelerate : q3_accelerate;
+			if (pm.ps->pm_flags & PMF_DUCKED)
+				accelerate = q3_crouch_accelerate;
+			else if (pm.ps->pm_flags & PMF_PRONE)
+				accelerate = q3_prone_accelerate;
 			break;
 		case MovementMode::CS:
 			accelerate = cs_accelerate;
 			break;
 		}
-		Accelerate(wishspeed, accelerate);
+		if (is_q3)
+			AccelerateWalk(wishspeed, accelerate);
+		else
+			Accelerate(wishspeed, accelerate);
 	}
 
 	void PmoveHud::AirMove()
@@ -164,14 +229,28 @@ namespace IW3SR::Addons
 	void PmoveHud::Accelerate(float wishspeed, float accel)
 	{
 		w_speed = wishspeed;
+		accel_wishspeed = wishspeed;
 		accelerate = accel;
 		slick_gravity = 0;
+	}
+
+	// Q3's ground move raises the wish speed its acceleration comes from to 100 when crouched or slower, or to
+	// 80 when prone and faster, though it still caps at the real one.
+	void PmoveHud::AccelerateWalk(float wishspeed, float accel)
+	{
+		Accelerate(wishspeed, accel);
+
+		if (pm.ps->viewHeightCurrent == 40.0f || wishspeed < 100.0f)
+			accel_wishspeed = 100.0f;
+		else if (pm.ps->viewHeightCurrent == 11.0f)
+			accel_wishspeed = 80.0f;
 	}
 
 	// The slick move loses the ground plane, so a frame of gravity comes with it
 	void PmoveHud::SlickAccelerate(float wishspeed, float accel)
 	{
 		w_speed = wishspeed;
+		accel_wishspeed = wishspeed;
 		accelerate = accel;
 		slick_gravity = static_cast<float>(pm.ps->gravity) * pml.frametime;
 	}

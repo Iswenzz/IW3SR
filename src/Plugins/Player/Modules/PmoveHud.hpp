@@ -1,6 +1,8 @@
 #pragma once
 #include "Player/Base.hpp"
 
+#include "Game/System/ServerDemo.hpp"
+
 namespace IW3SR::Addons
 {
 	// Shared pmove replay for the movement HUDs. Runs the accelerate step of the active movement
@@ -11,16 +13,21 @@ namespace IW3SR::Addons
 		pmove_t pm = {};
 		pml_t pml = {};
 		playerState_s ps = {};
+		const ServerDemoState* demo = nullptr;
 		vec2 w_vel = { 0, 0 };
 		float w_speed = 0;
+		float accel_wishspeed = 0;
 		float accelerate = 0;
 		float slick_gravity = 0;
 
 		bool Update(bool forceAir = false);
 
+		void Follow();
+		void ApplyDemo();
 		void WalkMove();
 		void AirMove();
 		void Accelerate(float wishspeed, float accel);
+		void AccelerateWalk(float wishspeed, float accel);
 		void SlickAccelerate(float wishspeed, float accel);
 
 		float CmdScale(playerState_s* ps, usercmd_s* cmd);
