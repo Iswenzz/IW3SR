@@ -104,6 +104,11 @@ namespace IW3SR
 			if (const auto dvar = Find(name))
 				dvar->flags = DvarFlags(dvar->flags & ~DVAR_CHEATPROTECTED);
 		}
+
+		// The cgame registers its dvars once, before the renderer, and the first gamestate with sv_cheats 0
+		// resets every cheat protected one (Dvar_SetCheatState) before CL_InitCGame returns, so a value set
+		// from the menu, cg_draw2D 0 for a demo, has to lose the protection here already.
+		InitializeGame();
 	}
 
 	void Dvar::InitializeGame()

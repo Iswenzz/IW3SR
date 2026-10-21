@@ -35,9 +35,6 @@ namespace IW3SR
 	constexpr const char* WndClassSignature = "C7 44 24 ?? 30 00 00 00 89 ?? F3 AB C7 44 24 ?? ?? ?? ?? ??";
 	constexpr const char* MainWndProcSignature = "55 57 56 53 83 EC 7C 8B AC 24 90 00 00 00";
 	constexpr const char* MainWndProcSignatureEax = "?? ?? ?? ?? ?? EC 7C C7 04 24 02 00 00 00";
-	constexpr const char* RestartForDemoSignature =
-		"55 57 56 53 81 EC 4C 09 00 00 C7 04 24 ?? ?? ?? ?? 8B 9C 24 60 09 00 00";
-	constexpr const char* RestartForDemoSignatureEax = "55 57 56 53 89 C3 81 EC 3C 09 00 00";
 
 	// The launcher loads a DLL to read its version, frees it and loads it again to run it, and the
 	// second image maps at the same base without any of the patches below. They all go in again on
@@ -81,7 +78,6 @@ namespace IW3SR
 		CL_Connect_h.Update(Signature(COD4X_BIN, ConnectSignature));
 		CL_FinishMove_h.Update(Signature(COD4X_BIN, FinishMoveSignature));
 		CL_PacketEventCoD4X_h.Update(Signature(COD4X_BIN, PacketEventSignature));
-		CL_RestartForDemo_h.Update(FindRestartForDemo());
 		CG_Respawn_h.Update(Signature(COD4X_BIN, RespawnSignature));
 		MainWndProc_h.Update(FindMainWndProc());
 		RB_ExecuteRenderCommandsLoop_h.Update(Signature(COD4X_BIN, RenderCommandsSignature));
@@ -110,16 +106,6 @@ namespace IW3SR
 		if (const uintptr_t address = Signature(COD4X_BIN, MainWndProcSignature))
 			return address;
 		return Signature(COD4X_BIN, MainWndProcSignatureEax);
-	}
-
-	uintptr_t GCoD4X::FindRestartForDemo()
-	{
-		if (const uintptr_t address = Signature(COD4X_BIN, RestartForDemoSignature))
-		{
-			CL_RestartForDemo_h.Callback = ASM_LOAD(CL_RestartForDemoCdecl_h);
-			return address;
-		}
-		return Signature(COD4X_BIN, RestartForDemoSignatureEax);
 	}
 
 	uintptr_t GCoD4X::FindXAssetsInitStdCount()
@@ -170,7 +156,6 @@ namespace IW3SR
 			{ "CL_Connect", CL_Connect_h.IsEnabled },
 			{ "CL_FinishMove", CL_FinishMove_h.IsEnabled },
 			{ "CL_PacketEvent", CL_PacketEventCoD4X_h.IsEnabled },
-			{ "CL_FindAndRunOldVersion2", CL_RestartForDemo_h.IsEnabled },
 			{ "CG_Respawn", CG_Respawn_h.IsEnabled },
 			{ "MainWndProc", MainWndProc_h.IsEnabled },
 			{ "RB_ExecuteRenderCommandsLoop", RB_ExecuteRenderCommandsLoop_h.IsEnabled },

@@ -3,12 +3,8 @@ target_sources(IW3SR PRIVATE
 	AssetDump.cpp
 	Assets.hpp
 	Assets.cpp
-	Audio.hpp
-	Audio.cpp
 	Autocomplete.hpp
 	Autocomplete.cpp
-	Capture.hpp
-	Capture.cpp
 	CdKey.hpp
 	CdKey.cpp
 	Channel.hpp

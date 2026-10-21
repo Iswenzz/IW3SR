@@ -2,7 +2,6 @@
 
 #include "Game/Renderer/Renderer.hpp"
 #include "Game/Renderer/Shadows.hpp"
-#include "Game/System/Capture.hpp"
 #include "Game/System/CdKey.hpp"
 #include "Game/System/Channel.hpp"
 #include "Game/System/Console.hpp"
@@ -18,10 +17,10 @@
 
 namespace IW3SR
 {
-	constexpr std::array ConsoleCommands = { "replayDemo", "sr_assets", "sr_assets_usage", "sr_capture", "sr_demo",
-		"sr_download_cancel", "sr_download_status", "sr_openurl", "sr_render", "sr_serverfilter_list",
-		"sr_serverfilter_refresh", "sr_serverinfo", "sr_serverlist", "sr_shell_register", "sr_shell_unregister",
-		"snd_pause", "snd_stopambient", "snd_unpause" };
+	constexpr std::array ConsoleCommands = { "replayDemo", "sr_assets", "sr_assets_usage", "sr_demo",
+		"sr_download_cancel", "sr_download_status", "sr_openurl", "sr_serverfilter_list", "sr_serverfilter_refresh",
+		"sr_serverinfo", "sr_serverlist", "sr_shell_register", "sr_shell_unregister", "snd_pause", "snd_stopambient",
+		"snd_unpause" };
 
 	// The timestep only exists in a debug build, so its commands are only offered there.
 	constexpr std::array DebugCommands = { "sr_timestep_status", "sr_timestep_test" };
@@ -84,7 +83,6 @@ namespace IW3SR
 	{
 		CL_Disconnect_h(localClientNum);
 		Timestep::Reset();
-		Capture::Disconnected();
 		GQoS::Disconnected();
 		GDownload::Disconnected();
 		GChannel::Disconnect();

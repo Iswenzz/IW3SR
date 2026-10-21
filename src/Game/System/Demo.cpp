@@ -6,6 +6,8 @@
 #include "Game/System/Patch.hpp"
 #include "Game/System/Protocol.hpp"
 
+using namespace asmjit;
+
 namespace IW3SR
 {
 	// Demo records open on a one byte type. Retail knows 0 (message data) and 1 (client archive);
@@ -32,12 +34,57 @@ namespace IW3SR
 	static_assert(DemoExtension.substr(1) == std::string_view(UnrestrictedDemo),
 		"The whitelist entry is the demo extension without its dot.");
 
+	// MSG_ReadDeltaPlayerstate (0x507110) fills origin, velocity and view angles from the client archive when
+	// a snapshot leaves them out, and this jne skips that when it sent them itself. The view angles are not
+	// among what it sends unless the player could not predict them (MSG_ShouldSendPSField), so in a demo
+	// they keep the last archived ones until the next snapshot that leaves them out. CS runs send their
+	// origin in about half their snapshots, which freezes and jerks the whole camera.
+	constexpr uintptr_t SentFieldsBranch = 0x507257;
+	constexpr uint8_t SentFieldsJne[6] = { 0x0F, 0x85, 0xA9, 0x00, 0x00, 0x00 };
+	constexpr uintptr_t SentFieldsResume = 0x507306;
+
+	// Where the function keeps its from and to arguments, off the stack it holds at the branch.
+	constexpr int FromArgument = 0x2F94;
+	constexpr int ToArgument = 0x2F98;
+
+	// The view angles are sent for a followed player, a locked view, the intermission, and the snapshot a
+	// teleport flips EF_TELEPORT_BIT in.
+	constexpr int OtherFlagFollow = 2;
+	constexpr int TeleportBit = 2;
+
+	// SR-Server copies every command into the dof fields of its player state (SR_DemoButton); its demos say
+	// so with sr_demo_version, which it has set since the copy began.
+	constexpr const char* SrDemoVersionKey = "sr_demo_version";
+
+	constexpr int ArchiveSize = 256;
+
+	ASM_FUNCTION(SentPlayerState_h)
+	{
+		a.pushad();
+		a.push(x86::dword_ptr(x86::esp, 0x20 + FromArgument));
+		a.push(x86::dword_ptr(x86::esp, 0x24 + ToArgument));
+		a.call(Demo::SentPlayerState);
+		a.add(x86::esp, 0x08);
+		a.popad();
+		a.push(imm(SentFieldsResume));
+		a.ret();
+	}
+
 	void Demo::Initialize()
 	{
 		LastDemo = Dvar::RegisterString("sr_lastdemo", DVAR_READONLY, "The last demo played", "");
 
 		Remember(Name);
 		Unrestrict();
+
+		bool stock = true;
+		for (size_t i = 0; i < sizeof(SentFieldsJne); i++)
+			stock = stock && Memory::Get<uint8_t>(SentFieldsBranch + i) == SentFieldsJne[i];
+		if (stock)
+		{
+			const uintptr_t stub = ASM_LOAD(SentPlayerState_h);
+			Memory::Set<int32_t>(SentFieldsBranch + 2, static_cast<int32_t>(stub - (SentFieldsBranch + 6)));
+		}
 	}
 
 	void Demo::Tick()
@@ -53,6 +100,112 @@ namespace IW3SR
 				std::format("Demo finished. Type replayDemo to play {} again.\n", Name).c_str(), 0);
 
 		Playing = playing;
+
+		// The demo's clock starts at its first snapshot, the earliest the client still holds this soon after.
+		if (!playing)
+			StartTime = 0;
+		else if (!StartTime && clients)
+		{
+			for (const clSnapshot_t& snapshot : clients->snapshots)
+			{
+				if (snapshot.valid && (!StartTime || snapshot.serverTime < StartTime))
+					StartTime = snapshot.serverTime;
+			}
+		}
+	}
+
+	bool Demo::IsPlaying()
+	{
+		return clc.demoplaying != 0;
+	}
+
+	// The recorder's name: the cgame's for its client, or the one the extended protocol sent apart.
+	std::string Demo::PlayerName()
+	{
+		const int clientNum = cgs->clientNum;
+		if (clientNum >= 0 && clientNum < MAX_PLAYERS && cgs->bgs.clientinfo[clientNum].name[0])
+			return cgs->bgs.clientinfo[clientNum].name;
+		return GProtocol::ClientName(clientNum);
+	}
+
+	// The recorder's frame rate, the way SR-Server reads it: the commonest gap between the archived command
+	// times, up to the frame being drawn.
+	int Demo::FPS()
+	{
+		if (!clients)
+			return 0;
+
+		std::array<int, 64> counts = {};
+		int previous = 0;
+		for (int i = 0, seen = 0; i < ArchiveSize && seen < 32; i++)
+		{
+			const int time = clients->clientArchive[(clients->clientArchiveIndex + ArchiveSize - 1 - i) % ArchiveSize]
+								 .serverTime;
+			if (!time || time > cgs->time)
+				continue;
+			if (previous > time && previous - time < static_cast<int>(counts.size()))
+			{
+				counts[previous - time]++;
+				seen++;
+			}
+			previous = time;
+		}
+		const auto best = std::max_element(counts.begin() + 1, counts.end());
+		return *best ? 1000 / static_cast<int>(best - counts.begin()) : 0;
+	}
+
+	// The run timer as SR-Server's demo player counts it: version 1 demos start 900ms into the run, later
+	// ones 100ms before it.
+	int Demo::RunTime()
+	{
+		if (!StartTime)
+			return 0;
+
+		const int version = std::atoi(GProtocol::ServerInfoValue(SrDemoVersionKey).c_str());
+		return std::max(0, cgs->time - StartTime + (version <= 1 ? 900 : -100));
+	}
+
+	bool Demo::HasKeys()
+	{
+		return IsPlaying() && !GProtocol::ServerInfoValue(SrDemoVersionKey).empty();
+	}
+
+	// The recorder's command: forwardmove and rightmove in the low byte of the first two dof fields, the
+	// buttons in the third.
+	usercmd_s Demo::Keys()
+	{
+		usercmd_s cmd = {};
+		if (!HasKeys())
+			return cmd;
+
+		const playerState_s& ps = cgs->predictedPlayerState;
+		cmd.forwardmove = static_cast<char>(std::bit_cast<uint32_t>(ps.dofNearStart));
+		cmd.rightmove = static_cast<char>(std::bit_cast<uint32_t>(ps.dofNearEnd));
+		cmd.buttons = std::bit_cast<int>(ps.dofFarStart);
+		cmd.serverTime = ps.commandTime;
+		return cmd;
+	}
+
+	// A demo snapshot that sent its predicted fields gets the view angles of the archive's command for its
+	// commandTime, which is what the snapshot would have filled them with had it left them out.
+	void Demo::SentPlayerState(playerState_s* to, const playerState_s* from)
+	{
+		if (!clc.demoplaying || !to || !clients)
+			return;
+		if ((to->otherFlags & OtherFlagFollow) || to->viewlocked_entNum != ENTITYNUM_NONE
+			|| to->pm_type == PM_INTERMISSION || (from && ((from->eFlags ^ to->eFlags) & TeleportBit)))
+			return;
+
+		for (int i = 0; i < ArchiveSize; i++)
+		{
+			const ClientArchiveData& archive =
+				clients->clientArchive[(clients->clientArchiveIndex + ArchiveSize - 1 - i) % ArchiveSize];
+			if (archive.serverTime != to->commandTime)
+				continue;
+
+			to->viewangles = { archive.viewangles[0], archive.viewangles[1], archive.viewangles[2] };
+			return;
+		}
 	}
 
 	// Retail answers a record type it does not know by returning without consuming that record's body,

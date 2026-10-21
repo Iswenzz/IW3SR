@@ -12,7 +12,6 @@
 #include "Game/Renderer/Water/Water.hpp"
 #include "Game/System/AssetDump.hpp"
 #include "Game/System/Assets.hpp"
-#include "Game/System/Capture.hpp"
 #include "Game/System/CdKey.hpp"
 #include "Game/System/Channel.hpp"
 #include "Game/System/Demo.hpp"
@@ -193,8 +192,6 @@ namespace IW3SR
 
 		IDirect3DDevice9_EndScene_h(device);
 		GVR::Submit();
-
-		Capture::Frame(device);
 	}
 
 	HRESULT GRenderer::Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters)

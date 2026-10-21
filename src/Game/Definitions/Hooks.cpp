@@ -8,7 +8,6 @@
 #include "Game/Renderer/VR/VR.hpp"
 
 #include "Game/System/Assets.hpp"
-#include "Game/System/Capture.hpp"
 #include "Game/System/Channel.hpp"
 #include "Game/System/Client.hpp"
 #include "Game/System/Collision.hpp"
@@ -103,9 +102,6 @@ namespace IW3SR
 
 	Hook<void(int localClientNum)>
 		CL_Disconnect_h(0x4696B0, Client::Disconnect);
-
-	Hook<int(int protocol)>
-		CL_RestartForDemo_h(uintptr_t(0), ASM_LOAD(CL_RestartForDemo_h));
 
 	Hook<void(int localClientNum)>
 		CL_ReadDemoMessage_h(0x4690C0, Demo::ReadMessage);
@@ -327,43 +323,6 @@ namespace IW3SR
 
 		a.bind(consumed);
 		a.ret();
-	}
-
-	// The protocol is wherever the release keeps it: eax before 21.4, the first stack argument since.
-	static void RestartForDemo(arch::Assembler& a, const x86::Mem& protocol)
-	{
-		Label restart = a.newLabel();
-
-		a.push(x86::ebp);
-		a.mov(x86::ebp, x86::esp);
-		a.pushad();
-
-		a.push(protocol);
-		a.call(Capture::RestartForDemo);
-		a.add(x86::esp, 0x04);
-
-		a.test(x86::eax, x86::eax);
-		a.jnz(restart);
-
-		a.popad();
-		a.pop(x86::ebp);
-		a.xor_(x86::eax, x86::eax);
-		a.ret();
-
-		a.bind(restart);
-		a.popad();
-		a.pop(x86::ebp);
-		a.jmp(ASM_TRAMPOLINE(CL_RestartForDemo_h));
-	}
-
-	ASM_FUNCTION(CL_RestartForDemo_h)
-	{
-		RestartForDemo(a, x86::dword_ptr(x86::ebp, -0x04)); // (eax) protocol
-	}
-
-	ASM_FUNCTION(CL_RestartForDemoCdecl_h)
-	{
-		RestartForDemo(a, x86::dword_ptr(x86::ebp, 0x08)); // (stack) protocol
 	}
 
 	ASM_FUNCTION(CL_BeginDownload_h)

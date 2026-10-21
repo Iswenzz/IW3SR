@@ -79,9 +79,6 @@ namespace IW3SR
 	extern Hook<void(int localClientNum)>
 		CL_Disconnect_h;
 
-	extern Hook<int(int protocol)>
-		CL_RestartForDemo_h;
-
 	extern Hook<void(int localClientNum)>
 		CL_ReadDemoMessage_h;
 
@@ -248,8 +245,6 @@ namespace IW3SR
 	ASM_FUNCTION(CL_ConnectionlessPacket_h);
 	ASM_FUNCTION(CL_PacketEvent_h);
 	ASM_FUNCTION(CL_BeginDownload_h);
-	ASM_FUNCTION(CL_RestartForDemo_h);
-	ASM_FUNCTION(CL_RestartForDemoCdecl_h);
 	ASM_FUNCTION(CG_Respawn_h);
 	ASM_FUNCTION(PM_CrashLand_h);
 	ASM_FUNCTION(R_AddCmdDrawText_h);

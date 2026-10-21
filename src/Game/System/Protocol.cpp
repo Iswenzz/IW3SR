@@ -1680,6 +1680,11 @@ namespace IW3SR
 		return InfoValue(ConfigString(1), key);
 	}
 
+	std::string GProtocol::ServerInfoValue(std::string_view key)
+	{
+		return InfoValue(ConfigString(0), key);
+	}
+
 	const char* GProtocol::ConfigString(int index)
 	{
 		if (!clients || index < 0 || index >= static_cast<int>(std::size(clients->gameState.stringOffsets)))

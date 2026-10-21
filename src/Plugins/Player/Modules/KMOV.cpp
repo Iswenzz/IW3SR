@@ -1,5 +1,6 @@
 #include "KMOV.hpp"
 
+#include "Game/System/Demo.hpp"
 #include "Game/System/ServerDemo.hpp"
 
 #include <random>
@@ -115,7 +116,7 @@ namespace IW3SR::Addons
 		const auto q3pg = BG_FindWeaponIndexForName("gl_g3_mp");
 		const auto portal = BG_FindWeaponIndexForName("portalgun_mp");
 		const auto demo = ServerDemo::Get();
-		const int buttons = demo ? demo->Buttons : pmove->cmd.buttons;
+		const int buttons = demo ? demo->Buttons : Demo::IsPlaying() ? Demo::Keys().buttons : pmove->cmd.buttons;
 		const bool isFire = buttons & KEY_MASK_FIRE;
 		const bool isAds = buttons & KEY_MASK_ADS;
 
@@ -231,19 +232,24 @@ namespace IW3SR::Addons
 		static const auto mapname = Dvar::Find("mapname");
 
 		const auto demo = ServerDemo::Get();
+		const bool local = !demo && Demo::IsPlaying();
 		node.Element.Value = "";
 
 		switch (node.Type)
 		{
 		case NodeEnum::Player:
-			node.Element.Value = demo ? demo->Name : name->current.string;
+			node.Element.Value = demo ? demo->Name : local ? Demo::PlayerName() : name->current.string;
 			break;
 		case NodeEnum::FPS:
-			node.Element.Value = std::format("{} FPS", demo ? demo->FPS : com_maxfps->current.integer);
+		{
+			const int fps = demo ? demo->FPS : local ? Demo::FPS() : com_maxfps->current.integer;
+			node.Element.Value = std::format("{} FPS", fps);
 			break;
+		}
 		case NodeEnum::Velocity:
 		{
-			const int velocity = demo ? demo->Velocity : static_cast<int>(glm::length(vec2(pmove->ps->velocity)));
+			const vec3& own = local ? cgs->predictedPlayerState.velocity : pmove->ps->velocity;
+			const int velocity = demo ? demo->Velocity : static_cast<int>(glm::length(vec2(own)));
 			node.Element.Value = std::format("{} UPS", velocity);
 			break;
 		}
@@ -252,7 +258,11 @@ namespace IW3SR::Addons
 			break;
 		case NodeEnum::Timer:
 		{
-			float seconds = demo ? ServerDemo::RunTime() / 1000.0f : UI::Time() - StartTime;
+			float seconds = UI::Time() - StartTime;
+			if (demo)
+				seconds = ServerDemo::RunTime() / 1000.0f;
+			else if (local)
+				seconds = Demo::RunTime() / 1000.0f;
 			int minutes = static_cast<int>(seconds) / 60;
 			float secs = fmod(seconds, 60.0f);
 			char buffer[16];
@@ -313,8 +323,9 @@ namespace IW3SR::Addons
 
 	void KMOV::OnRender()
 	{
-		// Active can come before the first prediction has pointed pmove at a player state.
-		if (!pmove || !pmove->ps)
+		// Active can come before the first prediction has pointed pmove at a player state, and a demo runs none:
+		// it reads the interpolated state instead.
+		if (!Demo::IsPlaying() && (!pmove || !pmove->ps))
 			return;
 
 		Compute();

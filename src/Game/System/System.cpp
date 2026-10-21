@@ -1,7 +1,6 @@
 #include "System.hpp"
 #include "AssetDump.hpp"
 #include "Assets.hpp"
-#include "Capture.hpp"
 #include "CdKey.hpp"
 #include "Channel.hpp"
 #include "CoD4X.hpp"
@@ -50,7 +49,6 @@ namespace IW3SR
 		Assets::Initialize();
 		GRank::Initialize();
 		GAssetDump::Initialize();
-		Capture::Initialize();
 		Demo::Initialize();
 		GMouse::Initialize();
 		GDiscord::Initialize();
@@ -70,7 +68,6 @@ namespace IW3SR
 		GDownload::Shutdown();
 		GZones::Shutdown();
 
-		Capture::Shutdown();
 		GMouse::Shutdown();
 		Browser::Shutdown();
 		Application::Shutdown();
@@ -93,7 +90,6 @@ namespace IW3SR
 
 		GMouse::Frame();
 		Timestep::Frame();
-		Capture::Tick();
 		Demo::Tick();
 		GCdKey::Frame();
 		GMaster::Frame();
@@ -216,8 +212,6 @@ namespace IW3SR
 	{
 		std::string command = cmd;
 
-		if (Capture::Command(command))
-			return;
 		if (GShell::Command(command))
 			return;
 		if (Demo::Command(command))

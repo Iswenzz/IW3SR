@@ -1,6 +1,7 @@
 #include "PmoveHud.hpp"
 
 #include "Game/Player/Movements/CoD4.hpp"
+#include "Game/System/Demo.hpp"
 #include "Game/System/Protocol.hpp"
 
 #include <bit>
@@ -34,7 +35,9 @@ namespace IW3SR::Addons
 	// modules see the same wish direction and acceleration pmove is about to use
 	bool PmoveHud::Update(bool forceAir)
 	{
-		const bool following = cgs->predictedPlayerState.otherFlags & POF_FOLLOW;
+		// A demo the client plays runs no pmove either, and reads like a followed player.
+		const bool local = Demo::IsPlaying();
+		const bool following = local || (cgs->predictedPlayerState.otherFlags & POF_FOLLOW);
 		if (!pmove || (!pmove->ps && !following))
 			return false;
 
@@ -55,7 +58,8 @@ namespace IW3SR::Addons
 		accelerate = 0;
 		slick_gravity = 0;
 
-		pml.frametime = static_cast<float>(demo && demo->FPS > 0 ? 1000 / demo->FPS : cgs->frametime) / 1000.f;
+		const int fps = demo ? demo->FPS : local ? Demo::FPS() : 0;
+		pml.frametime = static_cast<float>(fps > 0 ? 1000 / fps : cgs->frametime) / 1000.f;
 		pml.previous_velocity = pm.ps->velocity;
 		Math::AngleVectors(pm.ps->viewangles, pml.forward, pml.right, pml.up);
 
@@ -75,11 +79,11 @@ namespace IW3SR::Addons
 
 	// Following a player, the cgame runs no pmove, so cg_pmove still holds this client's own last command.
 	// SR-Server copies each player's command into the dof fields of its state, which reach whoever follows
-	// it; its sr_vrRelay is how a client tells it apart.
+	// it and its demos; its sr_vrRelay, or a demo's sr_demo_version, is how a client tells it apart.
 	void PmoveHud::Follow()
 	{
 		pm.cmd = {};
-		if (GProtocol::SystemInfoValue("sr_vrRelay") == "1")
+		if (Demo::HasKeys() || GProtocol::SystemInfoValue("sr_vrRelay") == "1")
 		{
 			pm.cmd.forwardmove = static_cast<char>(std::bit_cast<uint32_t>(ps.dofNearStart));
 			pm.cmd.rightmove = static_cast<char>(std::bit_cast<uint32_t>(ps.dofNearEnd));

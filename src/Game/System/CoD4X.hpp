@@ -20,7 +20,6 @@ namespace IW3SR
 		static std::string FormatVersion(int version);
 
 		static uintptr_t FindMainWndProc();
-		static uintptr_t FindRestartForDemo();
 		static uintptr_t FindXAssetsInitStdCount();
 		static WinMouseVars_t* FindWinMouseVars();
 	};
