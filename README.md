@@ -32,7 +32,6 @@ A client modification for Call of Duty 4, powered by [IzEngine](https://github.c
 
 ### Demos
 - Demo playback with missing fastfiles.
-- Demo rendering to MP4 with audio, unattended through `sr_render`.
 
 ### Assets
 - Extra zone loading and usermap search.
