@@ -80,8 +80,10 @@ float4 ps_main(PixelShaderInput input) : COLOR
 
 	float3 color = lerp(body, reflection, fresnel) + glint * waterSunColor.rgb;
 	color = lerp(color, waterSunColor.rgb * waterSunColor.w, foam);
-	float alpha = lerp(1.0f - through, 1.0f, fresnel);
-	alpha = saturate(max(alpha, foam) + glint) * saturate(depth * 0.5f);
+	// A stock map's water often lies a few units over a bed never meant to be seen, which IzFF's clear
+	// shallows would show; it stays mostly opaque, and the shore only softens its edge.
+	float alpha = lerp(max(1.0f - through, 0.85f), 1.0f, fresnel);
+	alpha = saturate(max(alpha, foam) + glint) * lerp(0.5f, 1.0f, saturate(depth * 0.5f));
 	color = lerp(fogColor.rgb, color, input.eyeFog.w);
 	return float4(color, alpha);
 }

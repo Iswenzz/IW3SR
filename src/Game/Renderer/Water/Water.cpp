@@ -280,7 +280,9 @@ namespace IW3SR
 			{ return !water.Target->techniqueSet || !CoversColorPasses(Template->techniqueSet, water.Target->techniqueSet); });
 	}
 
-	// Name, sort key and camera region stay the stock material's, so the world's draw lists still hold it.
+	// Name, sort key and camera region stay the stock material's, so the world's draw lists still hold it, and so
+	// do its render states: only the shaders change. Stock water is drawn ahead of the ground under it, so with
+	// iz_flow's blending and no depth write, that ground painted over it.
 	void GWater::ApplyStock()
 	{
 		if (!Template || Stock.empty() || !RealisticKnown)
@@ -294,10 +296,6 @@ namespace IW3SR
 			material->textureTable = Template->textureTable;
 			material->constantCount = Template->constantCount;
 			material->constantTable = Template->constantTable;
-			material->stateBitsCount = Template->stateBitsCount;
-			material->stateBitsTable = Template->stateBitsTable;
-			material->stateFlags = Template->stateFlags;
-			std::memcpy(material->stateBitsEntry, Template->stateBitsEntry, sizeof(material->stateBitsEntry));
 		}
 		StockApplied = true;
 	}
