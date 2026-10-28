@@ -50,6 +50,25 @@ iz_resource_archives(TARGET IW3SR SOURCE ${CMAKE_SOURCE_DIR}/resources
 install(TARGETS CEF CrashReporter RUNTIME
 	DESTINATION ${COD4}/iw3sr/Bin)
 
+# The iw3sr zone GZones mounts with common_mp, and iw3sr.iwd, the images its material draws with, which GZones
+# opens itself. resources/zone/build.ps1 rebuilds the zone from resources/zone/raw; the IWD is packed here.
+set(ZONE_IMAGES ${CMAKE_SOURCE_DIR}/resources/zone/raw/images)
+set(ZONE_IWD ${CMAKE_BINARY_DIR}/resources/iw3sr.iwd)
+file(GLOB ZONE_IMAGE_FILES CONFIGURE_DEPENDS ${ZONE_IMAGES}/*)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/resources/iw3sr)
+add_custom_command(
+	OUTPUT ${ZONE_IWD}
+	COMMAND ${CMAKE_COMMAND} -DDIRS=${ZONE_IMAGES} -DTOP=images -DOUTPUT=${ZONE_IWD} -P ${IZ_PACK_RESOURCES}
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/resources/iw3sr
+	DEPENDS ${ZONE_IMAGE_FILES} ${IZ_PACK_RESOURCES}
+	COMMENT "Packing iw3sr.iwd"
+	VERBATIM)
+add_custom_target(IW3SR.zone DEPENDS ${ZONE_IWD} SOURCES ${ZONE_IMAGE_FILES})
+set_target_properties(IW3SR.zone PROPERTIES FOLDER Resources)
+add_dependencies(IW3SR IW3SR.zone)
+install(FILES ${CMAKE_SOURCE_DIR}/resources/zone/iw3sr.ff ${ZONE_IWD}
+	DESTINATION ${COD4}/iw3sr/Zone)
+
 
 install(FILES ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resources/locales/en-US.pak
 	DESTINATION ${COD4}/iw3sr/Bin)

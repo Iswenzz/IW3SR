@@ -5,6 +5,7 @@
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
+#include "Game/Renderer/SSAO/SSAO.hpp"
 #include "Game/Renderer/Shadows.hpp"
 #include "Game/Renderer/UI/About.hpp"
 #include "Game/Renderer/UI/UI.hpp"
@@ -44,6 +45,7 @@ namespace IW3SR
 		Dvar::InitializeRenderer();
 		GPortal::Initialize();
 		GWater::Initialize();
+		GSSAO::Initialize();
 		Modules::Deserialize();
 
 		DX9GraphicsContext::Swap(dx->d3d9, dx->device);
@@ -57,6 +59,7 @@ namespace IW3SR
 		Swaps.Clear();
 		GPortal::Shutdown();
 		GWater::Shutdown();
+		GSSAO::Shutdown();
 		if (window)
 			GVR::Shutdown();
 
@@ -111,6 +114,7 @@ namespace IW3SR
 		CG_DrawCrosshair_h(localClientNum);
 		GPortal::DrawDebug();
 		GWater::DrawDebug();
+		GSSAO::DrawDebug();
 		DrawViewpos();
 
 		EventRenderer2D event;
@@ -123,6 +127,7 @@ namespace IW3SR
 		if (GPortal::Rendering)
 			return;
 
+		GSSAO::Render(viewInfo);
 		GDraw3D::Render();
 
 		EventRenderer3D event;
@@ -159,6 +164,31 @@ namespace IW3SR
 			text.SetAlignment(Alignment::Right, Alignment::Top);
 		}
 		text.Render();
+	}
+
+	void GRenderer::EndFrame()
+	{
+		GSSAO::RequestDepth();
+		GWater::RequestDepth();
+		R_EndFrame_h();
+	}
+
+	// The engine draws float-Z only for depth of field or for an emissive material that reads it. Here this frame's
+	// views are final and not yet with the backend, so the rest of the readers can ask for it too.
+	bool GRenderer::RequestFloatZ()
+	{
+		// GfxViewInfo's real stride, the one GPortal::BeginCommandList inlines.
+		constexpr size_t VIEW_INFO_STRIDE = 0x67B0;
+
+		const GfxRenderTarget& target = gfx_renderTargets[R_RENDERTARGET_FLOAT_Z];
+		const GfxBackEndData* data = gfx_frontEndDataOut ? *gfx_frontEndDataOut : nullptr;
+		if (!target.surface.color || !target.image || !data || !data->viewInfo || data->viewInfoCount <= 0)
+			return false;
+
+		for (int i = 0; i < data->viewInfoCount; i++)
+			reinterpret_cast<GfxViewInfo*>(reinterpret_cast<uint8_t*>(data->viewInfo) + i * VIEW_INFO_STRIDE)->needsFloatZ =
+				true;
+		return true;
 	}
 
 	void GRenderer::ExecuteRenderCommandsLoop(void* cmds)
@@ -207,6 +237,7 @@ namespace IW3SR
 		Swaps.Clear();
 		GPortal::Shutdown(); // hand the colour maps back before the render targets are released
 		GWater::Shutdown();
+		GSSAO::Shutdown();
 
 		GPUResource::NotifyBeforeReset();
 		ImGui_ImplAPI_InvalidateDeviceObjects();

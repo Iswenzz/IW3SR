@@ -3,6 +3,7 @@
 #include "Game/Renderer/Drawing/Text.hpp"
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
+#include "Game/Renderer/Renderer.hpp"
 #include "Game/System/Dvar.hpp"
 
 namespace IW3SR
@@ -10,7 +11,9 @@ namespace IW3SR
 	// What IzFF's converter names its water technique set, the image the shader reads a planar
 	// reflection from, and the constant that says the reflection is live and at what height.
 	constexpr std::string_view WATER_TECHNIQUE_SET = "iz_flow";
-	constexpr std::string_view WATER_PLANAR_IMAGE = "iz_water_planar";
+	constexpr std::string_view OWN_TECHNIQUE_SET = "iw3sr_iz_flow";
+	// IzFF's name for it, and the iw3sr zone's own copy.
+	constexpr std::array<std::string_view, 2> WATER_PLANAR_IMAGES = { "iz_water_planar", "iw3sr_water_planar" };
 	constexpr std::string_view WATER_PLANAR_CONSTANT = "waterPlanar";
 
 	// Surfaces this close in height are one sheet of water.
@@ -25,6 +28,9 @@ namespace IW3SR
 	// GfxViewInfo's real stride, the one GPortal::BeginCommandList inlines.
 	constexpr size_t VIEW_INFO_STRIDE = 0x67B0;
 
+	// The semantic of the engine's FFT water map, which only stock water materials sample.
+	constexpr char TEXTURE_SEMANTIC_WATER = 0xB;
+
 	static bool IsWaterTechniqueSet(const MaterialTechniqueSet* techniques)
 	{
 		if (!techniques || !techniques->name)
@@ -33,10 +39,44 @@ namespace IW3SR
 		return std::string_view(techniques->name).find(WATER_TECHNIQUE_SET) != std::string_view::npos;
 	}
 
+	// Stock water keeps its camera region, so it goes on being drawn with the technique types of its own set; a
+	// template needs one for each of those color passes. Stock world water is lit, which IzFF's sets are not.
+	static bool CoversColorPasses(const MaterialTechniqueSet* from, const MaterialTechniqueSet* to)
+	{
+		for (int type = TECHNIQUE_UNLIT; type < TECHNIQUE_LIT_INSTANCED; type++)
+		{
+			if (to->techniques[type] && !from->techniques[type])
+				return false;
+		}
+		return true;
+	}
+
+	// The planar image and the constant an iz_flow material reflects with, when it has both.
+	static bool ReadSurface(Material* material, WaterSurface& surface)
+	{
+		surface = { material };
+		for (int t = 0; t < static_cast<uint8_t>(material->textureCount); t++)
+		{
+			GfxImage* image = material->textureTable[t].u.image;
+			if (image && image->name && std::ranges::contains(WATER_PLANAR_IMAGES, std::string_view(image->name)))
+				surface.Image = image;
+		}
+		for (int c = 0; material->constantTable && c < static_cast<uint8_t>(material->constantCount); c++)
+		{
+			MaterialConstantDef& constant = material->constantTable[c];
+			const std::string_view name(constant.name, strnlen(constant.name, sizeof(constant.name)));
+			if (name == WATER_PLANAR_CONSTANT)
+				surface.Plane = &constant.literal;
+		}
+		return surface.Image && surface.Plane;
+	}
+
 	void GWater::Initialize()
 	{
 		// Off unless asked for: a mirrored pass draws the whole scene a second time.
 		Enabled = Dvar::RegisterBool("sr_water_reflection", DVAR_SAVED, "Mirror the scene in IzFF's water", false);
+		Realistic = Dvar::RegisterBool("sr_water_realistic", DVAR_SAVED,
+			"Draw stock water with IzFF's water shader, from the iw3sr zone", false);
 		Scale = Dvar::RegisterFloat("sr_water_scale", DVAR_SAVED, "Water reflection resolution, relative to the screen",
 			0.5f, 0.125f, 1.0f);
 		Distance = Dvar::RegisterFloat("sr_water_distance", DVAR_SAVED,
@@ -48,6 +88,9 @@ namespace IW3SR
 	void GWater::Shutdown()
 	{
 		Restore();
+		RestoreStock();
+		Stock.clear();
+		Template = nullptr;
 		Surfaces.clear();
 		Planes.clear();
 		KnownWorld = nullptr;
@@ -65,14 +108,27 @@ namespace IW3SR
 
 		// With r_smp_backend the render thread is often still inside the last frame's scene here,
 		// which Ready reads as busy: skipped, that one frame went unmirrored and the water flickered.
-		if (!Surfaces.empty() && Threaded && Threaded->current.enabled && dx && dx->device && !dx->deviceLost)
+		if ((!Surfaces.empty() || StockApplied) && Threaded && Threaded->current.enabled && dx && dx->device
+			&& !dx->deviceLost)
 			R_SyncRenderThread();
 		const bool ready = Ready();
 		Restore();
+		RestoreStock();
 		if (!ready)
 			return void(DebugStage = "not ready");
 
+		// Turning stock water over or back changes which materials draw through iz_flow, so look again.
+		const bool realistic = Realistic && Realistic->current.enabled;
+		if (realistic != RealisticKnown)
+		{
+			RealisticKnown = realistic;
+			KnownWorld = nullptr;
+		}
+
 		Discover();
+		ApplyStock();
+		if (realistic && StockFound && !Template)
+			return void(DebugStage = "stock water, but no iz_flow material loaded (iw3sr zone missing)");
 		if (Surfaces.empty())
 			return void(DebugStage = "no iz_flow material with iz_water_planar and waterPlanar");
 		if (!Enabled || !Enabled->current.enabled)
@@ -104,15 +160,25 @@ namespace IW3SR
 			return;
 
 		static GText text{ "", FONT_NORMAL, 10, 200, 1.2f, vec4(0, 1, 1, 1) };
-		text.Value = std::format("water: {}\nmaterials {}  planes {}  height {:.1f}  rendered {}", DebugStage,
-			Surfaces.size(), Planes.size(), DebugHeight, DebugRendered);
+		text.Value = std::format("water: {}\nmaterials {}  stock {}/{}  planes {}  height {:.1f}  rendered {}",
+			DebugStage, Surfaces.size(), Stock.size(), StockFound, Planes.size(), DebugHeight, DebugRendered);
 		text.Render();
 	}
 
-	// The world has been drawn, so the image and the constants go back to what the zone holds.
+	// iz_flow sees through shallow water by the float-Z of what lies under it. The engine draws float-Z for such a
+	// material in its emissive list, but stock water borrowing it stays in the lit list, which it never checks.
+	void GWater::RequestDepth()
+	{
+		if (StockApplied && !GPortal::Rendering)
+			GRenderer::RequestFloatZ();
+	}
+
+	// The world has been drawn, so the image, the constants and the stock materials go back to what the zone
+	// holds. A level only ever unloads between frames, so it never frees a material still borrowing.
 	void GWater::EndFrame()
 	{
 		Restore();
+		RestoreStock();
 	}
 
 	bool GWater::Ready()
@@ -133,11 +199,15 @@ namespace IW3SR
 	{
 		const int count = std::min(rgp->materialCount, GMaterials::PoolSize());
 
+		// The stock materials were handed back at the end of the last frame, so a level that is gone left
+		// nothing to restore here.
 		if (KnownWorld != rgp->world)
 		{
 			Restore();
 			Surfaces.clear();
 			Planes.clear();
+			Stock.clear();
+			Template = nullptr;
 			KnownWorld = rgp->world;
 			KnownCount = -1;
 			SettledScans = 0;
@@ -148,6 +218,13 @@ namespace IW3SR
 		SettledScans = count == KnownCount ? SettledScans + 1 : 0;
 		KnownCount = count;
 
+		// Stock water borrows first, so the scan below finds it drawing through iz_flow like IzFF's own.
+		if (RealisticKnown)
+		{
+			FindStock();
+			ApplyStock();
+		}
+
 		Material** const sorted = GMaterials::Sorted();
 		for (int i = 0; i < count; i++)
 		{
@@ -155,25 +232,84 @@ namespace IW3SR
 			if (!material || !material->textureTable || !IsWaterTechniqueSet(material->techniqueSet))
 				continue;
 
-			WaterSurface surface{ material };
-			for (int t = 0; t < material->textureCount; t++)
-			{
-				GfxImage* image = material->textureTable[t].u.image;
-				if (image && image->name && WATER_PLANAR_IMAGE == image->name)
-					surface.Image = image;
-			}
-			for (int c = 0; material->constantTable && c < material->constantCount; c++)
-			{
-				MaterialConstantDef& constant = material->constantTable[c];
-				const std::string_view name(constant.name, strnlen(constant.name, sizeof(constant.name)));
-				if (name == WATER_PLANAR_CONSTANT)
-					surface.Plane = &constant.literal;
-			}
-			if (surface.Image && surface.Plane)
+			WaterSurface surface;
+			if (ReadSurface(material, surface))
 				Surfaces.push_back(surface);
 		}
 		if (!Surfaces.empty())
 			FindPlanes();
+	}
+
+	// Stock water is any material sampling the engine's FFT water map. What it borrows from is a material
+	// already drawing through iz_flow: the iw3sr zone's, made to cover lit water, or else the first one found.
+	void GWater::FindStock()
+	{
+		Stock.clear();
+		StockFound = 0;
+		Template = nullptr;
+
+		const int count = std::min(rgp->materialCount, GMaterials::PoolSize());
+		Material** const sorted = GMaterials::Sorted();
+		for (int i = 0; i < count; i++)
+		{
+			Material* material = sorted[i];
+			if (!material || !material->textureTable)
+				continue;
+
+			if (IsWaterTechniqueSet(material->techniqueSet))
+			{
+				WaterSurface surface;
+				const bool own = OWN_TECHNIQUE_SET == material->techniqueSet->name;
+				if ((!Template || own) && ReadSurface(material, surface))
+					Template = material;
+				continue;
+			}
+
+			const MaterialTextureDef* textures = material->textureTable;
+			const MaterialTextureDef* end = textures + static_cast<uint8_t>(material->textureCount);
+			if (std::any_of(textures, end, [](const MaterialTextureDef& texture)
+					{ return texture.semantic == TEXTURE_SEMANTIC_WATER; }))
+				Stock.push_back({ material, *material });
+		}
+
+		StockFound = Stock.size();
+		if (!Template)
+			return Stock.clear();
+
+		std::erase_if(Stock, [](const StockWater& water)
+			{ return !water.Target->techniqueSet || !CoversColorPasses(Template->techniqueSet, water.Target->techniqueSet); });
+	}
+
+	// Name, sort key and camera region stay the stock material's, so the world's draw lists still hold it.
+	void GWater::ApplyStock()
+	{
+		if (!Template || Stock.empty() || !RealisticKnown)
+			return;
+
+		for (StockWater& water : Stock)
+		{
+			Material* material = water.Target;
+			material->techniqueSet = Template->techniqueSet;
+			material->textureCount = Template->textureCount;
+			material->textureTable = Template->textureTable;
+			material->constantCount = Template->constantCount;
+			material->constantTable = Template->constantTable;
+			material->stateBitsCount = Template->stateBitsCount;
+			material->stateBitsTable = Template->stateBitsTable;
+			material->stateFlags = Template->stateFlags;
+			std::memcpy(material->stateBitsEntry, Template->stateBitsEntry, sizeof(material->stateBitsEntry));
+		}
+		StockApplied = true;
+	}
+
+	void GWater::RestoreStock()
+	{
+		if (!StockApplied)
+			return;
+
+		StockApplied = false;
+		for (const StockWater& water : Stock)
+			*water.Target = water.Original;
 	}
 
 	// The world's water surfaces grouped by height. A converted map's water is flat, so each surface's

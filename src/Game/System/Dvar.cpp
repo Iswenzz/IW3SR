@@ -149,6 +149,15 @@ namespace IW3SR
 		dvar_modifiedFlags |= dvar->flags;
 	}
 
+	// SetBool's counterpart for a slider writing the value in place.
+	void Dvar::SetFloat(dvar_s* dvar, float value)
+	{
+		dvar->current.value = value;
+		dvar->latched.value = value;
+		dvar->modified = true;
+		dvar_modifiedFlags |= dvar->flags;
+	}
+
 	void Dvar::OverrideString(dvar_s* dvar, const char* value)
 	{
 		if (!dvar || dvar->type != DvarType::STRING || !value)

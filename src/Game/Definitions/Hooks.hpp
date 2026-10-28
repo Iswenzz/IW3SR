@@ -158,6 +158,9 @@ namespace IW3SR
 		R_BeginFrame_h;
 
 	extern Hook<void()>
+		R_EndFrame_h;
+
+	extern Hook<void()>
 		SND_UpdateLoopingSounds_h;
 
 	extern Hook<void(GfxViewInfo* viewInfo)>

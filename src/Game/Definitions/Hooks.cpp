@@ -241,6 +241,9 @@ namespace IW3SR
 		R_BeginFrame_h(0x5F75A0, GRenderer::BeginFrame);
 
 	Hook<void()>
+		R_EndFrame_h(0x5F7680, GRenderer::EndFrame);
+
+	Hook<void()>
 		SND_UpdateLoopingSounds_h(0x5C4C60, GRenderer::UpdateLoopingSounds);
 
 	Hook<void(GfxViewInfo* viewInfo)>

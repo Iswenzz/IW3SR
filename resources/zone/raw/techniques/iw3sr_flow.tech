@@ -1,0 +1,23 @@
+{
+	stateMap "default";
+
+	vertexShader 3.0 "iw3sr_flow"
+	{
+		waterFlow = material.waterFlow;
+	}
+
+	pixelShader 3.0 "iw3sr_flow"
+	{
+		skyMapSampler = material.colorMap;
+		detailMapSampler = material.detailMap;
+		specularMapSampler = material.specularMap;
+		waterShallow = material.waterShallow;
+		waterDeep = material.waterDeep;
+		waterSun = material.waterSun;
+		waterSunColor = material.waterSunColor;
+		waterShape = material.waterShape;
+		waterPlanar = material.waterPlanar;
+	}
+
+	vertex.position = code.position;
+}

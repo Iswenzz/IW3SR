@@ -43,6 +43,7 @@ namespace IW3SR
 
 		static void OverrideString(dvar_s* dvar, const char* value);
 		static void SetBool(dvar_s* dvar, bool value);
+		static void SetFloat(dvar_s* dvar, float value);
 		static void Shutdown();
 
 		template <typename T>

@@ -151,6 +151,7 @@ namespace IW3SR
 		R_AddCmdDrawText_h.Install();
 		R_AddCmdDrawTextWithEffects_h.Install();
 		R_BeginFrame_h.Install();
+		R_EndFrame_h.Install();
 		R_ChooseShadowedLights_h.Install();
 		R_SetWndParms_h.Install();
 		R_AddDObjToScene_h.Install();

@@ -1,6 +1,7 @@
 add_subdirectory(Drawing)
 add_subdirectory(Modules)
 add_subdirectory(Portal)
+add_subdirectory(SSAO)
 add_subdirectory(UI)
 add_subdirectory(VR)
 add_subdirectory(Water)

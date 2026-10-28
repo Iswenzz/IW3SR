@@ -17,7 +17,9 @@ namespace IW3SR
 		static void Draw3D(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf);
 		static void DrawVersion();
 		static void DrawViewpos();
+		static void EndFrame();
 		static void ExecuteRenderCommandsLoop(void* cmds);
+		static bool RequestFloatZ();
 		static void STDCALL Frame(IDirect3DDevice9* device);
 		static HRESULT STDCALL Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters);
 		static void UpdateLoopingSounds();

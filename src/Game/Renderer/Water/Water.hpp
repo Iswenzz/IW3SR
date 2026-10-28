@@ -21,6 +21,13 @@ namespace IW3SR
 		vec4* Plane = nullptr;
 	};
 
+	// A stock CoD4 water material and what it held before it borrowed iz_flow's tables for a frame.
+	struct StockWater
+	{
+		Material* Target = nullptr;
+		Material Original{};
+	};
+
 	class API GWater
 	{
 	public:
@@ -28,6 +35,7 @@ namespace IW3SR
 		static void Shutdown();
 		static void BeginFrame();
 		static void EndFrame();
+		static void RequestDepth();
 		static void DrawDebug();
 
 	private:
@@ -35,12 +43,18 @@ namespace IW3SR
 		static inline vec2 TargetSize{};
 		static inline std::vector<WaterSurface> Surfaces;
 		static inline std::vector<WaterPlane> Planes;
+		static inline std::vector<StockWater> Stock;
+		static inline const Material* Template = nullptr;
+		static inline size_t StockFound = 0;
 		static inline GfxWorld* KnownWorld = nullptr;
 		static inline int KnownCount = -1;
 		static inline int SettledScans = 0;
 		static inline bool Swapped = false;
+		static inline bool StockApplied = false;
+		static inline bool RealisticKnown = false;
 
 		static inline dvar_s* Enabled = nullptr;
+		static inline dvar_s* Realistic = nullptr;
 		static inline dvar_s* Scale = nullptr;
 		static inline dvar_s* Distance = nullptr;
 		static inline dvar_s* Threaded = nullptr;
@@ -52,6 +66,9 @@ namespace IW3SR
 
 		static bool Ready();
 		static void Discover();
+		static void FindStock();
+		static void ApplyStock();
+		static void RestoreStock();
 		static void FindPlanes();
 		static const WaterPlane* Pick();
 		static bool Render(const WaterPlane& plane);
