@@ -4,6 +4,8 @@
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Patch.hpp"
 
+#include "Engine/Core/IO/Zip.hpp"
+
 namespace IW3SR
 {
 	// DB_LoadXZone copies at most eight named zones out of a batch and silently drops the rest.
@@ -15,7 +17,7 @@ namespace IW3SR
 	constexpr int LayerFlags = XZONE_COMMON;
 
 	// Keeps a stray fastfile dropped in the folder from shadowing a retail zone by name.
-	constexpr std::string_view LayerPrefix = "iw3sr_";
+	constexpr std::string_view LayerPrefix = "iw3sr";
 
 	// Where CoD4x downloads its own patch zone to; under CoD4x that loader is the one serving it.
 	constexpr std::string_view CoD4XZonePath = "CallofDuty4MW/zone";
@@ -95,6 +97,11 @@ namespace IW3SR
 		return std::ranges::equal(left, right, [](char a, char b) { return Lower(a) == Lower(b); });
 	}
 
+	static bool HasLayerPrefix(std::string_view name)
+	{
+		return name.size() >= LayerPrefix.size() && EqualsNoCase(name.substr(0, LayerPrefix.size()), LayerPrefix);
+	}
+
 	// Discovery is deferred to the first batch: it is loaded from inside R_Init, before anything in
 	// IW3SR that runs off the renderer has been initialized.
 	void GZones::Inject(std::vector<XZoneInfo>& zones)
@@ -104,11 +111,12 @@ namespace IW3SR
 			Discovered = true;
 			Discover();
 		}
-		if (Injected || Layer.empty())
+		if (Layer.empty())
 			return;
 
-		// Ride the batch that outlives a map, the one bringing in common_mp: a map or mod batch
-		// would take the layer back down on the next load.
+		// Ride the batch that outlives a map, the one bringing in common_mp: a map or mod batch would take the
+		// layer back down on the next load. That batch only comes again once everything was unloaded (a
+		// vid_restart, a mod change), so the layer goes back in with it every time.
 		const bool common = std::ranges::any_of(zones,
 			[](const XZoneInfo& zone) { return zone.name && (zone.allocFlags & XZONE_COMMON); });
 
@@ -132,7 +140,6 @@ namespace IW3SR
 			Com_PrintMessage(CON_CHANNEL_FILES, std::format("Mounting IW3SR zone '{}'\n", zone.Path.string()).c_str(),
 				0);
 		}
-		Injected = true;
 	}
 
 	void GZones::Shutdown()
@@ -145,26 +152,46 @@ namespace IW3SR
 		return Environment::Initialized ? Environment::Path(Directory::App) / "Zone" : std::filesystem::path();
 	}
 
-	// FS_AddIwdFilesForGameDirectory walks <path>/<folder> and adds every .iwd to the search path,
-	// the way the engine does for a mod folder. CoD4X mounts its own IWD the same way, so its search
-	// path already covers this and a second mount would only duplicate entries.
-	void GZones::MountIwd()
+	// The layer's images come from the IWDs in IW3SR/Zone, opened here rather than mounted into the game's file
+	// system, where a pure server skips every IWD it does not list. Only names with the layer's prefix are served,
+	// so this never stands in for a stock image.
+	bool GZones::LoadImage(GfxImage* image)
 	{
-		if (Patch::UseCoD4X || !FS_AddIwdFilesForGameDirectory || !Environment::Initialized)
-			return;
+		if (!image->name || !HasLayerPrefix(image->name))
+			return false;
 
-		const std::filesystem::path app = Environment::Path(Directory::App);
-		if (app.empty() || !app.has_parent_path())
-			return;
+		const std::string entry = std::format("images/{}.iwi", image->name);
+		std::vector<uint8_t> data;
 
 		std::error_code ec;
-		if (!std::filesystem::exists(app, ec) || ec)
-			return;
+		for (const auto& file : std::filesystem::directory_iterator(Root(), ec))
+		{
+			if (!EqualsNoCase(file.path().extension().string(), ".iwd"))
+				continue;
 
-		const std::string path = app.parent_path().string();
-		const std::string folder = app.filename().string();
+			data = Zip::Read(file.path(), entry).Data;
+			if (!data.empty())
+				break;
+		}
 
-		FS_AddIwdFilesForGameDirectory(path.c_str(), folder.c_str());
+		GfxImageFileHeader header{};
+		if (data.size() < sizeof(header))
+			return false;
+		std::memcpy(&header, data.data(), sizeof(header));
+
+		if (std::string_view(header.tag, 3) != "IWi" || header.version != 6
+			|| header.fileSizeForPicmip[0] != static_cast<int>(data.size()))
+		{
+			Log::WriteLine(Channel::Warning, "Image '{}' in IW3SR/Zone/images is not a version 6 .iwi.", image->name);
+			return false;
+		}
+
+		// The data runs from the smallest mip up, so all of it is the full resolution.
+		image->noPicmip = true;
+		image->picmip.platform[0] = image->picmip.platform[1] = 0;
+		Image_LoadFromData(image, &header, data.data() + sizeof(header));
+
+		return image->texture.basemap != nullptr;
 	}
 
 	// Runs behind the engine's own lookup and only ever turns a zero into a real size, so a zone the
@@ -341,8 +368,6 @@ namespace IW3SR
 		// restart would have done again for the new fs_game.
 		Memory::Set<const char*>(ModFastFileAddress, DB_ModFileExists() ? "mod" : nullptr);
 
-		// The layer rode the batch that was just unloaded.
-		Injected = false;
 		DB_LoadXZoneFromGfxConfig();
 
 		// Unloading everything took the loading screen's zone with it.
@@ -374,20 +399,12 @@ namespace IW3SR
 		if (Enabled && !Enabled->current.enabled)
 			return;
 
-		MountIwd();
-
 		Collect();
 		if (Layer.empty())
 			return;
 
-		// CoD4x already replaces the whole zone file open path, private-zone lookup included, so the
-		// layer is left to it and only the zones its loader can reach are kept.
-		if (Patch::UseCoD4X)
-		{
-			std::erase_if(Layer, [](const PatchZone& zone) { return !Resolvable(zone); });
-			return;
-		}
-
+		// CoD4x replaces the zone open path, but for any zone that is not one of its own it still ends in a
+		// CreateFileA (DB_OpenCommonXZoneFile, CoD4x_Client_pub/src/xassets.c:616), so the redirect serves both.
 		const HMODULE kernel = GetModuleHandleA("kernel32.dll");
 		const FARPROC target = kernel ? GetProcAddress(kernel, "CreateFileA") : nullptr;
 
@@ -421,7 +438,7 @@ namespace IW3SR
 				continue;
 
 			const std::string stem = path.stem().string();
-			if (stem.size() <= LayerPrefix.size() || !EqualsNoCase(stem.substr(0, LayerPrefix.size()), LayerPrefix))
+			if (!HasLayerPrefix(stem))
 				continue;
 
 			files.push_back(path);

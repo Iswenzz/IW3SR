@@ -164,6 +164,9 @@ namespace IW3SR
 	API extern Function<void(const vec3& end, int passEntityNum, trace_t* results, const vec3& start, int contentMask)>
 		G_MissileTrace;
 
+	extern Function<void(GfxImage* image, GfxImageFileHeader* header, uint8_t* data)>
+		Image_LoadFromData;
+
 	extern Function<bool FASTCALL(GfxImage* image)>
 		Image_SetDefaultTexture;
 
@@ -329,6 +332,7 @@ namespace IW3SR
 	ASM_FUNCTION(Dvar_SetFromStringByNameFromSource);
 	ASM_FUNCTION(FS_FCloseFile);
 	ASM_FUNCTION(G_MissileTrace);
+	ASM_FUNCTION(Image_LoadFromData);
 	ASM_FUNCTION(Jump_Check);
 	ASM_FUNCTION(LoadMapLoadscreen);
 	ASM_FUNCTION(Material_RegisterHandle);

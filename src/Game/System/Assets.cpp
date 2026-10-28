@@ -156,6 +156,9 @@ namespace IW3SR
 	// already named the file it could not open by the time this runs.
 	bool Assets::LoadImageFromFile(GfxImage* image, void* reader)
 	{
+		if (image && GZones::LoadImage(image))
+			return true;
+
 		if (image && PicmipTableBroken(image, reader))
 		{
 			image->noPicmip = true;

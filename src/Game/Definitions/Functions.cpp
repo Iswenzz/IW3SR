@@ -160,6 +160,9 @@ namespace IW3SR
 	Function<void(const vec3& end, int passEntityNum, trace_t* results, const vec3& start, int contentMask)>
 		G_MissileTrace = ASM_LOAD(G_MissileTrace);
 
+	Function<void(GfxImage* image, GfxImageFileHeader* header, uint8_t* data)>
+		Image_LoadFromData = ASM_LOAD(Image_LoadFromData);
+
 	Function<bool FASTCALL(GfxImage* image)>
 		Image_SetDefaultTexture = 0x616DB0;
 
@@ -447,6 +450,23 @@ namespace IW3SR
 		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // end
 		a.call(0x4C4FD0);
 		a.add(x86::esp, 0x0C);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(Image_LoadFromData)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.push(x86::dword_ptr(x86::ebp, 0x08));			 // image
+		a.mov(x86::edx, x86::dword_ptr(x86::ebp, 0x10)); // data
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x0C)); // header
+		a.call(0x642210);
+		a.add(x86::esp, 0x04);
 
 		a.popad();
 		a.pop(x86::ebp);

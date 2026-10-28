@@ -17,6 +17,7 @@ namespace IW3SR
 		static void Shutdown();
 
 		static std::filesystem::path Root();
+		static bool LoadImage(GfxImage* image);
 		static int FileSize(const char* name, int size);
 		static bool LoadLoadscreen(const char* map);
 		static void PatchWorldVertices();
@@ -29,7 +30,6 @@ namespace IW3SR
 
 		static inline std::vector<PatchZone> Layer;
 		static inline bool Discovered = false;
-		static inline bool Injected = false;
 
 		static void Discover();
 		static void PatchFileSize();
@@ -40,7 +40,6 @@ namespace IW3SR
 		static void DownloadRestart();
 		static void ComRestart();
 		static void Collect();
-		static void MountIwd();
 		static void LoadWorldVertices();
 		static bool Resolvable(const PatchZone& zone);
 		static const PatchZone* Match(std::string_view path);
