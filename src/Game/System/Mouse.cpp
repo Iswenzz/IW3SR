@@ -77,6 +77,15 @@ namespace IW3SR
 			Confine();
 	}
 
+	// Retail reads the mouse again in CG_DrawActiveFrame, after a menu may have parked the pointer and before
+	// Frame runs, so the pin is put back before every read rather than once a frame.
+	void GMouse::InputFrame()
+	{
+		if (Looking)
+			Confine();
+		IN_Frame_h();
+	}
+
 	// Turns a WM_INPUT message into view movement. Runs at the polling rate of the device, so it
 	// must stay free of window and cursor calls.
 	RawInput GMouse::Process(uintptr_t rawInput)

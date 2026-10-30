@@ -17,6 +17,7 @@
 #include "Game/System/Demo.hpp"
 #include "Game/System/Download.hpp"
 #include "Game/System/Huffman.hpp"
+#include "Game/System/Mouse.hpp"
 #include "Game/System/PMem.hpp"
 #include "Game/System/Patch.hpp"
 #include "Game/System/Profile.hpp"
@@ -141,6 +142,9 @@ namespace IW3SR
 
 	Hook<LRESULT CALLBACK(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)>
 		MainWndProc_h(0x57BB20, GSystem::MainWndProc);
+
+	Hook<void()>
+		IN_Frame_h(0x576100, GMouse::InputFrame);
 
 	Hook<void STDCALL(int tickRate)>
 		PbServerProcessEvents_h(0x5C13C0, GSystem::MainLoop);

@@ -143,6 +143,7 @@ namespace IW3SR
 		DB_FindXAssetHeader_h.Install();
 		Image_LoadFromFile_h.Install();
 		MainWndProc_h.Install();
+		IN_Frame_h.Install();
 		PbServerProcessEvents_h.Install();
 		PM_WalkMove_h.Install();
 		PM_AirMove_h.Install();

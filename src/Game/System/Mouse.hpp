@@ -18,6 +18,7 @@ namespace IW3SR
 		static void Initialize();
 		static void Shutdown();
 		static void Frame();
+		static void InputFrame();
 
 		static RawInput Process(uintptr_t rawInput);
 		static bool IsLooking();
