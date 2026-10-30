@@ -222,6 +222,21 @@ namespace IW3SR
 		const vec3& end, int pass_entity_num, int content_mask)>
 		PM_PlayerTrace;
 
+	API extern Function<void(pmove_t* pm, pml_t* pml)>
+		PM_Weapon;
+
+	API extern Function<FxEffect*(const FxEffectDef* def, int msecBegin, const vec3& origin, const vec3* axis)>
+		FX_SpawnOrientedEffect;
+
+	API extern Function<void(void* system, FxEffect* effect)>
+		FX_EffectNoLongerReferenced;
+
+	API extern Function<void(FxEffect* effect)>
+		FX_ThroughWithEffect;
+
+	API extern Function<int(int entityNum, const vec3& origin, const char* alias)>
+		CG_PlaySoundAliasByName;
+
 	API extern Function<void(const vec3& normal, const vec3& velIn, vec3& velOut)>
 		PM_ProjectVelocity;
 
@@ -348,6 +363,10 @@ namespace IW3SR
 	ASM_FUNCTION(PM_Friction);
 	ASM_FUNCTION(PM_GroundTraceMissed);
 	ASM_FUNCTION(PM_PlayerTrace);
+	ASM_FUNCTION(PM_Weapon);
+	ASM_FUNCTION(FX_SpawnOrientedEffect);
+	ASM_FUNCTION(CG_PlaySoundAliasByName);
+	ASM_FUNCTION(FX_ThroughWithEffect);
 	ASM_FUNCTION(PM_ProjectVelocity);
 	ASM_FUNCTION(RB_BeginSurface);
 	ASM_FUNCTION(RB_Draw3DInternal);

@@ -4,4 +4,6 @@ target_sources(IW3SR PRIVATE
 	CS.hpp
 	CS.cpp
 	Q3.hpp
-	Q3.cpp)
+	Q3.cpp
+	Q3Weapons.hpp
+	Q3Weapons.cpp)

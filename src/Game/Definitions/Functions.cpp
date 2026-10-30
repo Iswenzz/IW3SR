@@ -1,4 +1,5 @@
 #include "Functions.hpp"
+#include "Hooks.hpp"
 
 // clang-format off
 namespace IW3SR
@@ -220,6 +221,21 @@ namespace IW3SR
 
 	Function<void(const vec3& normal, const vec3& velIn, vec3& velOut)>
 		PM_ProjectVelocity = ASM_LOAD(PM_ProjectVelocity);
+
+	Function<void(pmove_t* pm, pml_t* pml)>
+		PM_Weapon = ASM_LOAD(PM_Weapon);
+
+	Function<FxEffect*(const FxEffectDef* def, int msecBegin, const vec3& origin, const vec3* axis)>
+		FX_SpawnOrientedEffect = ASM_LOAD(FX_SpawnOrientedEffect);
+
+	Function<void(void* system, FxEffect* effect)>
+		FX_EffectNoLongerReferenced = 0x4A0C80;
+
+	Function<void(FxEffect* effect)>
+		FX_ThroughWithEffect = ASM_LOAD(FX_ThroughWithEffect);
+
+	Function<int(int entityNum, const vec3& origin, const char* alias)>
+		CG_PlaySoundAliasByName = ASM_LOAD(CG_PlaySoundAliasByName);
 
 	Function<void(pmove_t* pm, pml_t* pml, bool gravity)> 
 		PM_StepSlideMove = 0x4155C0;
@@ -747,6 +763,76 @@ namespace IW3SR
 		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // pm
 		a.call(0x4104E0);
 		a.add(x86::esp, 0x04);
+
+		a.popad();
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	// FX_SpawnEffect with no bolt, as FX_PlayOrientedEffect inlines it for client 0. The effect comes back
+	// holding one reference for the caller.
+	ASM_FUNCTION(FX_SpawnOrientedEffect)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+
+		a.push(0x3FF);									 // markEntnum
+		a.push(0xFFFF);									 // owner
+		a.push(0xFF);									 // runnerSortOrder
+		a.push(0x7FF);									 // boneIndex
+		a.push(0xFFF);									 // dobjHandle
+		a.push(x86::dword_ptr(x86::ebp, 0x14));			 // axis
+		a.push(x86::dword_ptr(x86::ebp, 0x10));			 // origin
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // msecBegin
+		a.push(0x115D100);								 // fx system
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x08)); // def
+		a.call(0x4A1150);
+		a.add(x86::esp, 0x24);
+
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	// Removes every element of the effect and drops the caller's reference. Takes the effect in esi.
+	ASM_FUNCTION(FX_ThroughWithEffect)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.push(x86::esi);
+
+		a.mov(x86::esi, x86::dword_ptr(x86::ebp, 0x08)); // effect
+		a.call(0x4A1900);
+
+		a.pop(x86::esi);
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	ASM_FUNCTION(CG_PlaySoundAliasByName)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+
+		a.push(x86::dword_ptr(x86::ebp, 0x0C));			 // origin
+		a.push(x86::dword_ptr(x86::ebp, 0x08));			 // entityNum
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x10)); // alias
+		a.call(0x43F4B0);
+		a.add(x86::esp, 0x08);
+
+		a.pop(x86::ebp);
+		a.ret();
+	}
+
+	// The original behind PM_Weapon_h, which takes pm in ecx and pml in eax.
+	ASM_FUNCTION(PM_Weapon)
+	{
+		a.push(x86::ebp);
+		a.mov(x86::ebp, x86::esp);
+		a.pushad();
+
+		a.mov(x86::ecx, x86::dword_ptr(x86::ebp, 0x08)); // pm
+		a.mov(x86::eax, x86::dword_ptr(x86::ebp, 0x0C)); // pml
+		a.call(ASM_TRAMPOLINE(PM_Weapon_h));
 
 		a.popad();
 		a.pop(x86::ebp);

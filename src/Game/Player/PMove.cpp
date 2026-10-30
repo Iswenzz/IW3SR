@@ -2,11 +2,31 @@
 
 #include "Game/Player/Movements/CS.hpp"
 #include "Game/Player/Movements/Q3.hpp"
+#include "Game/Player/Movements/Q3Weapons.hpp"
+#include "Game/Player/Q3Missiles.hpp"
 #include "Game/Renderer/VR/VR.hpp"
+#include "Game/System/Protocol.hpp"
 #include "Game/System/Timestep.hpp"
+
+#define Q3_WEAPON_HISTORY 256
 
 namespace IW3SR
 {
+	struct Q3WeaponFrame
+	{
+		int serverTime;
+		Q3WeaponState state;
+	};
+
+	// Missiles in flight are not in the playerstate, and prediction replays every command from the last
+	// snapshot each frame. So the state after each predicted command is kept by its time, and a step starts
+	// from the state after the command the playerstate ends on.
+	static std::array<Q3WeaponFrame, Q3_WEAPON_HISTORY> WeaponHistory{};
+	static int WeaponHistoryIndex = 0;
+	static Q3WeaponState WeaponState{};
+	static Q3WeaponEvents WeaponEvents{};
+	static bool WeaponStep = false;
+
 	// The call taken out of PmoveSingle for as long as a move is only being predicted.
 	constexpr uintptr_t PredictionPatch = 0x537D10;
 	static int PredictionDepth = 0;
@@ -80,6 +100,9 @@ namespace IW3SR
 
 	void PMove::GroundTrace(pmove_t* pm, pml_t* pml)
 	{
+		if (WeaponStep)
+			Q3Weapons::Detonate(pm, WeaponState, IsQ3Cpm(), &WeaponEvents);
+
 		TraceGround(pm, pml);
 		Timestep::Step(pm, pml);
 
@@ -101,6 +124,59 @@ namespace IW3SR
 		case MovementMode::CS:
 			CS::GroundTrace(pm, pml);
 			break;
+		}
+	}
+
+	// Brackets a predicted step of the local player so the Q3 weapons run from the right missiles.
+	void PMove::PmoveSingle(pmove_t* pm)
+	{
+		WeaponStep = pm->ps == &cgs->predictedPlayerState && HasQ3Weapons();
+
+		if (WeaponStep)
+		{
+			const auto frame = std::ranges::find(WeaponHistory, pm->ps->commandTime, &Q3WeaponFrame::serverTime);
+			WeaponState = frame != WeaponHistory.end() ? frame->state : Q3WeaponState{};
+		}
+		PmoveSingle_h(pm);
+
+		if (WeaponStep)
+		{
+			const auto frame = std::ranges::find(WeaponHistory, pm->ps->commandTime, &Q3WeaponFrame::serverTime);
+			if (frame != WeaponHistory.end())
+				frame->state = WeaponState;
+			else
+			{
+				WeaponHistory[WeaponHistoryIndex] = { pm->ps->commandTime, WeaponState };
+				WeaponHistoryIndex = (WeaponHistoryIndex + 1) % Q3_WEAPON_HISTORY;
+			}
+			Q3Missiles::Events(WeaponEvents);
+			WeaponEvents.clear();
+		}
+		WeaponStep = false;
+	}
+
+	// Runs PM_Weapon, then launches a Q3 missile when it fired a Q3 weapon, as SR-Server does.
+	void PMove::Weapon(pmove_t* pm, pml_t* pml)
+	{
+		const int weaponTime = pm->ps->weaponTime;
+		const int sequence = pm->ps->eventSequence;
+
+		PM_Weapon(pm, pml);
+
+		if (!WeaponStep)
+			return;
+
+		Q3Weapons::Switch(pm->ps, IsQ3Cpm());
+		if (!Q3Weapons::Fired(pm->ps, sequence))
+			return;
+
+		for (int i = 0; i < static_cast<int>(Q3Weapons::Defs.size()); i++)
+		{
+			if (BG_FindWeaponIndexForName(Q3Weapons::Defs[i].item) != static_cast<int>(pm->ps->weapon))
+				continue;
+
+			Q3Weapons::Fire(pm, pml, WeaponState, i, weaponTime, IsQ3Cpm(), &WeaponEvents);
+			return;
 		}
 	}
 
@@ -212,6 +288,25 @@ namespace IW3SR
 			return MovementMode::CS;
 		}
 		return MovementMode::COD4;
+	}
+
+	const Q3WeaponState* PMove::FindWeapons(int commandTime)
+	{
+		const auto frame = std::ranges::find(WeaponHistory, commandTime, &Q3WeaponFrame::serverTime);
+		return frame != WeaponHistory.end() ? &frame->state : nullptr;
+	}
+
+	// A Q3 mode on a server that runs its rocket and plasma in pmove.
+	bool PMove::HasQ3Weapons()
+	{
+		const int mode = statData->stats.data.bytedata[1700]; // sr_mode: Q3, Q3CPM, Q3CPMW
+		return mode >= 3 && mode <= 5 && GProtocol::SystemInfoValue("sr_q3weapons") == "1";
+	}
+
+	bool PMove::IsQ3Cpm()
+	{
+		const int mode = statData->stats.data.bytedata[1700]; // sr_mode
+		return mode == 4 || mode == 5;
 	}
 
 	vec3 PMove::GetEyePos()

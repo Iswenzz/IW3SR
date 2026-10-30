@@ -4,4 +4,6 @@ target_sources(IW3SR PRIVATE
 	Player.hpp
 	Player.cpp
 	PMove.hpp
-	PMove.cpp)
+	PMove.cpp
+	Q3Missiles.hpp
+	Q3Missiles.cpp)

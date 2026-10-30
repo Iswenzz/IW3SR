@@ -157,6 +157,12 @@ namespace IW3SR
 	Hook<void(playerState_s* ps, pml_t* pml)>
 		PM_CrashLand_h(0x40FFB0, ASM_LOAD(PM_CrashLand_h));
 
+	Hook<void(pmove_t* pm, pml_t* pml)>
+		PM_Weapon_h(0x41A470, ASM_LOAD(PM_Weapon_h));
+
+	Hook<void(pmove_t* pm)>
+		PmoveSingle_h(0x4143A0, PMove::PmoveSingle);
+
 	Hook<int(const char* localName, const char* remoteName)>
 		DL_BeginDownload_h(0x500AE0, GDownload::BeginDownload);
 
@@ -385,6 +391,15 @@ namespace IW3SR
 		a.popad();
 		a.pop(x86::ebp);
 		a.jmp(ASM_TRAMPOLINE(PM_CrashLand_h));
+	}
+
+	ASM_FUNCTION(PM_Weapon_h)
+	{
+		a.push(x86::eax); // pml
+		a.push(x86::ecx); // pm
+		a.call(PMove::Weapon);
+		a.add(x86::esp, 0x08);
+		a.ret();
 	}
 
 	ASM_FUNCTION(R_AddCmdDrawText_h)

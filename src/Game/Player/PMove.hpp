@@ -3,6 +3,8 @@
 
 namespace IW3SR
 {
+	struct Q3WeaponState;
+
 	enum class MovementMode
 	{
 		COD4,
@@ -29,6 +31,8 @@ namespace IW3SR
 		static void GroundTrace(pmove_t* pm, pml_t* pml);
 		static void TraceGround(pmove_t* pm, pml_t* pml);
 		static void CrashLand(playerState_s* ps, pml_t* pml);
+		static void PmoveSingle(pmove_t* pm);
+		static void Weapon(pmove_t* pm, pml_t* pml);
 
 		static void SetYaw(usercmd_s* cmd, const vec3& target);
 		static void SetPitch(usercmd_s* cmd, const vec3& target);
@@ -39,6 +43,9 @@ namespace IW3SR
 		static void PredictPmoveSingle(pmove_t* pm, int amount = 1);
 		static usercmd_s* GetUserCommand(int cmdNumber);
 		static MovementMode GetMovementMode();
+		static bool HasQ3Weapons();
+		static bool IsQ3Cpm();
+		static const Q3WeaponState* FindWeapons(int commandTime);
 		static vec3 GetEyePos();
 
 		static bool OnGround();

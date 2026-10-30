@@ -3063,6 +3063,34 @@ namespace IW3SR
 		char unused[1];
 	};
 
+	struct FxSpatialFrame
+	{
+		vec4 quat;
+		vec3 origin;
+	};
+
+	// A live effect in the FX system; status holds the reference count and 0x10000 while it loops.
+	struct FxEffect
+	{
+		const FxEffectDef* def;
+		volatile long status;
+		unsigned short firstElemHandle[3];
+		unsigned short firstSortedElemHandle;
+		unsigned short firstTrailHandle;
+		unsigned short randomSeed;
+		unsigned short owner;
+		unsigned short packedLighting;
+		int boltAndSortOrder;
+		volatile long frameCount;
+		int msecBegin;
+		int msecLastUpdate;
+		FxSpatialFrame frameAtSpawn;
+		FxSpatialFrame frameNow;
+		FxSpatialFrame framePrev;
+		float distanceTraveled;
+	};
+	static_assert(sizeof(FxEffect) == 0x80);
+
 	struct FxEffectDef
 	{
 		const char* name;

@@ -1,5 +1,6 @@
 #include "Client.hpp"
 
+#include "Game/Player/Q3Missiles.hpp"
 #include "Game/Renderer/Renderer.hpp"
 #include "Game/Renderer/Shadows.hpp"
 #include "Game/System/CdKey.hpp"
@@ -74,6 +75,7 @@ namespace IW3SR
 		GChannel::Connect();
 		GQoS::Connected();
 		Timestep::Reset();
+		Q3Missiles::Reset();
 
 		EventClientConnect event;
 		Application::Dispatch(event);
@@ -83,6 +85,7 @@ namespace IW3SR
 	{
 		CL_Disconnect_h(localClientNum);
 		Timestep::Reset();
+		Q3Missiles::Reset();
 		GQoS::Disconnected();
 		GDownload::Disconnected();
 		GChannel::Disconnect();
@@ -113,6 +116,7 @@ namespace IW3SR
 		CG_PredictPlayerState_Internal_h(localClientNum);
 
 		InterpolateViewForMover();
+		Q3Missiles::Frame();
 
 		EventClientPredict event;
 		Application::Dispatch(event);
