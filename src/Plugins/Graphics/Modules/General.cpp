@@ -61,26 +61,15 @@ namespace IW3SR::Addons
 		}
 
 		static const auto sr_ssao = Dvar::Find("sr_ssao");
-		static const auto sr_ssao_strength = Dvar::Find("sr_ssao_strength");
-		static const auto sr_ssao_radius = Dvar::Find("sr_ssao_radius");
-		if (sr_ssao && sr_ssao_strength && sr_ssao_radius)
+		if (sr_ssao)
 		{
 			ImGui::Property("Ambient Occlusion");
 			if (ImGui::Switch("##ssao", &sr_ssao->current.enabled))
 				Dvar::SetBool(sr_ssao, sr_ssao->current.enabled);
 			ImGui::Tooltip(
 				"Darken creases and contact shadows from the depth buffer.\n"
-				"Draws the scene's depth a second time each frame.");
-
-			if (sr_ssao->current.enabled)
-			{
-				ImGui::Property("Occlusion Strength");
-				if (ImGui::SliderFloat("##ssaostrength", &sr_ssao_strength->current.value, 0, 3))
-					Dvar::SetFloat(sr_ssao_strength, sr_ssao_strength->current.value);
-				ImGui::Property("Occlusion Radius");
-				if (ImGui::SliderFloat("##ssaoradius", &sr_ssao_radius->current.value, 4, 128))
-					Dvar::SetFloat(sr_ssao_radius, sr_ssao_radius->current.value);
-			}
+				"Draws the scene's depth a second time each frame.\n"
+				"Tune it with sr_ssao_strength, sr_ssao_radius and sr_ssao_distance.");
 		}
 		ImGui::EndSection();
 	}
