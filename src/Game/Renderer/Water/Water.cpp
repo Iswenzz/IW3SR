@@ -310,8 +310,16 @@ namespace IW3SR
 			*water.Target = water.Original;
 	}
 
-	// The world's water surfaces grouped by height. A converted map's water is flat, so each surface's
-	// bounds are one height.
+	// A water brush's sides and bottom carry its material too. Read as planes, a side sat at its middle height
+	// next to the camera and took the reflection from the real surface. The normal's z byte is above 127 when up.
+	static bool FacesUp(const GfxWorld* world, const GfxSurface& surface)
+	{
+		if (!world->vd.vertices || !surface.tris.vertexCount)
+			return false;
+		return static_cast<uint8_t>(world->vd.vertices[surface.tris.firstVertex].normal.array[2]) > 127;
+	}
+
+	// The world's water surfaces facing up, grouped by height.
 	void GWater::FindPlanes()
 	{
 		Planes.clear();
@@ -330,6 +338,8 @@ namespace IW3SR
 
 			const vec3 mins(surface.bounds[0][0], surface.bounds[0][1], surface.bounds[0][2]);
 			const vec3 maxs(surface.bounds[1][0], surface.bounds[1][1], surface.bounds[1][2]);
+			if (maxs.z - mins.z > PLANE_MERGE || !FacesUp(world, surface))
+				continue;
 			const float height = (mins.z + maxs.z) * 0.5f;
 
 			const auto plane = std::ranges::find_if(Planes,
