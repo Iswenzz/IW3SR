@@ -127,11 +127,17 @@ namespace IW3SR
 		if (GPortal::Rendering)
 			return;
 
-		GSSAO::Render(viewInfo);
 		GDraw3D::Render();
 
 		EventRenderer3D event;
 		Application::Dispatch(event);
+	}
+
+	// Lights, the sun and emissive surfaces (glows, effects) are drawn after this, so the occlusion leaves them alone.
+	void GRenderer::DrawLit(const GfxViewInfo* viewInfo)
+	{
+		if (!GPortal::Rendering)
+			GSSAO::Render(viewInfo);
 	}
 
 	void GRenderer::DrawVersion()

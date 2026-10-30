@@ -248,6 +248,9 @@ namespace IW3SR
 		RB_EndSceneRendering_h(0x6496EC, GRenderer::Draw3D);
 
 	Hook<void()>
+		RB_LitSceneDrawn_h(0x64B2DD, ASM_LOAD(RB_LitSceneDrawn_h));
+
+	Hook<void()>
 		R_BeginFrame_h(0x5F75A0, GRenderer::BeginFrame);
 
 	Hook<void()>
@@ -764,6 +767,18 @@ namespace IW3SR
 		a.add(x86::esp, 0x04);
 		a.popad();
 		a.jmp(ASM_TRAMPOLINE(RB_ViewCommands_h));
+	}
+
+	// Between the lit pass's decals and its sun, lights and emissive surfaces, with the scene target bound and the
+	// view in edi.
+	ASM_FUNCTION(RB_LitSceneDrawn_h)
+	{
+		a.pushad();
+		a.push(x86::edi); // viewInfo
+		a.call(GRenderer::DrawLit);
+		a.add(x86::esp, 0x04);
+		a.popad();
+		a.jmp(ASM_TRAMPOLINE(RB_LitSceneDrawn_h));
 	}
 
 	// Past CG_UpdateViewModelPose's null check, so the trampoline carries no branch, with the model in eax

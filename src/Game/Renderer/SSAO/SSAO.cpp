@@ -134,19 +134,25 @@ float4 main(float2 pixel : VPOS) : COLOR0
 
 	// A 4x4 blur over the half size occlusion, each tap weighted by how close its depth is to this pixel's plane,
 	// so the shadow of one surface does not bleed onto another while a floor seen at a grazing angle still blurs
-	// across. c2 here is a texel of the occlusion.
+	// across. c2 here is a texel of the occlusion, c3 the projection's depth terms.
 	constexpr const char* CompositeSource = R"(
 sampler2D Occlusion : register(s0);
 sampler2D Depth : register(s1);
 float4 View : register(c0);
 float4 Shape : register(c1);
 float4 Frame : register(c2);
+float4 Projection : register(c3);
 
-float4 main(float2 pixel : VPOS) : COLOR0
+float4 main(float2 pixel : VPOS, out float depth : DEPTH) : COLOR0
 {
 	float2 uv = (pixel + 0.5) * View.zw;
 	float z = tex2Dlod(Depth, float4(uv, 0, 0)).r;
 	float tolerance = max(z * 0.02, 1.0);
+
+	// Placed just in front of the surface float-Z holds, so the scene's depth test drops it wherever something
+	// float-Z leaves out was drawn nearer: water, and anything else without a depth prepass.
+	float front = max(z - max(z * 0.001, 0.5), 1.0);
+	depth = Projection.x + Projection.y / front;
 
 	// The depth's slope per texel, from the nearer neighbour on each axis so a silhouette does not tilt it.
 	float right = tex2Dlod(Depth, float4(uv + float2(View.z, 0), 0, 0)).r - z;
@@ -314,7 +320,8 @@ float4 main(float2 pixel : VPOS) : COLOR0
 		const vec4 view(PROJECTION_EPSILON / projection.m[0][0], PROJECTION_EPSILON / projection.m[1][1], 1.0f / size.x,
 			1.0f / size.y);
 		const vec4 shape(Radius->current.value, Strength->current.value, distance * FAR_FADE, distance);
-		Draw(device, depth, view, shape);
+		const vec4 depthTerms(projection.m[2][2], projection.m[3][2], 0.0f, 0.0f);
+		Draw(device, depth, view, shape, depthTerms);
 	}
 
 	IDirect3DTexture9* GSSAO::Depth()
@@ -373,7 +380,8 @@ float4 main(float2 pixel : VPOS) : COLOR0
 	// The occlusion goes to its own target, then multiplies the scene through blending, so the scene is never
 	// read back. The device comes back as the engine left it: its targets by hand, the rest through the state
 	// block, which keeps the engine's own record of the device true.
-	void GSSAO::Draw(IDirect3DDevice9* device, IDirect3DTexture9* depth, const vec4& view, const vec4& shape)
+	void GSSAO::Draw(IDirect3DDevice9* device, IDirect3DTexture9* depth, const vec4& view, const vec4& shape,
+		const vec4& projection)
 	{
 		IDirect3DSurface9* scene = nullptr;
 		IDirect3DSurface9* stencil = nullptr;
@@ -414,7 +422,11 @@ float4 main(float2 pixel : VPOS) : COLOR0
 		DrawQuad(device);
 
 		device->SetRenderTarget(0, scene);
+		device->SetDepthStencilSurface(stencil);
 		device->SetViewport(&sceneViewport);
+		device->SetRenderState(D3DRS_ZENABLE, stencil ? D3DZB_TRUE : D3DZB_FALSE);
+		device->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+		device->SetPixelShaderConstantF(3, &projection.x, 1);
 		device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 		device->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
 		device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
@@ -431,8 +443,6 @@ float4 main(float2 pixel : VPOS) : COLOR0
 		PointSampler(device, 1);
 		DrawQuad(device);
 
-		device->SetRenderTarget(0, scene);
-		device->SetDepthStencilSurface(stencil);
 		scene->Release();
 		if (stencil)
 			stencil->Release();

@@ -164,6 +164,7 @@ namespace IW3SR
 		RB_ExecuteRenderCommandsLoop_h.Install();
 		RB_LookupColor_h.Install();
 		RB_EndSceneRendering_h.Install();
+		RB_LitSceneDrawn_h.Install();
 		Script_ScriptMenuResponse_h.Install();
 		SND_UpdateLoopingSounds_h.Install();
 		UI_VersionNumber_h.Install();

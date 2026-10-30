@@ -163,6 +163,9 @@ namespace IW3SR
 	extern Hook<void(GfxCmdBufInput* cmd, GfxViewInfo* viewInfo, GfxCmdBufSourceState* src, GfxCmdBufState* buf)>
 		RB_EndSceneRendering_h;
 
+	extern Hook<void()>
+		RB_LitSceneDrawn_h;
+
 	API extern Hook<void()>
 		R_BeginFrame_h;
 
@@ -283,6 +286,7 @@ namespace IW3SR
 	ASM_FUNCTION(CG_Draw2D_h);
 	ASM_FUNCTION(CG_Draw2D_Original);
 	ASM_FUNCTION(RB_ViewCommands_h);
+	ASM_FUNCTION(RB_LitSceneDrawn_h);
 	ASM_FUNCTION(CG_UpdateViewModelPose_h);
 	ASM_FUNCTION(R_AddDObjToScene_h);
 	ASM_FUNCTION(CG_Player_h);

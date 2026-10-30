@@ -4,7 +4,7 @@
 namespace IW3SR
 {
 	// Screen-space ambient occlusion read from the engine's float-Z, drawn at half size, then blurred and
-	// multiplied into the scene ahead of IW3SR's own 3D overlays.
+	// multiplied into the lit scene before its emissive surfaces.
 	class API GSSAO
 	{
 	public:
@@ -37,6 +37,7 @@ namespace IW3SR
 		static IDirect3DTexture9* Depth();
 		static bool Create(IDirect3DDevice9* device);
 		static bool Resize(IDirect3DDevice9* device, const vec2& size);
-		static void Draw(IDirect3DDevice9* device, IDirect3DTexture9* depth, const vec4& view, const vec4& shape);
+		static void Draw(IDirect3DDevice9* device, IDirect3DTexture9* depth, const vec4& view, const vec4& shape,
+			const vec4& projection);
 	};
 }
