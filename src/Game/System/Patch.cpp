@@ -9,6 +9,7 @@
 #include "Voice.hpp"
 #include "Zones.hpp"
 
+#include "Game/Renderer/Lighting.hpp"
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Renderer.hpp"
 #include "Game/Renderer/Shadows.hpp"
@@ -93,6 +94,7 @@ namespace IW3SR
 
 		FixDownloadRate();
 		DisableAimAssistTargets();
+		GLighting::Initialize();
 		GShadows::Initialize();
 		GCollision::Initialize();
 		GZones::PatchWorldVertices();

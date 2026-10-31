@@ -299,6 +299,9 @@ namespace IW3SR
 	extern Function<void(GfxViewInfo* viewInfo)>
 		RB_Draw3DInternal;
 
+	extern Function<void(const GfxModelLightingPatch* patchList, unsigned int patchCount)>
+		RB_PatchModelLighting;
+
 	extern Function<void()>
 		RB_StandardDrawCommandsCommon;
 

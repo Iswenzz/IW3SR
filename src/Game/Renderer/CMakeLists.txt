@@ -7,6 +7,8 @@ add_subdirectory(VR)
 add_subdirectory(Water)
 
 target_sources(IW3SR PRIVATE
+	Lighting.hpp
+	Lighting.cpp
 	Materials.hpp
 	Materials.cpp
 	Renderer.hpp

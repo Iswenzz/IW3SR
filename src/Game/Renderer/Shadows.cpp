@@ -13,7 +13,7 @@ namespace IW3SR
 	constexpr uint32_t StockRatioFixed = 0x6BDF00;
 
 	// R_AddStaticModelSurfacesForShadow draws a static model into the sun shadow map only once it holds
-	// one of the 3072 static model lighting entries a frame has, which the camera's own models take
+	// one of the 4096 static model lighting entries a frame has, which the camera's own models take
 	// first and the far partition asks for last. A map built of models runs out, and its far shadows
 	// lose a share of their casters that grows and shrinks as the view turns. Casting reads no lighting,
 	// so every caster is drawn, entry or not.

@@ -296,6 +296,9 @@ namespace IW3SR
 	Function<void(GfxViewInfo* viewInfo)>
 		RB_Draw3DInternal = ASM_LOAD(RB_Draw3DInternal);
 
+	Function<void(const GfxModelLightingPatch* patchList, unsigned int patchCount)>
+		RB_PatchModelLighting = 0x62F190;
+
 	Function<void()>
 		RB_StandardDrawCommandsCommon = 0x64B3A0;
 
