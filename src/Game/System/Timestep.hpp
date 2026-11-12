@@ -64,7 +64,7 @@ namespace IW3SR
 		static void Advance();
 		static void ForceStance(const playerState_s& ps, int sequence);
 		static Steps PlanSteps(int* widths, int step, int target, int frametime);
-		static void SeedClock(int target);
+		static void SeedClock();
 		static void Receive(int target, int frametime);
 		static int Tick(int time);
 		static void AdjustDelta(int time);

@@ -536,9 +536,10 @@ namespace IW3SR
 	}
 
 	// Takes the clock over from wherever the engine has it, counting the current snapshot as seen.
-	void Timestep::SeedClock(int target)
+	// From its delta, not from the time it gave the frame, which predates a correction made this frame.
+	void Timestep::SeedClock()
 	{
-		Server.Delta = clients->serverTime - target;
+		Server.Delta = clients->serverTimeDelta;
 		Server.OldServerTime = clients->cmds[clients->cmdNumber & 0x7F].serverTime;
 		Server.Snap = clients->snap.serverTime;
 		Server.OldSnap = clients->oldSnapServerTime;
@@ -547,6 +548,7 @@ namespace IW3SR
 
 		Arrivals.clear();
 		Seen = clients->snap.serverTime;
+		HasOffset = false;
 	}
 
 	// A snapshot is parsed at the top of the frame after it came in, so all that is known of its
@@ -563,7 +565,7 @@ namespace IW3SR
 		// Time ran backwards, from a map restart.
 		if (snap < Seen)
 		{
-			SeedClock(target);
+			SeedClock();
 			return;
 		}
 		Seen = snap;
@@ -678,7 +680,7 @@ namespace IW3SR
 		// A big jump between the engine's delta and ours is a correction the engine made on its own,
 		// a map change or a lag spike, which starts the clock over from where the engine put it.
 		if (!Server.Started || std::abs(clients->serverTimeDelta - Server.Delta) > 100)
-			SeedClock(target);
+			SeedClock();
 		Receive(target, cls->frametime);
 
 		// The engine walked its delta once this frame, at the frame's time. Ours walks at the step the
