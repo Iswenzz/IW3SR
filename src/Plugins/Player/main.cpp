@@ -4,6 +4,7 @@
 #include "Player/Modules/CGAZ.hpp"
 #include "Player/Modules/Discord.hpp"
 #include "Player/Modules/FPS.hpp"
+#include "Player/Modules/Ghost.hpp"
 #include "Player/Modules/KMOV.hpp"
 #include "Player/Modules/Lagometer.hpp"
 #include "Player/Modules/Movements.hpp"
@@ -18,6 +19,7 @@ PLUGIN void Initialize()
 	Modules::Load<CGAZ>();
 	Modules::Load<Discord>();
 	Modules::Load<FPS>();
+	Modules::Load<Ghost>();
 	Modules::Load<KMOV>();
 	Modules::Load<Lagometer>();
 	Modules::Load<Movements>();
@@ -31,6 +33,7 @@ PLUGIN void Shutdown()
 	Modules::Remove("sr.player.cgaz");
 	Modules::Remove("sr.player.discord");
 	Modules::Remove("sr.player.fps");
+	Modules::Remove("sr.player.ghost");
 	Modules::Remove("sr.player.kmov");
 	Modules::Remove("sr.player.lagometer");
 	Modules::Remove("sr.player.movements");

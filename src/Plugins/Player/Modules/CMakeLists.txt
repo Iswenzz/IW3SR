@@ -7,6 +7,8 @@ target_sources(Player PRIVATE
 	Discord.cpp
 	FPS.hpp
 	FPS.cpp
+	Ghost.hpp
+	Ghost.cpp
 	KMOV.hpp
 	KMOV.cpp
 	Lagometer.hpp
