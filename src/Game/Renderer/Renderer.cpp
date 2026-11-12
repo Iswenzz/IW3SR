@@ -2,6 +2,7 @@
 
 #include "Game/Renderer/Drawing/Draw2D.hpp"
 #include "Game/Renderer/Drawing/Draw3D.hpp"
+#include "Game/Renderer/Ghost.hpp"
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
@@ -9,6 +10,7 @@
 #include "Game/Renderer/Shadows.hpp"
 #include "Game/Renderer/UI/About.hpp"
 #include "Game/Renderer/UI/UI.hpp"
+#include "Game/Renderer/VR/Body.hpp"
 #include "Game/Renderer/VR/VR.hpp"
 #include "Game/Renderer/Water/Water.hpp"
 #include "Game/System/AssetDump.hpp"
@@ -27,6 +29,7 @@
 #include "Game/System/Rank.hpp"
 #include "Game/System/Rcon.hpp"
 #include "Game/System/ServerFilter.hpp"
+#include "Game/System/ServerGhost.hpp"
 #include "Game/System/Shell.hpp"
 #include "Game/System/System.hpp"
 #include "Game/System/Timestep.hpp"
@@ -195,6 +198,17 @@ namespace IW3SR
 			reinterpret_cast<GfxViewInfo*>(reinterpret_cast<uint8_t*>(data->viewInfo) + i * VIEW_INFO_STRIDE)->needsFloatZ =
 				true;
 		return true;
+	}
+
+	// Every model with a pose passes here on its way into the scene, with the render flags it goes in with,
+	// and false keeps it out.
+	bool GRenderer::SceneModel(DObj_s* obj, const cpose_t* pose, int entnum, uint32_t* renderFx)
+	{
+		if (!ServerGhost::SceneModel(pose, entnum))
+			return false;
+
+		*renderFx |= GGhost::SceneFlags(entnum);
+		return GVRBody::SceneModel(obj, pose, entnum);
 	}
 
 	void GRenderer::ExecuteRenderCommandsLoop(void* cmds)

@@ -21,6 +21,7 @@ namespace IW3SR
 		static void EndFrame();
 		static void ExecuteRenderCommandsLoop(void* cmds);
 		static bool RequestFloatZ();
+		static bool SceneModel(DObj_s* obj, const cpose_t* pose, int entnum, uint32_t* renderFx);
 		static void STDCALL Frame(IDirect3DDevice9* device);
 		static HRESULT STDCALL Reset(IDirect3DDevice9* device, D3DPRESENT_PARAMETERS* pPresentationParameters);
 		static void UpdateLoopingSounds();

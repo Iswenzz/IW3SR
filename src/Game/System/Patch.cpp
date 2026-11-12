@@ -9,6 +9,7 @@
 #include "Voice.hpp"
 #include "Zones.hpp"
 
+#include "Game/Renderer/Ghost.hpp"
 #include "Game/Renderer/Lighting.hpp"
 #include "Game/Renderer/Materials.hpp"
 #include "Game/Renderer/Renderer.hpp"
@@ -96,6 +97,7 @@ namespace IW3SR
 		DisableAimAssistTargets();
 		GLighting::Initialize();
 		GShadows::Initialize();
+		GGhost::Initialize();
 		GCollision::Initialize();
 		GZones::PatchWorldVertices();
 
@@ -160,6 +162,7 @@ namespace IW3SR
 		R_ChooseShadowedLights_h.Install();
 		R_SetWndParms_h.Install();
 		R_AddDObjToScene_h.Install();
+		R_AddAllSceneEntSurfacesCamera_h.Install();
 		CG_Player_h.Install();
 		R_Init_h.Install();
 		R_Shutdown_h.Install();

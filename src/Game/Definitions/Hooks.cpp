@@ -1,5 +1,6 @@
 #include "Hooks.hpp"
 
+#include "Game/Renderer/Ghost.hpp"
 #include "Game/Renderer/Modules/Modules.hpp"
 #include "Game/Renderer/Portal/Portal.hpp"
 #include "Game/Renderer/Renderer.hpp"
@@ -202,6 +203,9 @@ namespace IW3SR
 
 	Hook<bool(DObj_s* obj, const cpose_t* pose, int entnum)>
 		R_AddDObjToScene_h(0x5F7B60, ASM_LOAD(R_AddDObjToScene_h));
+
+	Hook<void(const GfxViewInfo* viewInfo)>
+		R_AddAllSceneEntSurfacesCamera_h(0x607800, GGhost::SceneSurfaces);
 
 	Hook<bool()>
 		CG_Player_h(0x4453B0, ASM_LOAD(CG_Player_h));
@@ -800,18 +804,20 @@ namespace IW3SR
 		a.jmp(ASM_TRAMPOLINE(CG_UpdateViewModelPose_h));
 	}
 
-	// The model in ecx, its pose in eax, the entity it belongs to first on the stack. The caller pops
-	// the arguments, so a model kept out returns straight away.
+	// The model in ecx, its pose in eax, the entity it belongs to then its render flags first on the stack.
+	// The caller pops the arguments, so a model kept out returns straight away.
 	ASM_FUNCTION(R_AddDObjToScene_h)
 	{
 		Label skip = a.newLabel();
 
 		a.pushad();
-		a.push(x86::dword_ptr(x86::esp, 0x24)); // entnum
+		a.lea(x86::edx, x86::dword_ptr(x86::esp, 0x28));
+		a.push(x86::edx);						 // renderFxFlags
+		a.push(x86::dword_ptr(x86::esp, 0x28)); // entnum
 		a.push(x86::eax);						 // pose
 		a.push(x86::ecx);						 // obj
-		a.call(GVRBody::SceneModel);
-		a.add(x86::esp, 0x0C);
+		a.call(GRenderer::SceneModel);
+		a.add(x86::esp, 0x10);
 		a.test(x86::al, x86::al);
 		a.popad();
 		a.jz(skip);

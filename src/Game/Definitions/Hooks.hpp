@@ -229,6 +229,9 @@ namespace IW3SR
 	extern Hook<bool(DObj_s* obj, const cpose_t* pose, int entnum)>
 		R_AddDObjToScene_h;
 
+	extern Hook<void(const GfxViewInfo* viewInfo)>
+		R_AddAllSceneEntSurfacesCamera_h;
+
 	extern Hook<bool()>
 		CG_Player_h;
 

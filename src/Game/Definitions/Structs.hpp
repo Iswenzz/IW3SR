@@ -5234,6 +5234,19 @@ namespace IW3SR
 		MaterialTechniqueType origTechType;
 	};
 
+	struct GfxCmdBufContext
+	{
+		GfxCmdBufSourceState* source;
+		GfxCmdBufState* state;
+	};
+
+	struct GfxDrawSurfListArgs
+	{
+		GfxCmdBufContext context;
+		uint32_t firstDrawSurfIndex;
+		GfxDrawSurfListInfo* info;
+	};
+
 	struct GfxVertex
 	{
 		float xyzw[4];
