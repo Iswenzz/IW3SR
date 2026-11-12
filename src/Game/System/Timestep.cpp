@@ -744,8 +744,10 @@ namespace IW3SR
 			time += width;
 
 			// Placed on the wall clock the binds stamp, not on realtime's, which falls behind at every
-			// clamped hitch and would throw the stance hold's timer off.
-			const int stamp = frameTime - (target - time);
+			// clamped hitch and would throw the stance hold's timer off. Kept moving forward: the wall
+			// clock sits back against realtime on the frame after a slow one, and a held key reads as
+			// released on a stamp that has not advanced, which ends a sprint for good.
+			const int stamp = std::max(frameTime - (target - time), Stamp + 1);
 
 			// Both halves of CL_KeyState's ratio come off this one clock, as in CL_Frame, so a held key
 			// reads whole even on the step after a hitch or a change of com_maxfps.
