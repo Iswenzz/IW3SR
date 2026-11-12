@@ -5,6 +5,7 @@
 #include "Game/System/Patch.hpp"
 #include "Game/System/Protocol.hpp"
 #include "Game/System/ServerDemo.hpp"
+#include "Game/System/ServerGhost.hpp"
 #include "Game/Renderer/VR/Network.hpp"
 
 #include <cstring>
@@ -413,12 +414,12 @@ namespace IW3SR
 	}
 
 	// CoD4X runs every packet through its own CL_PacketEvent, which never calls retail's, so the relay
-	// and the demo state are taken off here instead. Its own channel it handles itself.
+	// and the demo and ghost states are taken off here instead. Its own channel it handles itself.
 	void GChannel::CoD4XPacketEvent(CoD4XNetadr* from, msg_t* msg)
 	{
 		const netadr_t retail = from ? Retail(*from) : netadr_t{};
 		const netadr_t* address = from ? &retail : nullptr;
-		if (!GVRNetwork::Packet(address, msg) && !ServerDemo::Packet(address, msg))
+		if (!GVRNetwork::Packet(address, msg) && !ServerDemo::Packet(address, msg) && !ServerGhost::Packet(address, msg))
 			CL_PacketEventCoD4X_h(from, msg);
 	}
 
@@ -426,7 +427,7 @@ namespace IW3SR
 	// one cannot be mistaken for a tagged one.
 	int GChannel::PacketEvent(const netadr_t* from, msg_t* msg, int time)
 	{
-		if (GVRNetwork::Packet(from, msg) || ServerDemo::Packet(from, msg))
+		if (GVRNetwork::Packet(from, msg) || ServerDemo::Packet(from, msg) || ServerGhost::Packet(from, msg))
 			return 1;
 		if (Patch::UseCoD4X || !from || !msg || !msg->data || msg->cursize < 4)
 			return 0;

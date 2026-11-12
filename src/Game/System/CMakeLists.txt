@@ -61,6 +61,8 @@ target_sources(IW3SR PRIVATE
 	Server.cpp
 	ServerDemo.hpp
 	ServerDemo.cpp
+	ServerGhost.hpp
+	ServerGhost.cpp
 	ServerFilter.hpp
 	ServerFilter.cpp
 	Shell.hpp
