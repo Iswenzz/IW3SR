@@ -69,17 +69,20 @@ namespace IW3SR
 		if (!DB_IsXAssetDefault(AssetTypeFx, name) && !(placeholder && EqualsNoCase(name, placeholder)))
 			return header;
 
-		auto* effect = static_cast<FxEffectDef*>(header);
-
-		if (effect->elemDefCountLooping || effect->elemDefCountOneShot || effect->elemDefCountEmission)
-		{
-			effect->elemDefCountLooping = 0;
-			effect->elemDefCountOneShot = 0;
-			effect->elemDefCountEmission = 0;
-
+		if (Empty(static_cast<FxEffectDef*>(header)))
 			Log::WriteLine(Channel::Warning, "Effect '{}' is missing; emptied so the placeholder draws nothing.", name);
-		}
 		return header;
+	}
+
+	// An effect made to draw nothing, and whether it drew anything before.
+	bool Assets::Empty(FxEffectDef* effect)
+	{
+		if (!effect->elemDefCountLooping && !effect->elemDefCountOneShot && !effect->elemDefCountEmission)
+			return false;
+		effect->elemDefCountLooping = 0;
+		effect->elemDefCountOneShot = 0;
+		effect->elemDefCountEmission = 0;
+		return true;
 	}
 
 	void Assets::LoadXAssets(XZoneInfo* zoneInfo, unsigned int zoneCount, int sync)

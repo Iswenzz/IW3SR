@@ -22,6 +22,7 @@ namespace IW3SR
 		static inline dvar_s* SubstituteViewmodel = nullptr;
 
 		static void* SubstituteViewhands(void* header, const char* name);
+		static bool Empty(FxEffectDef* effect);
 
 		static std::string ModZonePath();
 	};
