@@ -45,4 +45,11 @@ namespace IW3SR
 		// Clamps an unknown escape to white
 		*color = index >= 0 && index < static_cast<int>(std::size(ColorTable)) ? ColorTable[index] : 0xFFFFFFFF;
 	}
+
+	// Whether c picks a color after a ^, the extended ones past 9 included.
+	bool Colors::IsCode(char c)
+	{
+		const int index = c - '0';
+		return index >= 0 && index < static_cast<int>(std::size(ColorTable));
+	}
 }

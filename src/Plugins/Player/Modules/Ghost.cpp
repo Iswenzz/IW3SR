@@ -1,5 +1,7 @@
 #include "Ghost.hpp"
 
+#include "Game/System/Colors.hpp"
+
 namespace IW3SR::Addons
 {
 	namespace
@@ -18,7 +20,7 @@ namespace IW3SR::Addons
 			std::string plain;
 			for (size_t i = 0; i < name.size(); i++)
 			{
-				if (name[i] == '^' && i + 1 < name.size() && std::isdigit(static_cast<unsigned char>(name[i + 1])))
+				if (name[i] == '^' && i + 1 < name.size() && Colors::IsCode(name[i + 1]))
 					i++;
 				else
 					plain.push_back(name[i]);

@@ -1,6 +1,7 @@
 #include "Discord.hpp"
 #include "DiscordIPC.hpp"
 
+#include "Game/System/Colors.hpp"
 #include "Game/System/Dvar.hpp"
 #include "Game/System/Patch.hpp"
 
@@ -73,7 +74,7 @@ namespace IW3SR
 
 		for (size_t i = 0; i < text.size(); i++)
 		{
-			if (text[i] == '^' && i + 1 < text.size() && std::isdigit(static_cast<unsigned char>(text[i + 1])))
+			if (text[i] == '^' && i + 1 < text.size() && Colors::IsCode(text[i + 1]))
 			{
 				i++;
 				continue;
