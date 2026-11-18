@@ -37,6 +37,11 @@ namespace IW3SR
 	constexpr uintptr_t DownloadRateSite = 0x54A00A;
 	constexpr int DownloadRateSize = 0x1A;
 
+	// The CRT's call to WinMain. CoD4X attaches before the CRT gets there and has its own WinMain
+	// called instead, so retail's still being the one called means CoD4X is not loaded.
+	constexpr uintptr_t WinMainCallSite = 0x6748CE;
+	constexpr uintptr_t RetailWinMain = 0x577550;
+
 	void Patch::Initialize()
 	{
 		GShell::GuardCommandLine();
@@ -50,8 +55,24 @@ namespace IW3SR
 		const auto cod4x = settings.is_object() ? settings.find("CoD4X") : settings.end();
 		AllowCoD4X = cod4x == settings.end() || !cod4x->is_boolean() || cod4x->get<bool>();
 
-		if (AllowCoD4X)
+		Memory::CALL(WinMainCallSite, reinterpret_cast<uintptr_t>(&Patch::WinMain));
+	}
+
+	int WINAPI Patch::WinMain(HINSTANCE instance, HINSTANCE previous, LPSTR commandLine, int show)
+	{
+		Standalone();
+
+		const auto retail = reinterpret_cast<int(WINAPI*)(HINSTANCE, HINSTANCE, LPSTR, int)>(RetailWinMain);
+		return retail(instance, previous, commandLine, show);
+	}
+
+	// What CoD4X does for itself, done here whenever it is not loaded: turned off in the settings, or
+	// allowed and not installed. Going by the setting alone left the second case with none of these.
+	void Patch::Standalone()
+	{
+		if (UseCoD4X || UseStandalone)
 			return;
+		UseStandalone = true;
 
 		AllowMultipleInstances();
 		DisablePunkbuster();
@@ -65,6 +86,9 @@ namespace IW3SR
 		if (UseBase)
 			return;
 		UseBase = true;
+
+		// For an IW3SR loaded too late to see the CRT call WinMain.
+		Standalone();
 
 		Application::Initialize();
 
