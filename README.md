@@ -62,11 +62,6 @@ extended protocol 21.
 When cod4x dll is present, IW3SR loads alongside it and hands those features back to it rather than
 running its own. It can be kept out entirely from the settings panel.
 
-## Redistributables
-The client requires the following runtimes to be installed.
-- [Microsoft Visual C++ Redistributable (v14, x86)](https://aka.ms/vc14/vc_redist.x86.exe)
-- [DirectX End-User Runtime (June 2010)](https://www.microsoft.com/en-us/download/details.aspx?id=8109)
-
 ## Instructions
 In order to use this client, download the archived file down below, and extract it to your cod4 directory.
 To remove the client you can delete ddraw.dll and optionally every other files extracted from the archive.

@@ -78,7 +78,9 @@ install(DIRECTORY ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/cef/Resou
 
 install(DIRECTORY
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>bin/
-	DESTINATION ${COD4}/iw3sr/Bin FILES_MATCHING PATTERN "*.dll")
+	DESTINATION ${COD4}/iw3sr/Bin FILES_MATCHING PATTERN "*.dll"
+	PATTERN "d3dx*.dll" EXCLUDE
+	PATTERN "d3dcompiler_43.dll" EXCLUDE)
 
 install(DIRECTORY
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug/>bin/
@@ -90,5 +92,14 @@ install(DIRECTORY
 
 install(FILES
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/sentry-native/crashpad_handler.exe
+	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/d3dx9_43.dll
 	${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/zlib1.dll
+	DESTINATION ${COD4}/iw3sr/Bin)
+
+# The VC++ runtime our binaries import, shipped beside them so no redistributable has to be installed.
+set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+include(InstallRequiredSystemLibraries)
+list(FILTER CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS INCLUDE REGEX
+	"/(msvcp140|msvcp140_atomic_wait|vcruntime140|vcruntime140_1)\\.dll$")
+install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
 	DESTINATION ${COD4}/iw3sr/Bin)

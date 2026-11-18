@@ -14,7 +14,7 @@
 			"description": "Build DX9",
 			"dependencies": [
 				{ "name": "imgui", "features": ["dx9-binding"] },
-				"directxsdk"
+				"dxsdk-d3dx"
 			]
 		},
 		"cef": {
@@ -42,7 +42,7 @@
 	"overrides": [
 		{ "name": "cef", "version": "149.0.6" },
 		{ "name": "curl", "version": "8.14.1" },
-        { "name": "directxsdk", "version-string": "jun10#8" },
+        { "name": "dxsdk-d3dx", "version": "9.29.952.8#7" },
 		{ "name": "glm", "version": "1.0.1#2" },
         { "name": "imgui", "version": "1.92.8" },
         { "name": "implot", "version": "0.16#1" },
