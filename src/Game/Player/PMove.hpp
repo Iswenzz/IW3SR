@@ -11,6 +11,8 @@ namespace IW3SR
 		Q3,
 		Q3CPM,
 		CS,
+		SMB,
+		MKW,
 	};
 
 	class API PMove
@@ -43,6 +45,9 @@ namespace IW3SR
 		static void PredictPmoveSingle(pmove_t* pm, int amount = 1);
 		static usercmd_s* GetUserCommand(int cmdNumber);
 		static MovementMode GetMovementMode();
+		static void SceneModel(const DObj_s* obj, cpose_t* pose, int entnum);
+		static void RiderPose(cpose_t* pose, int rider);
+		static bool Predicted(std::string_view model, cpose_t* pose);
 		static bool HasQ3Weapons();
 		static bool IsQ3Cpm();
 		static const Q3WeaponState* FindWeapons(int commandTime);

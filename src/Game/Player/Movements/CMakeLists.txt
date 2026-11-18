@@ -3,7 +3,11 @@ target_sources(IW3SR PRIVATE
 	CoD4.cpp
 	CS.hpp
 	CS.cpp
+	Monkey.hpp
+	Monkey.cpp
 	Q3.hpp
 	Q3.cpp
 	Q3Weapons.hpp
-	Q3Weapons.cpp)
+	Q3Weapons.cpp
+	Racer.hpp
+	Racer.cpp)

@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 
+#include "Game/Player/PMove.hpp"
 #include "Game/Renderer/Drawing/Draw2D.hpp"
 #include "Game/Renderer/Drawing/Draw3D.hpp"
 #include "Game/Renderer/Ghost.hpp"
@@ -207,6 +208,7 @@ namespace IW3SR
 		if (!ServerGhost::SceneModel(pose, entnum))
 			return false;
 
+		PMove::SceneModel(obj, const_cast<cpose_t*>(pose), entnum);
 		*renderFx |= GGhost::SceneFlags(entnum);
 		return GVRBody::SceneModel(obj, pose, entnum);
 	}
