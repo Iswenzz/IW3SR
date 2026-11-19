@@ -29,6 +29,10 @@
 // The bit of a player's flags the game flips whenever it puts the player somewhere.
 #define MONKEY_PLACED 0x4
 #define MONKEY_MOVED 0.05f
+// Two balls part this much faster than they met, so the one that hits is knocked back too, and sunk into
+// one another they are eased apart at this much of a tick per unit.
+#define MONKEY_BUMP 1.3f
+#define MONKEY_EASE 0.1f
 
 namespace IW3SR
 {
@@ -95,6 +99,42 @@ namespace IW3SR
 		angles = vec3(-glm::degrees(asinf(glm::clamp(ahead.z, -1.0f, 1.0f))), glm::degrees(atan2f(ahead.y, ahead.x)),
 			glm::degrees(atan2f(left.z, up.z)));
 		return true;
+	}
+
+	// Two balls that met over the last tick, turned apart along the line between them. Both states take it at
+	// once, so neither meets the other again before its next move; the change to this one's velocity is given
+	// back in units a second for its playerstate, the other's being the opposite.
+	vec3 Monkey::Bump(MonkeyState& self, MonkeyState& other)
+	{
+		if (!self.Running || !other.Running)
+			return vec3(0);
+
+		// Where the two middles came nearest over the tick.
+		const vec3 from = self.Previous - other.Previous;
+		const vec3 along = (self.Position - other.Position) - from;
+		const float length = glm::dot(along, along);
+		const float t = length > 0.0f ? glm::clamp(-glm::dot(from, along) / length, 0.0f, 1.0f) : 1.0f;
+		const vec3 apart = from + along * t;
+		const float distance = glm::length(apart);
+		if (distance >= 2.0f * monkey_radius)
+			return vec3(0);
+
+		const vec3 normal = distance > 0.01f ? apart / distance : vec3(1, 0, 0);
+		const float closing = glm::dot(self.Velocity - other.Velocity, normal);
+		float impulse = closing < 0.0f ? -closing * (1.0f + MONKEY_BUMP) * 0.5f : 0.0f;
+		const float sunk = 2.0f * monkey_radius - glm::length(self.Position - other.Position);
+		if (sunk > 0.0f && closing + 2.0f * impulse < sunk * MONKEY_EASE)
+			impulse = (sunk * MONKEY_EASE - closing) * 0.5f;
+		if (impulse <= 0.0f)
+			return vec3(0);
+
+		const vec3 push = normal * impulse;
+		const vec3 speed = push * (1000.0f / monkey_tick);
+		self.Velocity += push;
+		self.Speed += speed;
+		other.Velocity -= push;
+		other.Speed -= speed;
+		return speed;
 	}
 
 	// The game keeps its camera level with the world while the stage leans under the ball. Here the stage

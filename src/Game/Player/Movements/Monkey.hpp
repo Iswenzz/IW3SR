@@ -53,6 +53,7 @@ namespace IW3SR
 		static void GroundTrace(pmove_t* pm, pml_t* pml, const MonkeyState& state);
 		static void Move(pmove_t* pm, pml_t* pml, MonkeyState& state);
 		static bool Pose(const MonkeyState& state, vec3& origin, vec3& angles, bool inside);
+		static vec3 Bump(MonkeyState& self, MonkeyState& other);
 
 	private:
 		static void Follow(const playerState_s* ps, MonkeyState& state);
