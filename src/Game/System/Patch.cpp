@@ -58,6 +58,14 @@ namespace IW3SR
 		Memory::CALL(WinMainCallSite, reinterpret_cast<uintptr_t>(&Patch::WinMain));
 	}
 
+	// CoD4X's launcher hashes iw3mp.exe's code in memory and calls the game impure, then replaces the
+	// exe, over a single changed byte. So the call goes back to retail before the launcher looks, and
+	// CoD4X puts its own WinMain there; should it still not load, Base runs Standalone instead.
+	void Patch::RestoreWinMain()
+	{
+		Memory::CALL(WinMainCallSite, RetailWinMain);
+	}
+
 	int WINAPI Patch::WinMain(HINSTANCE instance, HINSTANCE previous, LPSTR commandLine, int show)
 	{
 		Standalone();

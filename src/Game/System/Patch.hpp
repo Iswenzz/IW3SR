@@ -13,6 +13,7 @@ namespace IW3SR
 
 		static void Initialize();
 		static void Base();
+		static void RestoreWinMain();
 
 		static void FrameWait();
 		static void ReallocXAssetPools();

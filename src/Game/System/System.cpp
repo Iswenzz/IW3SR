@@ -292,10 +292,14 @@ namespace IW3SR
 
 		const std::wstring name = ModuleName(lpLibFileName);
 
-		if (name == L"launcher.dll" && !Patch::AllowCoD4X)
+		if (name == L"launcher.dll")
 		{
-			SetLastError(ERROR_MOD_NOT_FOUND);
-			return nullptr;
+			if (!Patch::AllowCoD4X)
+			{
+				SetLastError(ERROR_MOD_NOT_FOUND);
+				return nullptr;
+			}
+			Patch::RestoreWinMain();
 		}
 		const HMODULE mod = LoadLibraryW_h(lpLibFileName);
 
