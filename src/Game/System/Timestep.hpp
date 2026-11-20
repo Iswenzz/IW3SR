@@ -49,6 +49,7 @@ namespace IW3SR
 		static bool Command(const std::string& command);
 
 		static void FASTCALL CreateNewCommands(int localClientNum);
+		static void ExecuteCommands(int localClientNum, int controllerIndex);
 		static void CalcViewValues(int localClientNum);
 		static void Sample(const usercmd_s& cmd);
 		static void Step(const pmove_t* pm, const pml_t* pml);
@@ -64,6 +65,8 @@ namespace IW3SR
 		static void Advance();
 		static void ForceStance(const playerState_s& ps, int sequence);
 		static Steps PlanSteps(int* widths, int step, int target, int frametime);
+		static int StepClock(int step, int target, int frametime);
+		static bool MakesCommand();
 		static void SeedClock();
 		static void Receive(int target, int frametime);
 		static int Tick(int time);
@@ -86,6 +89,10 @@ namespace IW3SR
 
 		// The client limiter the step widths come from.
 		static inline Cadence Vanilla = {};
+
+		// realtime as of the last command buffer pass, and whether the frame's first pass was put off.
+		static inline int Credited = 0;
+		static inline bool Deferred = false;
 
 		// The server clock the command times come from, and the snapshots it has yet to see.
 		static inline ServerClock Server = {};

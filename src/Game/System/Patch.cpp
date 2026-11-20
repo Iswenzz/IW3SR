@@ -147,6 +147,7 @@ namespace IW3SR
 		Profile::UseCoD4XStatsFormat();
 
 		CreateWindowExA_h.Install();
+		Cbuf_ExecuteInternal_h.Install();
 		Cmd_ExecuteSingleCommand_h.Install();
 		Com_InitDvars_h.Install();
 		FS_RegisterDvars_h.Install();

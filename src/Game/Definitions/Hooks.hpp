@@ -13,6 +13,9 @@ namespace IW3SR
 		HINSTANCE hInstance, LPVOID lpParam)>
 		CreateWindowExA_h;
 
+	extern Hook<void(int localClientNum, int controllerIndex)>
+		Cbuf_ExecuteInternal_h;
+
 	extern Hook<void(int localClientNum, int controllerIndex, char* command)>
 		Cmd_ExecuteSingleCommand_h;
 

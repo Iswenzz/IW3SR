@@ -39,6 +39,9 @@ namespace IW3SR
 		HINSTANCE hInstance, LPVOID lpParam)>
 		CreateWindowExA_h(CreateWindowExA, GSystem::CreateMainWindow);
 
+	Hook<void(int localClientNum, int controllerIndex)>
+		Cbuf_ExecuteInternal_h(0x4F9280, Timestep::ExecuteCommands);
+
 	Hook<void(int localClientNum, int controllerIndex, char* command)>
 		Cmd_ExecuteSingleCommand_h(0x4F9AB0, GSystem::ExecuteSingleCommand);
 

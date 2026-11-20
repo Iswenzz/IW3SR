@@ -427,6 +427,33 @@ namespace IW3SR
 		Split(localClientNum);
 	}
 
+	// Com_Frame runs the command buffer twice a frame, each pass stopping at a wait, so a client at
+	// com_maxfps gives a bind two passes per command. A frame that makes no command would still run its
+	// two, letting a crouch bind's crouch catch up with its jump on one command, where pmove ducks instead
+	// of jumping. So both passes run once the frame's time is credited, and only if it makes a command.
+	void Timestep::ExecuteCommands(int localClientNum, int controllerIndex)
+	{
+		if (!Active())
+		{
+			Deferred = false;
+			Cbuf_ExecuteInternal_h(localClientNum, controllerIndex);
+			return;
+		}
+		// The first pass comes before CL_RunOncePerClientFrame credits the frame.
+		if (cls->realtime == Credited)
+		{
+			Deferred = true;
+			return;
+		}
+		Credited = cls->realtime;
+
+		const int passes = !MakesCommand() ? 0 : Deferred ? 2 : 1;
+		Deferred = false;
+
+		for (int i = 0; i < passes; i++)
+			Cbuf_ExecuteInternal_h(localClientNum, controllerIndex);
+	}
+
 	// The last movement step sits up to a step short of the frame being drawn, by a gap that
 	// changes frame to frame, which reads as judder no client stepping at its frame rate shows.
 	// Carrying the view along the velocity for the remainder draws it at the frame time. The gun
@@ -498,19 +525,14 @@ namespace IW3SR
 	// Com_Frame's client branch (0x500037, and CoD4X's rewrite of it) only waits for the millisecond to
 	// tick over, credits the frame max(elapsed, 1000/com_maxfps), and R_WaitEndTime then holds it until
 	// wall time catches up. So a client that keeps up steps an exact grid however long its wait takes,
-	// and one that cannot sends a single wide command for the frame it lost. The virtual client starts
-	// a frame behind the real one, or it would owe nothing on the frame it is seeded and stay a step
-	// short for the whole run.
+	// and one that cannot sends a single wide command for the frame it lost.
 	Steps Timestep::PlanSteps(int* widths, int step, int target, int frametime)
 	{
 		if (step < 1)
 			step = 1;
 
-		if (!Vanilla.Started || std::abs(target - Vanilla.Time) > MaxDrift)
-		{
-			Vanilla.Time = target - (frametime > 0 ? frametime : step);
-			Vanilla.Started = true;
-		}
+		Vanilla.Time = StepClock(step, target, frametime);
+		Vanilla.Started = true;
 
 		Steps plan;
 		plan.Clock = Vanilla.Time;
@@ -533,6 +555,23 @@ namespace IW3SR
 			plan.Starved = true;
 		}
 		return plan;
+	}
+
+	// The virtual client's clock for a frame ending at target. It starts over a frame behind the real one
+	// when it has not run yet or has drifted off, or it would owe nothing on the frame it is seeded and
+	// stay a step short for the whole run.
+	int Timestep::StepClock(int step, int target, int frametime)
+	{
+		if (Vanilla.Started && std::abs(target - Vanilla.Time) <= MaxDrift)
+			return Vanilla.Time;
+		return target - (frametime > 0 ? frametime : step);
+	}
+
+	// Whether the frame just credited makes a command, reckoned the way PlanSteps will.
+	bool Timestep::MakesCommand()
+	{
+		const int step = std::max(1000 / MovementFps(), 1);
+		return cls->realtime - StepClock(step, cls->realtime, cls->frametime) >= step;
 	}
 
 	// Takes the clock over from wherever the engine has it, counting the current snapshot as seen.
